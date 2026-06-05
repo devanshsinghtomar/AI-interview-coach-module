@@ -336,16 +336,25 @@ def upload_resume():
 
     if "resume" not in request.files:
 
-        flash("No file selected.")
-
+        flash("No file selected")
         return redirect("/dashboard")
 
     resume = request.files["resume"]
 
     if resume.filename == "":
 
-        flash("Please select a resume.")
+        flash("Select a file")
+        return redirect("/dashboard")
 
+    allowed = [".pdf", ".txt"]
+
+    ext = os.path.splitext(
+        resume.filename
+    )[1].lower()
+
+    if ext not in allowed:
+
+        flash("Only PDF and TXT supported")
         return redirect("/dashboard")
 
     filepath = os.path.join(
@@ -355,25 +364,14 @@ def upload_resume():
 
     resume.save(filepath)
 
-    try:
+    resume_text = extract_resume_text(
+        filepath
+    )
 
-        resume_text = extract_resume_text(
-            filepath
-        )
-
-        return render_template(
-            "resume_result.html",
-            resume_text=resume_text
-        )
-
-    except Exception as e:
-
-        return render_template(
-            "resume_result.html",
-            resume_text=f"Error: {str(e)}"
-        )
-
-
+    return render_template(
+        "resume_result.html",
+        resume_text=resume_text
+    )
 # ==================================================
 # PDF REPORT
 # ==================================================
