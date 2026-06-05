@@ -402,6 +402,34 @@ return render_template(
     "resume_result.html",
     resume_text=resume_text
 )
+
+@app.route("/feedback")
+def feedback():
+
+    if "user_id" not in session:
+        return redirect("/")
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        SELECT *
+        FROM interviews
+        WHERE user_id=?
+        ORDER BY id DESC
+        """,
+        (session["user_id"],)
+    )
+
+    records = cur.fetchall()
+
+    conn.close()
+
+    return render_template(
+        "feedback.html",
+        records=records
+    )
 # ==================================================
 # PERFORMANCE PAGE
 # ==================================================
