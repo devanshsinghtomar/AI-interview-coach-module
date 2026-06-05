@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Feedback</title>
+</head>
+<body>
+
+<h1>Interview Feedback History</h1>
+
+{% for record in records %}
+
+<h3>{{ record['question'] }}</h3>
+
+<p><b>Answer:</b></p>
+<p>{{ record['answer'] }}</p>
+
+<p><b>Feedback:</b></p>
+<pre>{{ record['feedback'] }}</pre>
+
+<hr>
+
+{% endfor %}
+
+</body>
+</html>
