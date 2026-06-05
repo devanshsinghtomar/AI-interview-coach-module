@@ -239,11 +239,21 @@ def generate():
         return redirect("/interview")
 
     try:
+    questions = generate_questions(role, level)
 
-        questions = generate_questions(
-            role,
-            level
-        )
+except Exception as e:
+
+    questions = f"""
+AI generation failed.
+
+Error:
+{str(e)}
+
+Possible reasons:
+1. GEMINI_API_KEY missing
+2. Gemini quota exhausted
+3. Internet/API issue
+"""
 
         return render_template(
             "interview.html",
@@ -322,7 +332,17 @@ def evaluate():
             "result.html",
             feedback=f"Evaluation Error: {str(e)}"
         )
+# ==================================================
+# RESUME PAGE
+# ==================================================
 
+@app.route("/resume")
+def resume():
+
+    if "user_id" not in session:
+        return redirect("/")
+
+    return render_template("resume_upload.html")
 
 # ==================================================
 # RESUME UPLOAD
@@ -362,15 +382,56 @@ def upload_resume():
         resume.filename
     )
 
-    resume.save(filepath)
+   resume.save(filepath)
+
+try:
 
     resume_text = extract_resume_text(
         filepath
     )
 
+except Exception as e:
+
+    resume_text = f"""
+Resume Processing Error:
+
+{str(e)}
+"""
+
+return render_template(
+    "resume_result.html",
+    resume_text=resume_text
+)
+# ==================================================
+# PERFORMANCE PAGE
+# ==================================================
+
+@app.route("/performance")
+def performance():
+
+    if "user_id" not in session:
+        return redirect("/")
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        SELECT *
+        FROM interviews
+        WHERE user_id=?
+        ORDER BY id DESC
+        """,
+        (session["user_id"],)
+    )
+
+    records = cur.fetchall()
+
+    conn.close()
+
     return render_template(
-        "resume_result.html",
-        resume_text=resume_text
+        "performance.html",
+        records=records
     )
 # ==================================================
 # PDF REPORT
@@ -385,9 +446,9 @@ def download_report():
     )
 
     filepath = os.path.join(
-        REPORT_FOLDER,
-        "report.pdf"
-    )
+    REPORT_FOLDER,
+    f"report_{session.get('user_id',0)}.pdf"
+)
 
     generate_report(
         "AI Interview Report",
