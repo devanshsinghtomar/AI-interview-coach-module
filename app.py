@@ -109,8 +109,7 @@ def register_user():
 
         cur.execute(
             """
-            INSERT INTO users
-            (name,email,password)
+            INSERT INTO users(name,email,password)
             VALUES (?,?,?)
             """,
             (name, email, password)
@@ -118,12 +117,11 @@ def register_user():
 
         conn.commit()
 
-        flash("Account created successfully.")
+        flash("Account created successfully!")
 
     except sqlite3.IntegrityError:
 
-        flash("Email already registered.")
-
+        flash("Email already exists")
         return redirect("/register")
 
     finally:
@@ -164,8 +162,7 @@ def login():
 
         return redirect("/dashboard")
 
-    flash("Invalid email or password.")
-
+    flash("Invalid Email or Password")
     return redirect("/")
 
 
@@ -178,7 +175,7 @@ def logout():
 
     session.clear()
 
-    flash("Logged out successfully.")
+    flash("Logged Out Successfully")
 
     return redirect("/")
 
@@ -222,52 +219,34 @@ def generate():
     if "user_id" not in session:
         return redirect("/")
 
-    role = request.form.get(
-        "role",
-        ""
-    ).strip()
+    role = request.form.get("role", "")
+    level = request.form.get("level", "")
 
-    level = request.form.get(
-        "level",
-        ""
-    ).strip()
-
-    if not role:
-
-        flash("Please enter a job role.")
-
+    if role.strip() == "":
+        flash("Please Enter Job Role")
         return redirect("/interview")
 
     try:
-    questions = generate_questions(role, level)
 
-except Exception as e:
-
-    questions = f"""
-AI generation failed.
-
-Error:
-{str(e)}
-
-Possible reasons:
-1. GEMINI_API_KEY missing
-2. Gemini quota exhausted
-3. Internet/API issue
-"""
-
-        return render_template(
-            "interview.html",
-            role=role,
-            questions=questions
+        questions = generate_questions(
+            role,
+            level
         )
 
     except Exception as e:
 
-        return render_template(
-            "interview.html",
-            role=role,
-            questions=f"Error generating questions: {str(e)}"
-        )
+        questions = f"""
+Question Generation Failed
+
+Error:
+{str(e)}
+"""
+
+    return render_template(
+        "interview.html",
+        role=role,
+        questions=questions
+    )
 
 
 # ==================================================
@@ -332,6 +311,8 @@ def evaluate():
             "result.html",
             feedback=f"Evaluation Error: {str(e)}"
         )
+
+
 # ==================================================
 # RESUME PAGE
 # ==================================================
@@ -343,6 +324,7 @@ def resume():
         return redirect("/")
 
     return render_template("resume_upload.html")
+
 
 # ==================================================
 # RESUME UPLOAD
@@ -356,82 +338,45 @@ def upload_resume():
 
     if "resume" not in request.files:
 
-        flash("No file selected")
-        return redirect("/dashboard")
+        flash("No File Selected")
+        return redirect("/resume")
 
     resume = request.files["resume"]
 
     if resume.filename == "":
 
-        flash("Select a file")
-        return redirect("/dashboard")
-
-    allowed = [".pdf", ".txt"]
-
-    ext = os.path.splitext(
-        resume.filename
-    )[1].lower()
-
-    if ext not in allowed:
-
-        flash("Only PDF and TXT supported")
-        return redirect("/dashboard")
+        flash("Please Select Resume")
+        return redirect("/resume")
 
     filepath = os.path.join(
         UPLOAD_FOLDER,
         resume.filename
     )
 
-   resume.save(filepath)
+    resume.save(filepath)
 
-try:
+    try:
 
-    resume_text = extract_resume_text(
-        filepath
-    )
+        resume_text = extract_resume_text(
+            filepath
+        )
 
-except Exception as e:
+    except Exception as e:
 
-    resume_text = f"""
-Resume Processing Error:
+        resume_text = f"""
+Resume Processing Error
 
 {str(e)}
 """
 
-return render_template(
-    "resume_result.html",
-    resume_text=resume_text
-)
-
-@app.route("/feedback")
-def feedback():
-
-    if "user_id" not in session:
-        return redirect("/")
-
-    conn = get_db()
-    cur = conn.cursor()
-
-    cur.execute(
-        """
-        SELECT *
-        FROM interviews
-        WHERE user_id=?
-        ORDER BY id DESC
-        """,
-        (session["user_id"],)
-    )
-
-    records = cur.fetchall()
-
-    conn.close()
-
     return render_template(
-        "feedback.html",
-        records=records
+        "resume_result.html",
+        resume_text=resume_text
     )
+
+
 # ==================================================
-# PERFORMANCE PAGE
+# PERFORMANCE
 # ==================================================
 
 @app.route("/performance")
@@ -461,8 +406,10 @@ def performance():
         "performance.html",
         records=records
     )
+
+
 # ==================================================
-# PDF REPORT
+# DOWNLOAD REPORT
 # ==================================================
 
 @app.route("/download_report")
@@ -470,13 +417,13 @@ def download_report():
 
     feedback = session.get(
         "feedback",
-        "No interview feedback available."
+        "No feedback available"
     )
 
     filepath = os.path.join(
-    REPORT_FOLDER,
-    f"report_{session.get('user_id',0)}.pdf"
-)
+        REPORT_FOLDER,
+        f"report_{session.get('user_id',0)}.pdf"
+    )
 
     generate_report(
         "AI Interview Report",
@@ -491,12 +438,29 @@ def download_report():
 
 
 # ==================================================
+# ERROR HANDLER
+# ==================================================
+
+@app.errorhandler(404)
+def not_found(error):
+    return render_template(
+        "dashboard.html",
+        name=session.get("name", "User")
+    )
+
+
+# ==================================================
 # RUN APP
 # ==================================================
 
 if __name__ == "__main__":
+
+    port = int(
+        os.environ.get("PORT", 5000)
+    )
+
     app.run(
-        debug=True,
         host="0.0.0.0",
-        port=5000
+        port=port,
+        debug=False
     )
