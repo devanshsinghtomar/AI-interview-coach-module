@@ -1,30 +1,33 @@
-from fpdf import FPDF
+# utils/pdf_report.py
+
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Paragraph,
+    Spacer
+)
+
+from reportlab.lib.styles import getSampleStyleSheet
 
 
-def generate_report(title, feedback, filename):
+def generate_report(title, content, filepath):
 
-    pdf = FPDF()
+    doc = SimpleDocTemplate(filepath)
 
-    pdf.add_page()
+    styles = getSampleStyleSheet()
 
-    pdf.set_font("Arial", "B", 16)
+    elements = []
 
-    pdf.cell(
-        200,
-        10,
-        txt=title,
-        ln=True,
-        align="C"
+    elements.append(
+        Paragraph(title, styles["Title"])
     )
 
-    pdf.ln(10)
-
-    pdf.set_font("Arial", size=12)
-
-    pdf.multi_cell(
-        0,
-        10,
-        feedback
+    elements.append(
+        Spacer(1, 20)
     )
 
-    pdf.output(filename)
+    elements.append(
+        Paragraph(content.replace("\n", "<br/>"),
+                  styles["BodyText"])
+    )
+
+    doc.build(elements)
