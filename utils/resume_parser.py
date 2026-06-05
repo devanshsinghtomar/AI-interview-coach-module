@@ -1,39 +1,29 @@
-from PyPDF2 import PdfReader
-import os
+# utils/resume_parser.py
+
+import PyPDF2
+
 
 def extract_resume_text(filepath):
 
-    ext = os.path.splitext(filepath)[1].lower()
+    if filepath.endswith(".txt"):
 
-    if ext == ".pdf":
+        with open(filepath, "r", encoding="utf-8") as f:
+            return f.read()
+
+    elif filepath.endswith(".pdf"):
 
         text = ""
 
-        reader = PdfReader(filepath)
+        with open(filepath, "rb") as pdf_file:
 
-        for page in reader.pages:
+            pdf = PyPDF2.PdfReader(pdf_file)
 
-            page_text = page.extract_text()
+            for page in pdf.pages:
+                extracted = page.extract_text()
 
-            if page_text:
-                text += page_text + "\n"
+                if extracted:
+                    text += extracted + "\n"
 
         return text
 
-    elif ext == ".txt":
-
-        with open(
-            filepath,
-            "r",
-            encoding="utf-8",
-            errors="ignore"
-        ) as f:
-
-            return f.read()
-
-    else:
-
-        return (
-            "Unsupported file format. "
-            "Please upload PDF or TXT."
-        )
+    return "Unsupported file format"
