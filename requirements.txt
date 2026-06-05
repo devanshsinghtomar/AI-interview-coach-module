@@ -9,4 +9,3 @@ Pillow==10.4.0
 grpcio==1.71.2
 grpcio-status==1.71.2
 protobuf==5.29.3
-openai>=1.0.0
