@@ -1,101 +1,60 @@
-import os
-from dotenv import load_dotenv
-import google.generativeai as genai
-
-# ---------------- GEMINI CONFIG ---------------- #
-
-load_dotenv()
-
-API_KEY = os.getenv("GEMINI_API_KEY")
-
-if not API_KEY:
-    raise Exception(
-        "GEMINI_API_KEY not found. Add it to your .env file."
-    )
-
-genai.configure(api_key=API_KEY)
-
-model = genai.GenerativeModel("gemini-2.5-flash")
-
-# ---------------- QUESTION GENERATION ---------------- #
+# utils/ai_helper.py
 
 def generate_questions(role, level):
 
-    prompt = f"""
-You are a Senior Technical Interviewer.
+    questions = f"""
+1. Tell me about yourself.
 
-Create role-specific interview questions.
+2. Why do you want to work as a {role}?
 
-Job Role: {role}
-Experience Level: {level}
+3. What are your strengths?
 
-Requirements:
-- Questions must be specific to the given role.
-- Different roles must get different questions.
-- Include:
-  * Technical Questions
-  * Scenario-Based Questions
-  * Project Questions
-  * Problem-Solving Questions
-  * Advanced Questions
-  * HR Questions
+4. What are your weaknesses?
 
-Generate as many high-quality questions as possible.
-Return only the questions in a structured format.
+5. Explain a challenging project you worked on.
+
+6. How do you handle deadlines?
+
+7. Why should we hire you?
+
+8. Where do you see yourself in 5 years?
+
+9. Describe a difficult situation and how you handled it.
+
+10. Do you have any questions for us?
 """
 
-    try:
-        response = model.generate_content(
-            prompt,
-            generation_config={
-                "temperature": 0.9,
-                "max_output_tokens": 8192
-            }
-        )
+    return questions
 
-        return response.text
-
-    except Exception as e:
-        return f"Error Generating Questions: {str(e)}"
-
-
-# ---------------- ANSWER EVALUATION ---------------- #
 
 def evaluate_answer(role, question, answer):
 
-    prompt = f"""
-You are a Senior Interview Evaluator.
+    score = min(len(answer.split()) * 2, 100)
 
-ROLE:
-{role}
+    feedback = f"""
+Role: {role}
 
-QUESTION:
+Question:
 {question}
 
-ANSWER:
+Your Answer:
 {answer}
 
-Evaluate the answer and provide:
+Evaluation:
 
-1. Score (/10)
-2. Strengths
-3. Weaknesses
-4. Technical Feedback
-5. Improvement Suggestions
-6. Ideal Answer
-7. Hiring Recommendation
+✔ Communication: Good
+
+✔ Relevance: Good
+
+✔ Confidence: Moderate
+
+Estimated Score: {score}/100
+
+Suggestions:
+
+• Add more technical details
+• Use real project examples
+• Structure answers using STAR method
 """
 
-    try:
-        response = model.generate_content(
-            prompt,
-            generation_config={
-                "temperature": 0.7,
-                "max_output_tokens": 4096
-            }
-        )
-
-        return response.text
-
-    except Exception as e:
-        return f"Evaluation Error: {str(e)}"
+    return feedback
