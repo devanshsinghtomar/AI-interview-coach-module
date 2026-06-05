@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Interview Feedback</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:'Poppins',sans-serif;
+        }
+
+        body{
+            min-height:100vh;
+            background:#0f172a;
+            color:white;
+            padding:30px;
+        }
+
+        .container{
+            max-width:1100px;
+            margin:auto;
+        }
+
+        .header{
+            background:linear-gradient(
+                135deg,
+                #6366f1,
+                #8b5cf6
+            );
+            padding:30px;
+            border-radius:25px;
+            margin-bottom:25px;
+            box-shadow:0 15px 35px rgba(99,102,241,.3);
+        }
+
+        .header h1{
+            font-size:34px;
+            margin-bottom:10px;
+        }
+
+        .header p{
+            color:#e2e8f0;
+        }
+
+        .stats{
+            display:grid;
+            grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+            gap:20px;
+            margin-bottom:25px;
+        }
+
+        .stat-card{
+            background:#1e293b;
+            padding:25px;
+            border-radius:20px;
+            text-align:center;
+            transition:.3s;
+        }
+
+        .stat-card:hover{
+            transform:translateY(-6px);
+            box-shadow:0 15px 30px rgba(0,0,0,.25);
+        }
+
+        .stat-card i{
+            font-size:35px;
+            color:#818cf8;
+            margin-bottom:10px;
+        }
+
+        .stat-card h3{
+            margin-bottom:8px;
+        }
+
+        .stat-card p{
+            color:#94a3b8;
+            font-size:14px;
+        }
+
+        .feedback-card{
+            background:#1e293b;
+            border-radius:25px;
+            padding:30px;
+            margin-bottom:25px;
+        }
+
+        .feedback-title{
+            font-size:24px;
+            margin-bottom:20px;
+            color:#818cf8;
+        }
+
+        .feedback-content{
+            background:#0f172a;
+            border:1px solid #334155;
+            border-radius:15px;
+            padding:25px;
+            white-space:pre-wrap;
+            line-height:1.8;
+            color:#e2e8f0;
+            overflow-x:auto;
+        }
+
+        .actions{
+            display:flex;
+            gap:15px;
+            flex-wrap:wrap;
+            justify-content:center;
+        }
+
+        .btn{
+            text-decoration:none;
+            padding:14px 25px;
+            border-radius:12px;
+            font-weight:600;
+            transition:.3s;
+            display:inline-flex;
+            align-items:center;
+            gap:10px;
+        }
+
+        .download-btn{
+            background:linear-gradient(
+                135deg,
+                #10b981,
+                #059669
+            );
+            color:white;
+        }
+
+        .download-btn:hover{
+            transform:translateY(-3px);
+            box-shadow:0 12px 25px rgba(16,185,129,.3);
+        }
+
+        .dashboard-btn{
+            background:#334155;
+            color:white;
+        }
+
+        .dashboard-btn:hover{
+            background:#475569;
+        }
+
+        .interview-btn{
+            background:#6366f1;
+            color:white;
+        }
+
+        .interview-btn:hover{
+            background:#4f46e5;
+        }
+
+        .success-banner{
+            background:#064e3b;
+            color:#d1fae5;
+            padding:15px;
+            border-radius:12px;
+            margin-bottom:20px;
+            text-align:center;
+        }
+
+        @media(max-width:768px){
+
+            body{
+                padding:15px;
+            }
+
+            .header h1{
+                font-size:28px;
+            }
+
+            .actions{
+                flex-direction:column;
+            }
+
+            .btn{
+                justify-content:center;
+            }
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+
+        <h1>
+            <i class="fas fa-brain"></i>
+            AI Interview Evaluation
+        </h1>
+
+        <p>
+            Your response has been analyzed. Review the AI-generated feedback below.
+        </p>
+
+    </div>
+
+    <div class="success-banner">
+        ✅ Evaluation Completed Successfully
+    </div>
+
+    <div class="stats">
+
+        <div class="stat-card">
+            <i class="fas fa-robot"></i>
+            <h3>AI Analysis</h3>
+            <p>Answer evaluated using Gemini AI</p>
+        </div>
+
+        <div class="stat-card">
+            <i class="fas fa-lightbulb"></i>
+            <h3>Suggestions</h3>
+            <p>Improvement recommendations included</p>
+        </div>
+
+        <div class="stat-card">
+            <i class="fas fa-chart-line"></i>
+            <h3>Performance</h3>
+            <p>Track interview readiness</p>
+        </div>
+
+    </div>
+
+    <div class="feedback-card">
+
+        <div class="feedback-title">
+            <i class="fas fa-comments"></i>
+            Detailed Feedback
+        </div>
+
+        <div class="feedback-content">
+{{ feedback }}
+        </div>
+
+    </div>
+
+    <div class="actions">
+
+        <a href="/download_report" class="btn download-btn">
+            <i class="fas fa-file-pdf"></i>
+            Download PDF Report
+        </a>
+
+        <a href="/interview" class="btn interview-btn">
+            <i class="fas fa-redo"></i>
+            Take Another Interview
+        </a>
+
+        <a href="/dashboard" class="btn dashboard-btn">
+            <i class="fas fa-home"></i>
+            Dashboard
+        </a>
+
+    </div>
+
+</div>
+
+</body>
+</html>

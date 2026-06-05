@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Interview Session</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:'Poppins',sans-serif;
+        }
+
+        body{
+            background:#0f172a;
+            min-height:100vh;
+            color:white;
+            padding:30px;
+        }
+
+        .container{
+            max-width:1200px;
+            margin:auto;
+        }
+
+        .header{
+            background:linear-gradient(135deg,#6366f1,#8b5cf6);
+            padding:25px;
+            border-radius:20px;
+            margin-bottom:25px;
+            box-shadow:0 10px 25px rgba(99,102,241,.3);
+        }
+
+        .header h1{
+            font-size:32px;
+            margin-bottom:8px;
+        }
+
+        .header p{
+            opacity:.9;
+        }
+
+        .grid{
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:25px;
+        }
+
+        .card{
+            background:#1e293b;
+            border-radius:20px;
+            padding:25px;
+            box-shadow:0 10px 20px rgba(0,0,0,.2);
+        }
+
+        .card:hover{
+            transform:translateY(-3px);
+            transition:.3s;
+        }
+
+        .card-title{
+            font-size:20px;
+            margin-bottom:15px;
+            color:#818cf8;
+        }
+
+        .question-box{
+            background:#0f172a;
+            border-radius:15px;
+            padding:20px;
+            height:450px;
+            overflow-y:auto;
+            white-space:pre-wrap;
+            line-height:1.8;
+            color:#e2e8f0;
+            border:1px solid #334155;
+        }
+
+        label{
+            display:block;
+            margin-bottom:8px;
+            font-weight:500;
+            color:#e2e8f0;
+        }
+
+        textarea{
+            width:100%;
+            border:none;
+            border-radius:12px;
+            padding:15px;
+            background:#0f172a;
+            color:white;
+            resize:none;
+            outline:none;
+            border:1px solid #334155;
+        }
+
+        textarea:focus{
+            border:1px solid #6366f1;
+        }
+
+        .question-input{
+            height:120px;
+            margin-bottom:20px;
+        }
+
+        .answer-input{
+            height:220px;
+            margin-bottom:20px;
+        }
+
+        .btn{
+            width:100%;
+            padding:15px;
+            border:none;
+            border-radius:12px;
+            background:linear-gradient(
+                135deg,
+                #10b981,
+                #059669
+            );
+            color:white;
+            font-size:16px;
+            font-weight:600;
+            cursor:pointer;
+            transition:.3s;
+        }
+
+        .btn:hover{
+            transform:translateY(-3px);
+            box-shadow:0 10px 25px rgba(16,185,129,.3);
+        }
+
+        .role-badge{
+            display:inline-block;
+            background:#4338ca;
+            padding:8px 16px;
+            border-radius:30px;
+            margin-top:10px;
+            font-size:14px;
+        }
+
+        .tips{
+            margin-top:20px;
+            background:#0f172a;
+            padding:15px;
+            border-radius:12px;
+            border-left:4px solid #6366f1;
+        }
+
+        .tips ul{
+            margin-left:20px;
+            margin-top:10px;
+        }
+
+        .tips li{
+            margin-bottom:8px;
+            color:#cbd5e1;
+        }
+
+        .back-btn{
+            display:inline-block;
+            margin-top:20px;
+            text-decoration:none;
+            color:white;
+            background:#334155;
+            padding:12px 20px;
+            border-radius:12px;
+            transition:.3s;
+        }
+
+        .back-btn:hover{
+            background:#475569;
+        }
+
+        @media(max-width:900px){
+
+            .grid{
+                grid-template-columns:1fr;
+            }
+
+            .question-box{
+                height:300px;
+            }
+
+            body{
+                padding:15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+
+        <h1>
+            <i class="fas fa-microphone"></i>
+            AI Interview Session
+        </h1>
+
+        <p>
+            Review your generated questions and submit your answer for AI evaluation.
+        </p>
+
+        <div class="role-badge">
+            Role: {{ role }}
+        </div>
+
+    </div>
+
+    <div class="grid">
+
+        <div class="card">
+
+            <h3 class="card-title">
+                <i class="fas fa-list"></i>
+                Generated Interview Questions
+            </h3>
+
+            <div class="question-box">
+                {{ questions }}
+            </div>
+
+            <div class="tips">
+                <strong>Interview Tips:</strong>
+
+                <ul>
+                    <li>Use the STAR method (Situation, Task, Action, Result)</li>
+                    <li>Provide specific examples from projects</li>
+                    <li>Keep answers structured and concise</li>
+                    <li>Mention relevant technologies and skills</li>
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="card">
+
+            <h3 class="card-title">
+                <i class="fas fa-pen"></i>
+                Submit Your Answer
+            </h3>
+
+            <form action="/evaluate" method="POST">
+
+                <input
+                    type="hidden"
+                    name="role"
+                    value="{{ role }}"
+                >
+
+                <label>
+                    Interview Question
+                </label>
+
+                <textarea
+                    class="question-input"
+                    name="question"
+                    placeholder="Paste one interview question here..."
+                    required></textarea>
+
+                <label>
+                    Your Answer
+                </label>
+
+                <textarea
+                    class="answer-input"
+                    name="answer"
+                    placeholder="Write your detailed answer here..."
+                    required></textarea>
+
+                <button class="btn" type="submit">
+                    <i class="fas fa-brain"></i>
+                    Evaluate with AI
+                </button>
+
+            </form>
+
+            <a href="/dashboard" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+                Back to Dashboard
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>
