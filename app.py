@@ -30,6 +30,9 @@ app.secret_key = os.environ.get(
     "interviewcoach-secret-key"
 )
 
+app.config['SESSION_PERMANENT'] = True
+app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 hours
+
 UPLOAD_FOLDER = "static/uploads"
 REPORT_FOLDER = "reports"
 
@@ -117,11 +120,11 @@ def register_user():
 
         conn.commit()
 
-        flash("Account created successfully!")
+        flash("Account created successfully! Please login.")
 
     except sqlite3.IntegrityError:
 
-        flash("Email already exists")
+        flash("Email already exists. Please use a different email.")
         return redirect("/register")
 
     finally:
@@ -137,33 +140,43 @@ def register_user():
 @app.route("/login", methods=["POST"])
 def login():
 
-    email = request.form.get("email")
-    password = request.form.get("password")
+    email = request.form.get("email", "").strip()
+    password = request.form.get("password", "").strip()
+
+    if not email or not password:
+        flash("Please enter both email and password")
+        return redirect("/")
 
     conn = get_db()
     cur = conn.cursor()
 
-    cur.execute(
-        """
-        SELECT * FROM users
-        WHERE email=? AND password=?
-        """,
-        (email, password)
-    )
+    try:
+        cur.execute(
+            """
+            SELECT * FROM users
+            WHERE email=? AND password=?
+            """,
+            (email, password)
+        )
 
-    user = cur.fetchone()
+        user = cur.fetchone()
 
-    conn.close()
+        if user:
+            session.permanent = True
+            session["user_id"] = user["id"]
+            session["name"] = user["name"]
+            session["email"] = user["email"]
+            return redirect("/dashboard")
+        else:
+            flash("Invalid Email or Password. Please try again.")
+            return redirect("/")
 
-    if user:
+    except Exception as e:
+        flash(f"Login error: {str(e)}")
+        return redirect("/")
 
-        session["user_id"] = user["id"]
-        session["name"] = user["name"]
-
-        return redirect("/dashboard")
-
-    flash("Invalid Email or Password")
-    return redirect("/")
+    finally:
+        conn.close()
 
 
 # ==================================================
@@ -174,9 +187,7 @@ def login():
 def logout():
 
     session.clear()
-
-    flash("Logged Out Successfully")
-
+    flash("Logged out successfully!")
     return redirect("/")
 
 
@@ -188,11 +199,12 @@ def logout():
 def dashboard():
 
     if "user_id" not in session:
+        flash("Please login first")
         return redirect("/")
 
     return render_template(
         "dashboard.html",
-        name=session["name"]
+        name=session.get("name", "User")
     )
 
 
@@ -204,6 +216,7 @@ def dashboard():
 def interview():
 
     if "user_id" not in session:
+        flash("Please login first")
         return redirect("/")
 
     return render_template("index.html")
@@ -217,13 +230,14 @@ def interview():
 def generate():
 
     if "user_id" not in session:
+        flash("Please login first")
         return redirect("/")
 
-    role = request.form.get("role", "")
-    level = request.form.get("level", "")
+    role = request.form.get("role", "").strip()
+    level = request.form.get("level", "Beginner")
 
-    if role.strip() == "":
-        flash("Please Enter Job Role")
+    if role == "":
+        flash("Please enter a job role")
         return redirect("/interview")
 
     try:
@@ -257,6 +271,7 @@ Error:
 def evaluate():
 
     if "user_id" not in session:
+        flash("Please login first")
         return redirect("/")
 
     role = request.form.get("role")
@@ -321,6 +336,7 @@ def evaluate():
 def resume():
 
     if "user_id" not in session:
+        flash("Please login first")
         return redirect("/")
 
     return render_template("resume_upload.html")
@@ -334,18 +350,19 @@ def resume():
 def upload_resume():
 
     if "user_id" not in session:
+        flash("Please login first")
         return redirect("/")
 
     if "resume" not in request.files:
 
-        flash("No File Selected")
+        flash("No file selected")
         return redirect("/resume")
 
     resume = request.files["resume"]
 
     if resume.filename == "":
 
-        flash("Please Select Resume")
+        flash("Please select a resume file")
         return redirect("/resume")
 
     filepath = os.path.join(
@@ -383,24 +400,31 @@ Resume Processing Error
 def performance():
 
     if "user_id" not in session:
+        flash("Please login first")
         return redirect("/")
 
     conn = get_db()
     cur = conn.cursor()
 
-    cur.execute(
-        """
-        SELECT *
-        FROM interviews
-        WHERE user_id=?
-        ORDER BY id DESC
-        """,
-        (session["user_id"],)
-    )
+    try:
+        cur.execute(
+            """
+            SELECT *
+            FROM interviews
+            WHERE user_id=?
+            ORDER BY id DESC
+            """,
+            (session["user_id"],)
+        )
 
-    records = cur.fetchall()
+        records = cur.fetchall()
 
-    conn.close()
+    except Exception as e:
+        records = []
+        flash(f"Error loading performance: {str(e)}")
+
+    finally:
+        conn.close()
 
     return render_template(
         "performance.html",
@@ -415,6 +439,10 @@ def performance():
 @app.route("/download_report")
 def download_report():
 
+    if "user_id" not in session:
+        flash("Please login first")
+        return redirect("/")
+
     feedback = session.get(
         "feedback",
         "No feedback available"
@@ -425,16 +453,34 @@ def download_report():
         f"report_{session.get('user_id',0)}.pdf"
     )
 
-    generate_report(
-        "AI Interview Report",
-        feedback,
-        filepath
-    )
+    try:
+        generate_report(
+            "AI Interview Report",
+            feedback,
+            filepath
+        )
 
-    return send_file(
-        filepath,
-        as_attachment=True
-    )
+        return send_file(
+            filepath,
+            as_attachment=True
+        )
+    except Exception as e:
+        flash(f"Error generating report: {str(e)}")
+        return redirect("/dashboard")
+
+
+# ==================================================
+# FEEDBACK PAGE (Optional)
+# ==================================================
+
+@app.route("/feedback")
+def feedback():
+
+    if "user_id" not in session:
+        flash("Please login first")
+        return redirect("/")
+
+    return redirect("/performance")
 
 
 # ==================================================
@@ -443,10 +489,12 @@ def download_report():
 
 @app.errorhandler(404)
 def not_found(error):
-    return render_template(
-        "dashboard.html",
-        name=session.get("name", "User")
-    )
+    if "user_id" in session:
+        return render_template(
+            "dashboard.html",
+            name=session.get("name", "User")
+        )
+    return redirect("/")
 
 
 # ==================================================

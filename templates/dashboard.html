@@ -31,6 +31,7 @@
             height: 100%;
             background: #111827;
             padding: 25px;
+            overflow-y: auto;
         }
 
         .logo {
@@ -52,7 +53,8 @@
             transition: 0.3s;
         }
 
-        .menu a:hover {
+        .menu a:hover,
+        .menu a.active {
             background: #6366f1;
             color: white;
             transform: translateX(5px);
@@ -92,6 +94,10 @@
             border-radius: 20px;
             padding: 25px;
             transition: .3s;
+            text-decoration: none;
+            color: white;
+            display: flex;
+            flex-direction: column;
         }
 
         .card:hover {
@@ -130,6 +136,7 @@
 
         .action-box:hover {
             transform: scale(1.03);
+            box-shadow: 0 15px 40px rgba(99,102,241,.25);
         }
 
         .action-box i {
@@ -155,6 +162,7 @@
 
         .btn-custom:hover {
             background: #4f46e5;
+            transform: translateY(-2px);
         }
 
         .logout {
@@ -191,12 +199,13 @@
     <div class="sidebar">
 
         <div class="logo">
+            <i class="fas fa-robot"></i>
             AI Interview Coach
         </div>
 
         <div class="menu">
 
-            <a href="/dashboard">
+            <a href="/dashboard" class="active">
                 <i class="fas fa-home"></i>
                 Dashboard
             </a>
@@ -204,6 +213,16 @@
             <a href="/interview">
                 <i class="fas fa-microphone"></i>
                 Mock Interview
+            </a>
+
+            <a href="/resume">
+                <i class="fas fa-file-alt"></i>
+                Resume Analysis
+            </a>
+
+            <a href="/performance">
+                <i class="fas fa-chart-line"></i>
+                Performance
             </a>
 
             <a href="/logout">
@@ -224,33 +243,31 @@
 
         <div class="cards">
 
-            <div class="cards">
+            <a href="/interview" class="card" style="text-decoration:none;color:white;">
+                <i class="fas fa-microphone"></i>
+                <h2>Mock AI</h2>
+                <p>Generate role-specific interview questions.</p>
+            </a>
 
-    <a href="/interview" class="card" style="text-decoration:none;color:white;">
-        <i class="fas fa-microphone"></i>
-        <h2>Mock AI</h2>
-        <p>Generate role-specific interview questions.</p>
-    </a>
+            <a href="/performance" class="card" style="text-decoration:none;color:white;">
+                <i class="fas fa-chart-line"></i>
+                <h2>Performance</h2>
+                <p>Track your interview improvement.</p>
+            </a>
 
-    <a href="/feedback" class="card" style="text-decoration:none;color:white;">
-        <i class="fas fa-brain"></i>
-        <h2>AI Feedback</h2>
-        <p>View interview feedback and evaluations.</p>
-    </a>
+            <a href="/resume" class="card" style="text-decoration:none;color:white;">
+                <i class="fas fa-file-alt"></i>
+                <h2>Resume Analysis</h2>
+                <p>Upload and analyze your resume.</p>
+            </a>
 
-    <a href="/resume" class="card" style="text-decoration:none;color:white;">
-        <i class="fas fa-file-alt"></i>
-        <h2>Resume Analysis</h2>
-        <p>Upload and analyze your resume.</p>
-    </a>
+            <a href="/download_report" class="card" style="text-decoration:none;color:white;">
+                <i class="fas fa-file-pdf"></i>
+                <h2>Reports</h2>
+                <p>Download your interview reports.</p>
+            </a>
 
-    <a href="/performance" class="card" style="text-decoration:none;color:white;">
-        <i class="fas fa-chart-line"></i>
-        <h2>Performance</h2>
-        <p>Track your interview improvement.</p>
-    </a>
-
-</div>
+        </div>
 
         <div class="actions">
 
@@ -265,12 +282,12 @@
             </div>
 
             <div class="action-box">
-                <i class="fas fa-file-pdf"></i>
-                <h3>Download Report</h3>
-                <p>Export your interview feedback.</p>
+                <i class="fas fa-file-upload"></i>
+                <h3>Analyze Resume</h3>
+                <p>Upload and get AI insights on your resume.</p>
 
-                <a href="/download_report" class="btn-custom">
-                    Download
+                <a href="/resume" class="btn-custom">
+                    Upload Resume
                 </a>
             </div>
 
