@@ -5,7 +5,8 @@ from flask import (
     redirect,
     session,
     flash,
-    send_file
+    send_file,
+    jsonify
 )
 
 import sqlite3
@@ -13,7 +14,9 @@ import os
 
 from utils.ai_helper import (
     generate_questions,
-    evaluate_answer
+    evaluate_answer,
+    analyze_resume_ai,
+    get_ai_suggestions
 )
 
 from utils.resume_parser import extract_resume_text
@@ -70,7 +73,20 @@ def init_db():
         role TEXT,
         question TEXT,
         answer TEXT,
-        feedback TEXT
+        feedback TEXT,
+        score INTEGER,
+        communication_level TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS resume_analyses(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        analysis_data TEXT,
+        score INTEGER,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)
 
@@ -246,20 +262,25 @@ def generate():
             role,
             level
         )
+        
+        # Get AI suggestions
+        suggestions = get_ai_suggestions(role, level)
 
     except Exception as e:
 
         questions = f"""
-Question Generation Failed
+❌ Question Generation Failed
 
 Error:
 {str(e)}
 """
+        suggestions = {}
 
     return render_template(
         "interview.html",
         role=role,
-        questions=questions
+        questions=questions,
+        suggestions=suggestions
     )
 
 
@@ -280,13 +301,14 @@ def evaluate():
 
     try:
 
-        feedback = evaluate_answer(
+        feedback, score, communication = evaluate_answer(
             role,
             question,
             answer
         )
 
         session["feedback"] = feedback
+        session["score"] = score
 
         conn = get_db()
         cur = conn.cursor()
@@ -299,16 +321,20 @@ def evaluate():
                 role,
                 question,
                 answer,
-                feedback
+                feedback,
+                score,
+                communication_level
             )
-            VALUES (?,?,?,?,?)
+            VALUES (?,?,?,?,?,?,?)
             """,
             (
                 session["user_id"],
                 role,
                 question,
                 answer,
-                feedback
+                feedback,
+                score,
+                communication
             )
         )
 
@@ -317,14 +343,16 @@ def evaluate():
 
         return render_template(
             "result.html",
-            feedback=feedback
+            feedback=feedback,
+            score=score
         )
 
     except Exception as e:
 
         return render_template(
             "result.html",
-            feedback=f"Evaluation Error: {str(e)}"
+            feedback=f"❌ Evaluation Error: {str(e)}",
+            score=0
         )
 
 
@@ -377,18 +405,23 @@ def upload_resume():
         resume_text = extract_resume_text(
             filepath
         )
+        
+        # AI Analysis
+        analysis = analyze_resume_ai(resume_text)
 
     except Exception as e:
 
         resume_text = f"""
-Resume Processing Error
+❌ Resume Processing Error
 
 {str(e)}
 """
+        analysis = None
 
     return render_template(
         "resume_result.html",
-        resume_text=resume_text
+        resume_text=resume_text,
+        analysis=analysis
     )
 
 
@@ -430,6 +463,20 @@ def performance():
         "performance.html",
         records=records
     )
+
+
+# ==================================================
+# SKILL ASSESSMENT
+# ==================================================
+
+@app.route("/skill-assessment")
+def skill_assessment():
+
+    if "user_id" not in session:
+        flash("Please login first")
+        return redirect("/")
+
+    return render_template("skill_assessment.html")
 
 
 # ==================================================
