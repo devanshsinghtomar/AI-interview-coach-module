@@ -1,14 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Interview Coach Dashboard</title>
-
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
     <style>
         * {
             margin: 0;
@@ -23,6 +20,22 @@
             min-height: 100vh;
         }
 
+        .hamburger {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: linear-gradient(135deg, #10b981, #14b8a6);
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 10px 15px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+        }
+
         .sidebar {
             position: fixed;
             width: 260px;
@@ -32,6 +45,25 @@
             overflow-y: auto;
             box-shadow: 5px 0 20px rgba(0, 0, 0, 0.3);
             border-right: 2px solid #10b981;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar.active {
+            transform: translateX(0);
+        }
+
+        .sidebar-close {
+            display: none;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #ef4444;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 5px;
         }
 
         .logo {
@@ -193,24 +225,6 @@
             overflow: hidden;
         }
 
-        .action-box::before {
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(45deg, transparent 30%, rgba(251, 191, 36, 0.1) 50%, transparent 70%);
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            transition: all 0.5s;
-        }
-
-        .action-box:hover::before {
-            top: -25%;
-            left: -25%;
-        }
-
         .action-box:hover {
             transform: scale(1.05);
             box-shadow: 0 20px 50px rgba(251, 191, 36, 0.2);
@@ -265,16 +279,6 @@
             box-shadow: 0 15px 40px rgba(16, 185, 129, 0.5);
         }
 
-        .logout {
-            background: linear-gradient(135deg, #ef4444, #f97316);
-            box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3);
-        }
-
-        .logout:hover {
-            background: linear-gradient(135deg, #dc2626, #ea580c);
-            box-shadow: 0 15px 40px rgba(239, 68, 68, 0.5);
-        }
-
         .stats-row {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -304,16 +308,31 @@
         }
 
         @media(max-width: 768px) {
+            .hamburger {
+                display: block;
+            }
+
             .sidebar {
-                width: 100%;
-                height: auto;
-                position: relative;
-                margin-bottom: 20px;
+                position: fixed;
+                left: 0;
+                transform: translateX(-100%);
+                width: 260px;
+                z-index: 999;
+                height: 100vh;
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .sidebar-close {
+                display: block;
             }
 
             .main {
                 margin-left: 0;
                 padding: 20px;
+                padding-top: 80px;
             }
 
             .welcome h1 {
@@ -327,9 +346,16 @@
         }
     </style>
 </head>
-
 <body>
+    <button class="hamburger" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+
     <div class="sidebar">
+        <button class="sidebar-close" onclick="toggleSidebar()">
+            <i class="fas fa-times"></i>
+        </button>
+
         <div class="logo">
             <i class="fas fa-robot"></i>
             AI Coach
@@ -374,16 +400,16 @@
             <p>Master your interview skills with AI-powered coaching and real-time feedback</p>
             <div class="stats-row">
                 <div class="stat">
-                    <div class="stat-number">10+</div>
-                    <div class="stat-label">Practice Modes</div>
-                </div>
-                <div class="stat">
                     <div class="stat-number">500+</div>
                     <div class="stat-label">Interview Questions</div>
                 </div>
                 <div class="stat">
-                    <div class="stat-number">AI</div>
-                    <div class="stat-label">Powered Analysis</div>
+                    <div class="stat-number">6</div>
+                    <div class="stat-label">Job Domains</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">🤖</div>
+                    <div class="stat-label">AI Powered</div>
                 </div>
             </div>
         </div>
@@ -446,5 +472,29 @@
             </div>
         </div>
     </div>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('active');
+        }
+
+        // Close sidebar when clicking on a link
+        document.querySelectorAll('.menu a').forEach(link => {
+            link.addEventListener('click', () => {
+                const sidebar = document.querySelector('.sidebar');
+                sidebar.classList.remove('active');
+            });
+        });
+
+        // Close sidebar when clicking outside
+        document.addEventListener('click', (e) => {
+            const sidebar = document.querySelector('.sidebar');
+            const hamburger = document.querySelector('.hamburger');
+            if (!sidebar.contains(e.target) && !hamburger.contains(e.target)) {
+                sidebar.classList.remove('active');
+            }
+        });
+    </script>
 </body>
 </html>
