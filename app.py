@@ -506,7 +506,6 @@ def performance():
 # SKILL ASSESSMENT
 # ==================================================
 
-@app.route("/submit_skill_quiz", methods=["POST"])
 @app.route("/skill-assessment")
 def skill_assessment():
 
@@ -515,6 +514,9 @@ def skill_assessment():
         return redirect("/")
 
     return render_template("skill_assessment.html")
+
+
+@app.route("/submit_skill_quiz", methods=["POST"])
 def submit_skill_quiz():
 
     data = request.get_json()
