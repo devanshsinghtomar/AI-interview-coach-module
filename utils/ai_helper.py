@@ -127,47 +127,93 @@ ROLE_MAPPING = {
 # =====================================================
 
 def generate_questions(role, level):
+    """
+    Generate AI-powered interview questions based on role and level.
+    """
 
-    role_key = ROLE_MAPPING.get(
-        role.lower().strip(),
-        "python_developer"
-    )
+    role_key = role.lower().strip().replace(" ", "_")
 
-    bank = QUESTION_BANK[role_key]
+    role_mapping = {
+        "python": "python_developer",
+        "python_developer": "python_developer",
 
-    questions = []
+        "java": "java_developer",
+        "java_developer": "java_developer",
 
+        "javascript": "javascript_developer",
+        "javascript_developer": "javascript_developer",
+
+        "react": "javascript_developer",
+
+        "data_science": "data_scientist",
+        "data_scientist": "data_scientist",
+
+        "data_scientist": "data_scientist",
+
+        "full_stack": "full_stack_developer",
+        "full_stack_developer": "full_stack_developer",
+
+        "devops": "devops_engineer",
+        "devops_engineer": "devops_engineer"
+    }
+
+    role_key = role_mapping.get(role_key)
+
+    if role_key and role_key in QUESTION_BANK:
+        bank = QUESTION_BANK[role_key]
+    else:
+        bank = QUESTION_BANK["python_developer"]
+
+    # Question count based on level
     if level == "Beginner":
-        g, t, b = 2, 3, 2
+        general_count = 3
+        technical_count = 3
+        behavioral_count = 2
 
     elif level == "Intermediate":
-        g, t, b = 2, 4, 2
+        general_count = 2
+        technical_count = 4
+        behavioral_count = 3
 
     else:
-        g, t, b = 2, 5, 3
+        general_count = 2
+        technical_count = 5
+        behavioral_count = 3
+
+    questions = []
 
     questions.extend(
         random.sample(
             bank["general"],
-            min(g, len(bank["general"]))
+            min(general_count, len(bank["general"]))
         )
     )
 
     questions.extend(
         random.sample(
             bank["technical"],
-            min(t, len(bank["technical"]))
+            min(technical_count, len(bank["technical"]))
         )
     )
 
     questions.extend(
         random.sample(
             bank["behavioral"],
-            min(b, len(bank["behavioral"]))
+            min(behavioral_count, len(bank["behavioral"]))
         )
     )
 
-    return questions
+    formatted_questions = "\n\n".join(
+        [f"{i+1}. {q}" for i, q in enumerate(questions)]
+    )
+
+    return f"""
+🎯 AI Interview Questions ({level})
+
+Role: {role}
+
+{formatted_questions}
+"""
 
 # =====================================================
 # ANSWER EVALUATION
