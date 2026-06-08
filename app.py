@@ -407,7 +407,17 @@ def upload_resume():
         )
         
         # AI Analysis
-        analysis = analyze_resume_ai(resume_text)
+       analysis = analyze_resume_ai(resume_text)
+
+if not analysis.get("valid", True):
+
+    flash(analysis["message"])
+
+    return render_template(
+        "resume_result.html",
+        analysis=analysis,
+        resume_text=""
+    )
 
     except Exception as e:
 
