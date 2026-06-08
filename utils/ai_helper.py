@@ -47,25 +47,36 @@ def generate_questions(role, level):
     role_key = role.lower().replace(" ", "_")
 
     # Role Mapping
-    role_mapping = {
-        "python": "python_developer",
-        "python_developer": "python_developer",
+   role_key = role.lower().strip().replace(" ", "_")
 
-        "java": "java_developer",
-        "java_developer": "java_developer",
+role_mapping = {
+    "python": "python_developer",
+    "python_developer": "python_developer",
 
-        "javascript": "javascript_developer",
-        "javascript_developer": "javascript_developer",
+    "java": "java_developer",
+    "java_developer": "java_developer",
 
-        "data_science": "data_scientist",
-        "data_scientist": "data_scientist",
+    "javascript": "javascript_developer",
+    "javascript_developer": "javascript_developer",
 
-        "full_stack": "full_stack_developer",
-        "full_stack_developer": "full_stack_developer",
+    "react": "full_stack_developer",
+    "react_developer": "full_stack_developer",
 
-        "devops": "devops_engineer",
-        "devops_engineer": "devops_engineer"
-    }
+    "full_stack": "full_stack_developer",
+    "full_stack_developer": "full_stack_developer",
+
+    "data_science": "data_scientist",
+    "data_scientist": "data_scientist",
+
+    "data_analyst": "data_scientist",
+
+    "devops": "devops_engineer",
+    "devops_engineer": "devops_engineer"
+}
+
+role_key = role_mapping.get(role_key, "python_developer")
+
+bank = QUESTION_BANK[role_key]
 
     # Get correct question bank
     role_key = role_mapping.get(role_key)
