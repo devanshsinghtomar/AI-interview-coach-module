@@ -468,20 +468,29 @@ def performance():
     cur = conn.cursor()
 
     try:
-        cur.execute(
-            """
+        # Interview records
+        cur.execute("""
             SELECT *
             FROM interviews
             WHERE user_id=?
             ORDER BY id DESC
-            """,
-            (session["user_id"],)
-        )
+        """, (session["user_id"],))
 
         records = cur.fetchall()
 
+        # Skill quiz records
+        cur.execute("""
+            SELECT *
+            FROM skill_quiz_results
+            WHERE user_id=?
+            ORDER BY id DESC
+        """, (session["user_id"],))
+
+        quiz_results = cur.fetchall()
+
     except Exception as e:
         records = []
+        quiz_results = []
         flash(f"Error loading performance: {str(e)}")
 
     finally:
@@ -489,9 +498,9 @@ def performance():
 
     return render_template(
         "performance.html",
-        records=records
+        records=records,
+        quiz_results=quiz_results
     )
-
 
 # ==================================================
 # SKILL ASSESSMENT
