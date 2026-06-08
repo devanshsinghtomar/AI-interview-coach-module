@@ -347,132 +347,103 @@
     </style>
 </head>
 <body>
-    <button class="hamburger" onclick="toggleSidebar()">
-        <i class="fas fa-bars"></i>
-    </button>
 
-    <div class="sidebar">
-        <button class="sidebar-close" onclick="toggleSidebar()">
-            <i class="fas fa-times"></i>
-        </button>
+<div class="dashboard-container">
 
+    <aside class="sidebar">
         <div class="logo">
-            <i class="fas fa-robot"></i>
-            AI Coach
+            <i class="fas fa-brain"></i>
         </div>
 
-        <div class="menu">
+        <nav>
             <a href="/dashboard" class="active">
                 <i class="fas fa-home"></i>
-                Dashboard
             </a>
 
             <a href="/interview">
                 <i class="fas fa-microphone"></i>
-                Mock Interview
             </a>
 
             <a href="/resume">
                 <i class="fas fa-file-alt"></i>
-                Resume Analysis
             </a>
 
             <a href="/performance">
                 <i class="fas fa-chart-line"></i>
-                Performance
             </a>
 
             <a href="/skill-assessment">
                 <i class="fas fa-brain"></i>
-                Skill Test
             </a>
 
             <a href="/logout">
                 <i class="fas fa-sign-out-alt"></i>
-                Logout
             </a>
-        </div>
-    </div>
+        </nav>
+    </aside>
 
-    <div class="main">
-        <div class="welcome">
-            <h1>🚀 Welcome, {{ name }}!</h1>
-            <p>Master your interview skills with AI-powered coaching and real-time feedback</p>
-            <div class="stats-row">
-                <div class="stat">
-                    <div class="stat-number">500+</div>
-                    <div class="stat-label">Interview Questions</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-number">6</div>
-                    <div class="stat-label">Job Domains</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-number">🤖</div>
-                    <div class="stat-label">AI Powered</div>
-                </div>
+    <main class="content">
+
+        <div class="topbar">
+            <div>
+                <h1>Welcome Back, {{ name }}</h1>
+                <p>Track your interview preparation journey</p>
+            </div>
+
+            <button class="start-btn">
+                Start Interview
+            </button>
+        </div>
+
+        <div class="hero-card">
+            <div>
+                <span class="badge">AI Coach</span>
+                <h2>Ready for your next interview?</h2>
+                <p>Your confidence score increased by 12% this week.</p>
+            </div>
+
+            <div class="score-circle">
+                89%
             </div>
         </div>
 
-        <div class="cards">
-            <a href="/interview" class="card">
+        <div class="bento-grid">
+
+            <a href="/interview" class="box large">
                 <i class="fas fa-microphone"></i>
-                <h2>Mock Interview</h2>
-                <p>Practice with AI-generated questions</p>
+                <h3>Mock Interview</h3>
+                <p>Practice real interview scenarios.</p>
             </a>
 
-            <a href="/performance" class="card">
-                <i class="fas fa-chart-line"></i>
-                <h2>Performance</h2>
-                <p>Track your improvement journey</p>
-            </a>
-
-            <a href="/resume" class="card">
+            <a href="/resume" class="box">
                 <i class="fas fa-file-alt"></i>
-                <h2>Resume Analysis</h2>
-                <p>AI-powered resume optimization</p>
+                <h3>Resume</h3>
             </a>
 
-            <a href="/skill-assessment" class="card">
+            <a href="/skill-assessment" class="box">
                 <i class="fas fa-brain"></i>
-                <h2>Skill Assessment</h2>
-                <p>Test your technical knowledge</p>
+                <h3>Skills</h3>
             </a>
+
+            <a href="/performance" class="box">
+                <i class="fas fa-chart-line"></i>
+                <h3>Performance</h3>
+            </a>
+
+            <div class="box">
+                <h3>AI Insights</h3>
+                <p>
+                    Improve technical answers and communication.
+                </p>
+            </div>
+
         </div>
 
-        <div class="actions">
-            <div class="action-box">
-                <i class="fas fa-play-circle"></i>
-                <h3>Start Interview</h3>
-                <p>Begin your first mock interview session</p>
-                <a href="/interview" class="btn-custom">
-                    <i class="fas fa-bolt"></i>
-                    Start Now
-                </a>
-            </div>
+    </main>
 
-            <div class="action-box">
-                <i class="fas fa-file-upload"></i>
-                <h3>Analyze Resume</h3>
-                <p>Get AI insights on your resume</p>
-                <a href="/resume" class="btn-custom">
-                    <i class="fas fa-upload"></i>
-                    Upload
-                </a>
-            </div>
+</div>
 
-            <div class="action-box">
-                <i class="fas fa-trophy"></i>
-                <h3>View Progress</h3>
-                <p>See your improvement metrics</p>
-                <a href="/performance" class="btn-custom">
-                    <i class="fas fa-chart-bar"></i>
-                    View
-                </a>
-            </div>
-        </div>
-    </div>
-
+</body>
     <script>
         function toggleSidebar() {
             const sidebar = document.querySelector('.sidebar');
