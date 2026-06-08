@@ -79,31 +79,9 @@ def init_db():
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)
-    cur.execute("""
-CREATE TABLE IF NOT EXISTS skill_quiz_results(
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER,
-    skill TEXT,
-    score INTEGER,
-    total_questions INTEGER,
-    percentage REAL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
-""")
 
     cur.execute("""
     CREATE TABLE IF NOT EXISTS resume_analyses(
-    cur.execute("""
-CREATE TABLE IF NOT EXISTS skill_assessments(
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER,
-    skill TEXT,
-    score INTEGER,
-    total_questions INTEGER,
-    percentage INTEGER,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
-""")
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER,
         analysis_data TEXT,
@@ -112,9 +90,20 @@ CREATE TABLE IF NOT EXISTS skill_assessments(
     )
     """)
 
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS skill_quiz_results(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        skill TEXT,
+        score INTEGER,
+        total_questions INTEGER,
+        percentage REAL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
     conn.commit()
     conn.close()
-
 
 init_db()
 
