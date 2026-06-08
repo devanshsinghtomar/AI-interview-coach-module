@@ -500,118 +500,29 @@ def analyze_resume_ai(resume_text):
         "missing_skills": missing_skills,
         "recommendations": recommendations
     }
-def get_ai_suggestions(role, level):
-    """
-    Get AI-powered interview preparation suggestions.
-    """
-    
-    role_lower = role.lower()
-    
-    suggestions_map = {
-        "python": {
-            "key_topics": ["Data structures", "OOP concepts", "Algorithms", "Django/Flask", "Testing", "Async Programming"],
-            "common_questions": [
-                "Explain decorators in Python",
-                "What is a list comprehension?",
-                "Explain GIL in Python",
-                "What are generators?",
-                "Explain exception handling"
-            ],
-            "tips": [
-                "Practice coding problems on LeetCode",
-                "Master Python frameworks (Django/Flask)",
-                "Understand async/await programming",
-                "Know Python best practices and PEP 8"
-            ]
-        },
-        "java": {
-            "key_topics": ["OOP", "Collections", "Multithreading", "Spring Boot", "Design Patterns", "JVM"],
-            "common_questions": [
-                "Explain JVM memory management",
-                "What are Design Patterns?",
-                "Explain Spring dependency injection",
-                "What is immutability?",
-                "Explain exception handling in Java"
-            ],
-            "tips": [
-                "Master Spring Framework and annotations",
-                "Understand JVM internals and garbage collection",
-                "Practice multithreading concepts",
-                "Know common design patterns"
-            ]
-        },
-        "javascript": {
-            "key_topics": ["Async/Await", "Closures", "DOM", "React/Vue", "Event Loop", "Promises"],
-            "common_questions": [
-                "Explain event delegation",
-                "What is closure?",
-                "How does async/await work?",
-                "Explain hoisting",
-                "What is the event loop?"
-            ],
-            "tips": [
-                "Master React or Vue deeply",
-                "Understand the event loop and callbacks",
-                "Know ES6+ features and arrow functions",
-                "Practice async/promise patterns"
-            ]
-        },
-        "data science": {
-            "key_topics": ["ML Algorithms", "Statistics", "Feature Engineering", "Data Preprocessing", "Evaluation Metrics"],
-            "common_questions": [
-                "Explain supervised vs unsupervised learning",
-                "What is overfitting and regularization?",
-                "Explain cross-validation",
-                "What are evaluation metrics?",
-                "How do you handle imbalanced data?"
-            ],
-            "tips": [
-                "Learn statistics and probability well",
-                "Master popular ML libraries (scikit-learn, TensorFlow)",
-                "Understand feature engineering techniques",
-                "Practice with Kaggle competitions"
-            ]
-        },
-        "devops": {
-            "key_topics": ["Docker", "Kubernetes", "CI/CD", "Infrastructure as Code", "Cloud Platforms", "Monitoring"],
-            "common_questions": [
-                "Explain containerization and Docker",
-                "What is Kubernetes orchestration?",
-                "How do CI/CD pipelines work?",
-                "Explain infrastructure as code",
-                "What is monitoring and logging?"
-            ],
-            "tips": [
-                "Get hands-on with Docker and Kubernetes",
-                "Master at least one cloud platform (AWS/Azure/GCP)",
-                "Learn infrastructure as code tools (Terraform)",
-                "Understand CI/CD tools like Jenkins, GitLab CI"
-            ]
-        }
-    }
-    
-    # Try to find matching suggestions
-    for key, value in suggestions_map.items():
-        if key in role_lower:
-            return value
-    
-    # Default suggestions
-    return {
-    "valid": True,
-    "score": score,
-    "skills": detected_skills,
-    "strengths": strengths,
-    "weaknesses": weaknesses,
-
-    "recommendations": [
-        f"Best matched role: {recommendations['best_match']['role']}",
-        f"Detected {len(detected_skills)} technical skills",
-        "Add more quantified achievements",
-        "Include GitHub and portfolio links",
-        "Tailor resume according to target role"
+# Default suggestions
+return {
+    "key_topics": [
+        "Data Structures",
+        "Algorithms",
+        "System Design",
+        "Problem Solving",
+        "Communication Skills"
     ],
 
-    "job_matches": recommendations,
+    "common_questions": [
+        "Tell me about yourself",
+        "Describe a challenging project",
+        "What are your strengths and weaknesses?",
+        "Why should we hire you?",
+        "Where do you see yourself in 5 years?"
+    ],
 
-    "missing_skills": missing_skills
+    "tips": [
+        "Research the company before the interview",
+        "Practice explaining your projects clearly",
+        "Prepare behavioral questions using STAR method",
+        "Review fundamentals of your domain",
+        "Communicate confidently and clearly"
+    ]
 }
