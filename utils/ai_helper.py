@@ -597,23 +597,21 @@ def get_ai_suggestions(role, level):
     
     # Default suggestions
     return {
-        "key_topics": [
-            "Core fundamentals",
-            "System design",
-            "Algorithms",
-            "Problem solving",
-            "Communication"
-        ],
-        "common_questions": [
-            "Why this role?",
-            "Tell about your experience",
-            "How do you approach problems?",
-            "Describe a challenging project"
-        ],
-        "tips": [
-            "Practice problem-solving",
-            "Prepare concrete examples",
-            "Practice speaking clearly",
-            "Research the company thoroughly"
-        ]
-    }
+    "valid": True,
+    "score": score,
+    "skills": detected_skills,
+    "strengths": strengths,
+    "weaknesses": weaknesses,
+
+    "recommendations": [
+        f"Best matched role: {recommendations['best_match']['role']}",
+        f"Detected {len(detected_skills)} technical skills",
+        "Add more quantified achievements",
+        "Include GitHub and portfolio links",
+        "Tailor resume according to target role"
+    ],
+
+    "job_matches": recommendations,
+
+    "missing_skills": missing_skills
+}
