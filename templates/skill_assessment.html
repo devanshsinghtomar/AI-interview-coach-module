@@ -483,9 +483,15 @@ let currentSkill = '';
             const percentage = (current / total) * 100;
             document.getElementById('progressFill').style.width = percentage + '%';
         }
-        function submitQuiz()
+       function submitQuiz()
 {
     const quiz = quizzes[currentSkill];
+
+    if(!quiz)
+    {
+        alert("Please select a skill first");
+        return;
+    }
 
     let score = 0;
 
