@@ -1,7 +1,7 @@
 # utils/ai_helper.py
 import json
 import random
-
+from utils.job_recommendation import recommend_job_roles
 # Comprehensive question bank for multiple domains
 QUESTION_BANK = {
     "python_developer": {
@@ -309,90 +309,197 @@ def evaluate_answer(role, question, answer):
 
 def analyze_resume_ai(resume_text):
     """
-    AI-powered resume analysis with comprehensive scoring.
+    Advanced ATS Resume Analysis + Job Recommendation
     """
-    
-    analysis = {
-        "strengths": [],
-        "weaknesses": [],
-        "score": 0,
-        "recommendations": []
-    }
-    
+
     resume_lower = resume_text.lower()
-    
-    # Check for key elements
-    if any(word in resume_lower for word in ["project", "developed", "created", "built", "implemented"]):
-        analysis["strengths"].append("✅ Clear project descriptions")
-        analysis["score"] += 15
-    else:
-        analysis["weaknesses"].append("⚠️ Limited project details")
-        analysis["recommendations"].append("Add 3-4 key projects with measurable impact")
-    
-    if any(word in resume_lower for word in ["leadership", "managed", "led", "supervised", "mentored"]):
-        analysis["strengths"].append("✅ Leadership experience shown")
-        analysis["score"] += 12
-    else:
-        analysis["recommendations"].append("Highlight any leadership or mentoring experience")
-    
+
+    # =====================================================
+    # VALIDATE RESUME
+    # =====================================================
+
+    resume_sections = [
+        "education",
+        "skills",
+        "experience",
+        "projects",
+        "internship",
+        "technical skills",
+        "certification",
+        "work experience",
+        "summary",
+        "objective"
+    ]
+
+    section_count = sum(
+        1 for section in resume_sections
+        if section in resume_lower
+    )
+
+    if len(resume_text.split()) < 100:
+        return {
+            "valid": False,
+            "message": "Uploaded document is too short and does not appear to be a professional resume."
+        }
+
+    if section_count < 2:
+        return {
+            "valid": False,
+            "message": "Uploaded file does not appear to be a valid resume. Please upload a professional resume."
+        }
+
+    # =====================================================
+    # SKILL EXTRACTION
+    # =====================================================
+
+    skills_database = [
+        "python","java","c","c++","javascript",
+        "typescript","react","angular","vue",
+        "node","express","mongodb","mysql",
+        "postgresql","sql","flask","django",
+        "html","css","bootstrap","tailwind",
+        "machine learning","deep learning",
+        "nlp","tensorflow","pytorch",
+        "power bi","tableau","excel",
+        "aws","azure","gcp",
+        "docker","kubernetes",
+        "git","github","rest api",
+        "fastapi"
+    ]
+
+    detected_skills = []
+
+    for skill in skills_database:
+        if skill.lower() in resume_lower:
+            detected_skills.append(skill)
+
+    # =====================================================
+    # SCORE CALCULATION
+    # =====================================================
+
+    score = 40
+
+    # Skills
+    score += min(len(detected_skills) * 2, 20)
+
+    # Projects
+    if "project" in resume_lower:
+        score += 10
+
+    # Experience
+    if "experience" in resume_lower:
+        score += 10
+
+    # Metrics
     if any(char.isdigit() for char in resume_text):
-        analysis["strengths"].append("✅ Quantifiable achievements included")
-        analysis["score"] += 15
-    else:
-        analysis["weaknesses"].append("⚠️ Missing metrics and numbers")
-        analysis["recommendations"].append("Add specific metrics (% improvement, users reached, revenue generated)")
-    
-    # Technical skills check
-    tech_skills = ["python", "java", "javascript", "react", "node", "sql", "mongodb", "aws", "docker", "kubernetes", "git", "api", "rest", "graphql"]
-    tech_count = sum(1 for skill in tech_skills if skill in resume_lower)
-    if tech_count >= 3:
-        analysis["strengths"].append(f"✅ Strong technical skills ({tech_count} technologies mentioned)")
-        analysis["score"] += 15
-    else:
-        analysis["recommendations"].append(f"Include more technical skills (currently has {tech_count})")
-    
-    # Education check
-    if any(word in resume_lower for word in ["certification", "degree", "bachelor", "master", "diploma", "bootcamp"]):
-        analysis["strengths"].append("✅ Education and certifications included")
-        analysis["score"] += 10
-    else:
-        analysis["recommendations"].append("Highlight relevant education and certifications")
-    
-    # Length check
-    if len(resume_text) > 500:
-        analysis["strengths"].append("✅ Comprehensive resume with good detail")
-        analysis["score"] += 10
-    elif len(resume_text) > 300:
-        analysis["score"] += 5
-    else:
-        analysis["weaknesses"].append("⚠️ Resume might be too brief")
-        analysis["recommendations"].append("Expand resume with more achievements and responsibilities")
-    
-    # Achievement keywords
-    achievement_keywords = ["improved", "increased", "reduced", "optimized", "accelerated", "streamlined", "enhanced", "launched", "delivered"]
-    achievement_count = sum(1 for keyword in achievement_keywords if keyword in resume_lower)
-    if achievement_count >= 3:
-        analysis["strengths"].append("✅ Action-oriented language and achievements")
-        analysis["score"] += 12
-    else:
-        analysis["recommendations"].append("Use more action verbs (improved, increased, optimized, etc.)")
-    
-    # Ensure score doesn't exceed 100
-    analysis["score"] = min(analysis["score"] + 11, 100)
-    
-    if not analysis["weaknesses"]:
-        analysis["recommendations"] = [
-            "✅ Your resume is well-structured!",
-            "💡 Consider adding:",
-            "   • Links to GitHub or portfolio",
-            "   • Open source contributions",
-            "   • Notable achievements and awards",
-            "   • Certifications and training courses"
+        score += 10
+
+    # Education
+    if any(word in resume_lower for word in [
+        "bachelor",
+        "master",
+        "degree",
+        "b.tech",
+        "m.tech",
+        "certification"
+    ]):
+        score += 10
+
+    score = min(score, 100)
+
+    # =====================================================
+    # JOB RECOMMENDATIONS
+    # =====================================================
+
+    recommendations = recommend_job_roles(
+        resume_text,
+        detected_skills
+    )
+
+    # =====================================================
+    # STRENGTHS
+    # =====================================================
+
+    strengths = []
+
+    if len(detected_skills) >= 5:
+        strengths.append(
+            "Strong technical skill set detected."
+        )
+
+    if "project" in resume_lower:
+        strengths.append(
+            "Project experience included."
+        )
+
+    if any(char.isdigit() for char in resume_text):
+        strengths.append(
+            "Quantifiable achievements found."
+        )
+
+    if "internship" in resume_lower:
+        strengths.append(
+            "Internship experience included."
+        )
+
+    # =====================================================
+    # WEAKNESSES
+    # =====================================================
+
+    weaknesses = []
+
+    if len(detected_skills) < 3:
+        weaknesses.append(
+            "Limited technical skills detected."
+        )
+
+    if "project" not in resume_lower:
+        weaknesses.append(
+            "Projects section missing."
+        )
+
+    if "experience" not in resume_lower:
+        weaknesses.append(
+            "Professional experience section missing."
+        )
+
+    # =====================================================
+    # MISSING SKILLS
+    # =====================================================
+
+    missing_skills = []
+
+    best_role = recommendations["best_match"]["role"]
+
+    role_skills = {
+        "Python Developer": ["flask", "django", "fastapi", "docker"],
+        "Data Scientist": ["tensorflow", "pytorch", "pandas"],
+        "Frontend Developer": ["react", "typescript", "tailwind"],
+        "Backend Developer": ["docker", "aws", "sql"],
+        "DevOps Engineer": ["docker", "kubernetes", "aws"]
+    }
+
+    if best_role in role_skills:
+
+        missing_skills = [
+            skill
+            for skill in role_skills[best_role]
+            if skill not in detected_skills
         ]
-    
-    return analysis
 
+    # =====================================================
+    # RETURN
+    # =====================================================
 
+    return {
+        "valid": True,
+        "score": score,
+        "skills": detected_skills,
+        "strengths": strengths,
+        "weaknesses": weaknesses,
+        "missing_skills": missing_skills,
+        "recommendations": recommendations
+    }
 def get_ai_suggestions(role, level):
     """
     Get AI-powered interview preparation suggestions.
