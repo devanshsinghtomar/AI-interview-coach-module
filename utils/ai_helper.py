@@ -165,11 +165,34 @@ def generate_questions(role, level):
     role_key = role.lower().replace(" ", "_")
     
     # Get question bank for the role or use generic questions
-    if role_key in QUESTION_BANK:
-        bank = QUESTION_BANK[role_key]
-    else:
-        # Default to generic questions
-        bank = QUESTION_BANK.get(list(QUESTION_BANK.keys())[0])
+   role_key = role.lower().replace(" ", "_")
+
+role_mapping = {
+    "python": "python_developer",
+    "python_developer": "python_developer",
+
+    "java": "java_developer",
+    "java_developer": "java_developer",
+
+    "javascript": "javascript_developer",
+    "javascript_developer": "javascript_developer",
+
+    "data_science": "data_scientist",
+    "data_scientist": "data_scientist",
+
+    "full_stack": "full_stack_developer",
+    "full_stack_developer": "full_stack_developer",
+
+    "devops": "devops_engineer",
+    "devops_engineer": "devops_engineer"
+}
+
+role_key = role_mapping.get(role_key)
+
+if role_key:
+    bank = QUESTION_BANK[role_key]
+else:
+    bank = QUESTION_BANK["python_developer"]
     
     # Select question mix based on level
     if level == "Beginner":
