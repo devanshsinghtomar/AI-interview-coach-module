@@ -505,6 +505,49 @@ def skill_assessment():
         return redirect("/")
 
     return render_template("skill_assessment.html")
+    @app.route("/submit_skill_quiz", methods=["POST"])
+def submit_skill_quiz():
+
+    if "user_id" not in session:
+        return jsonify({"success": False})
+
+    data = request.get_json()
+
+    skill = data["skill"]
+    score = data["score"]
+    total = data["total"]
+
+    percentage = int((score / total) * 100)
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO skill_assessments
+        (
+            user_id,
+            skill,
+            score,
+            total_questions,
+            percentage
+        )
+        VALUES (?,?,?,?,?)
+    """,
+    (
+        session["user_id"],
+        skill,
+        score,
+        total,
+        percentage
+    ))
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        "success": True,
+        "percentage": percentage
+    })
 
 
 # ==================================================
