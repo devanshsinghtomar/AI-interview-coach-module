@@ -558,6 +558,9 @@ def skill_assessment():
 @app.route("/submit_skill_quiz", methods=["POST"])
 def submit_skill_quiz():
 
+    if "user_id" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+
     data = request.get_json()
 
     skill = data.get("skill")
