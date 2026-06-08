@@ -39,42 +39,95 @@ QUESTION_BANK = {
 # GENERATE QUESTIONS
 # =====================================================
 def generate_questions(role, level):
+    """
+    Generate AI-powered interview questions based on role and level.
+    """
 
+    # Normalize role
     role_key = role.lower().replace(" ", "_")
 
+    # Role Mapping
     role_mapping = {
         "python": "python_developer",
         "python_developer": "python_developer",
-        "java": "python_developer",
-        "javascript": "python_developer",
-        "data_science": "python_developer",
-        "full_stack": "python_developer",
-        "devops": "python_developer"
+
+        "java": "java_developer",
+        "java_developer": "java_developer",
+
+        "javascript": "javascript_developer",
+        "javascript_developer": "javascript_developer",
+
+        "data_science": "data_scientist",
+        "data_scientist": "data_scientist",
+
+        "full_stack": "full_stack_developer",
+        "full_stack_developer": "full_stack_developer",
+
+        "devops": "devops_engineer",
+        "devops_engineer": "devops_engineer"
     }
 
-    role_key = role_mapping.get(role_key, "python_developer")
-    bank = QUESTION_BANK[role_key]
+    # Get correct question bank
+    role_key = role_mapping.get(role_key)
 
-    if level == "Beginner":
-        g, t, b = 3, 3, 2
-    elif level == "Intermediate":
-        g, t, b = 2, 4, 3
+    if role_key:
+        bank = QUESTION_BANK[role_key]
     else:
-        g, t, b = 2, 5, 3
+        bank = QUESTION_BANK["python_developer"]
 
+    # Select question mix based on level
+    if level == "Beginner":
+        general_count = 3
+        technical_count = 3
+        behavioral_count = 2
+
+    elif level == "Intermediate":
+        general_count = 2
+        technical_count = 4
+        behavioral_count = 3
+
+    else:  # Advanced
+        general_count = 2
+        technical_count = 5
+        behavioral_count = 3
+
+    # Select random questions
     questions = []
-    questions += random.sample(bank["general"], min(g, len(bank["general"])))
-    questions += random.sample(bank["technical"], min(t, len(bank["technical"])))
-    questions += random.sample(bank["behavioral"], min(b, len(bank["behavioral"])))
 
-    formatted = "\n\n".join([f"{i+1}. {q}" for i, q in enumerate(questions)])
+    questions.extend(
+        random.sample(
+            bank["general"],
+            min(general_count, len(bank["general"]))
+        )
+    )
+
+    questions.extend(
+        random.sample(
+            bank["technical"],
+            min(technical_count, len(bank["technical"]))
+        )
+    )
+
+    questions.extend(
+        random.sample(
+            bank["behavioral"],
+            min(behavioral_count, len(bank["behavioral"]))
+        )
+    )
+
+    display_role = role.replace("_", " ").title()
+
+    formatted_questions = "\n\n".join(
+        [f"{i+1}. {q}" for i, q in enumerate(questions)]
+    )
 
     return f"""
-🎯 AI Interview Questions ({level})
+🎯 AI-Generated Interview Questions for {display_role} ({level})
 
-{formatted}
+{formatted_questions}
 
-💡 Tip: Use STAR method for behavioral questions
+---
+💡 TIP: Use the STAR method (Situation, Task, Action, Result) for behavioral questions!
 """
 
 
