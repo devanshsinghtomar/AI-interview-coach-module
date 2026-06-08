@@ -79,6 +79,17 @@ def init_db():
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)
+    cur.execute("""
+CREATE TABLE IF NOT EXISTS skill_quiz_results(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    skill TEXT,
+    score INTEGER,
+    total_questions INTEGER,
+    percentage REAL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
+""")
 
     cur.execute("""
     CREATE TABLE IF NOT EXISTS resume_analyses(
