@@ -498,6 +498,14 @@ def performance():
 # ==================================================
 
 @app.route("/submit_skill_quiz", methods=["POST"])
+@app.route("/skill-assessment")
+def skill_assessment():
+
+    if "user_id" not in session:
+        flash("Please login first")
+        return redirect("/")
+
+    return render_template("skill_assessment.html")
 def submit_skill_quiz():
 
     data = request.get_json()
