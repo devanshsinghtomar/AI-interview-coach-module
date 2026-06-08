@@ -751,15 +751,29 @@
                 </div>
 
                 <div class="recommendations">
-                    <h4>🎯 Recommendations to Improve</h4>
-                    <ul>
-                        {% for rec in analysis.recommendations %}
-                        <li>{{ rec }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                {% endif %}
-            </div>
+    <h4>🎯 Recommendations to Improve</h4>
+    <ul>
+        {% for rec in analysis.recommendations %}
+        <li>{{ rec }}</li>
+        {% endfor %}
+    </ul>
+</div>
+
+{% if analysis.missing_skills %}
+<div class="recommendations" style="margin-top:20px; border-left:4px solid #fbbf24;">
+    <h4 style="color:#fbbf24;">
+        🚀 Missing Skills For Best Match
+    </h4>
+
+    <ul>
+        {% for skill in analysis.missing_skills %}
+        <li>{{ skill }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+{% endif %}
 
             <div class="analysis-section">
                 <div class="section-title">
