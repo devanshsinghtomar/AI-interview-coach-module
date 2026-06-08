@@ -545,22 +545,162 @@ def analyze_resume_ai(resume_text):
         "recommendations": recommendations
     }
 # Default suggestions
-return {
-    "key_topics": [
-        "Data Structures",
-        "Algorithms",
-        "System Design",
-        "Problem Solving",
-        "Communication Skills"
-    ],
+def get_ai_suggestions(role, level):
+    """
+    Get interview preparation suggestions.
+    """
 
-    "common_questions": [
-        "Tell me about yourself",
-        "Describe a challenging project",
-        "What are your strengths and weaknesses?",
-        "Why should we hire you?",
-        "Where do you see yourself in 5 years?"
-    ],
+    role_lower = role.lower()
+
+    suggestions_map = {
+
+        "python": {
+            "key_topics": [
+                "Python Basics",
+                "OOP",
+                "Data Structures",
+                "Django/Flask",
+                "APIs",
+                "SQL"
+            ],
+            "common_questions": [
+                "What are decorators?",
+                "Explain list comprehension",
+                "What is GIL?",
+                "What are generators?",
+                "Difference between list and tuple?"
+            ],
+            "tips": [
+                "Practice coding daily",
+                "Build Flask or Django projects",
+                "Learn API integration",
+                "Revise OOP concepts"
+            ]
+        },
+
+        "java": {
+            "key_topics": [
+                "OOP",
+                "Collections",
+                "Spring Boot",
+                "JVM",
+                "Multithreading"
+            ],
+            "common_questions": [
+                "Explain JVM",
+                "Difference between Interface and Abstract Class",
+                "What is Spring Boot?",
+                "Explain Multithreading",
+                "What is Exception Handling?"
+            ],
+            "tips": [
+                "Practice Java coding",
+                "Learn Spring Boot",
+                "Understand JVM architecture",
+                "Revise Collections Framework"
+            ]
+        },
+
+        "javascript": {
+            "key_topics": [
+                "ES6",
+                "DOM",
+                "React",
+                "Node.js",
+                "Promises",
+                "Async/Await"
+            ],
+            "common_questions": [
+                "Explain Event Loop",
+                "What is Closure?",
+                "Difference between var let const",
+                "Explain Async Await",
+                "What is Hoisting?"
+            ],
+            "tips": [
+                "Practice React projects",
+                "Learn Node.js APIs",
+                "Understand JavaScript fundamentals",
+                "Build portfolio projects"
+            ]
+        },
+
+        "data": {
+            "key_topics": [
+                "Machine Learning",
+                "Statistics",
+                "Python",
+                "Pandas",
+                "Numpy"
+            ],
+            "common_questions": [
+                "What is Overfitting?",
+                "Explain Supervised Learning",
+                "What is PCA?",
+                "Explain Cross Validation",
+                "Difference between Regression and Classification"
+            ],
+            "tips": [
+                "Work on Kaggle projects",
+                "Practice ML algorithms",
+                "Learn statistics",
+                "Build end-to-end ML projects"
+            ]
+        },
+
+        "devops": {
+            "key_topics": [
+                "Docker",
+                "Kubernetes",
+                "AWS",
+                "CI/CD",
+                "Linux"
+            ],
+            "common_questions": [
+                "What is Docker?",
+                "What is Kubernetes?",
+                "Explain CI/CD",
+                "What is IaC?",
+                "Explain Load Balancing"
+            ],
+            "tips": [
+                "Practice Docker",
+                "Deploy projects on AWS",
+                "Learn Linux commands",
+                "Understand Kubernetes basics"
+            ]
+        }
+    }
+
+    for key, value in suggestions_map.items():
+        if key in role_lower:
+            return value
+
+    return {
+        "key_topics": [
+            "Data Structures",
+            "Algorithms",
+            "System Design",
+            "Problem Solving",
+            "Communication Skills"
+        ],
+
+        "common_questions": [
+            "Tell me about yourself",
+            "Describe a challenging project",
+            "What are your strengths and weaknesses?",
+            "Why should we hire you?",
+            "Where do you see yourself in 5 years?"
+        ],
+
+        "tips": [
+            "Research the company before the interview",
+            "Practice explaining projects clearly",
+            "Use the STAR method",
+            "Review fundamentals",
+            "Communicate confidently"
+        ]
+    }
 
     "tips": [
         "Research the company before the interview",
