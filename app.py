@@ -82,6 +82,17 @@ def init_db():
 
     cur.execute("""
     CREATE TABLE IF NOT EXISTS resume_analyses(
+    cur.execute("""
+CREATE TABLE IF NOT EXISTS skill_assessments(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    skill TEXT,
+    score INTEGER,
+    total_questions INTEGER,
+    percentage INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
+""")
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER,
         analysis_data TEXT,
