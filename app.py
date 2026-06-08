@@ -253,48 +253,87 @@ def interview():
 # GENERATE QUESTIONS
 # ==================================================
 
-@app.route("/generate_questions", methods=["POST"])
-def generate():
-
-    if "user_id" not in session:
-        flash("Please login first")
-        return redirect("/")
-
-    role = request.form.get("role", "").strip()
-    level = request.form.get("level", "Beginner")
-
-    if role == "":
-        flash("Please enter a job role")
-        return redirect("/interview")
+def generate_questions(role, level):
+    """
+    Safe AI question generator (fixed crash-proof version)
+    """
 
     try:
+        # -------------------------
+        # Normalize inputs safely
+        # -------------------------
+        role_key = (role or "").lower().strip().replace(" ", "_")
+        level = (level or "Beginner").capitalize()
 
-        questions = generate_questions(
-            role,
-            level
+        role_mapping = {
+            "python": "python_developer",
+            "python_developer": "python_developer",
+            "java": "python_developer",
+            "javascript": "python_developer",
+            "data_science": "python_developer",
+            "full_stack": "python_developer",
+            "devops": "python_developer"
+        }
+
+        role_key = role_mapping.get(role_key, "python_developer")
+
+        # -------------------------
+        # safe bank fetch
+        # -------------------------
+        bank = QUESTION_BANK.get(role_key, QUESTION_BANK["python_developer"])
+
+        # -------------------------
+        # level safe mapping
+        # -------------------------
+        if level == "Beginner":
+            g, t, b = 3, 3, 2
+        elif level == "Intermediate":
+            g, t, b = 2, 4, 3
+        else:
+            g, t, b = 2, 5, 3
+
+        # -------------------------
+        # SAFE sampling
+        # -------------------------
+        questions = []
+
+        questions += random.sample(
+            bank["general"],
+            min(g, len(bank["general"]))
         )
-        
-        # Get AI suggestions
-        suggestions = get_ai_suggestions(role, level)
+
+        questions += random.sample(
+            bank["technical"],
+            min(t, len(bank["technical"]))
+        )
+
+        questions += random.sample(
+            bank["behavioral"],
+            min(b, len(bank["behavioral"]))
+        )
+
+        formatted = "\n\n".join(
+            f"{i+1}. {q}" for i, q in enumerate(questions)
+        )
+
+        display_role = role.replace("_", " ").title()
+
+        return f"""
+🎯 AI Interview Questions for {display_role} ({level})
+
+{formatted}
+
+💡 Tip: Use STAR method for behavioral answers
+"""
 
     except Exception as e:
+        return f"""
+❌ Question generation failed safely recovered
 
-        questions = f"""
-❌ Question Generation Failed
+Error: {str(e)}
 
-Error:
-{str(e)}
+👉 Please check role/level input from frontend
 """
-        suggestions = {}
-
-    return render_template(
-        "interview.html",
-        role=role,
-        questions=questions,
-        suggestions=suggestions
-    )
-
-
 # ==================================================
 # EVALUATE ANSWER
 # ==================================================
