@@ -5,29 +5,89 @@ import random
 # =====================================================
 
 QUESTION_BANK = {
+
     "python_developer": {
         "general": [
-            "Tell me about yourself and your Python experience.",
-            "Why are you interested in this Python Developer role?",
-            "What are your key strengths as a Python developer?",
-            "Describe a challenging Python project you completed.",
-            "How do you stay updated with Python trends?"
+            "Tell me about your Python experience.",
+            "What Python projects have you built?",
+            "Why do you prefer Python?"
         ],
         "technical": [
-            "Explain the difference between list and tuple in Python.",
-            "What is a decorator in Python? Give an example.",
-            "Explain list comprehension and its advantages.",
-            "How does the GIL (Global Interpreter Lock) work?",
-            "What are generators and why use them?",
-            "Explain the difference between *args and **kwargs.",
-            "What is the difference between shallow and deep copy?",
-            "Explain async/await in Python."
+            "Explain decorators.",
+            "What is list comprehension?",
+            "Difference between tuple and list?",
+            "Explain generators.",
+            "What is GIL?",
+            "What are *args and **kwargs?"
         ],
         "behavioral": [
-            "Tell me about a time you debugged a complex Python issue.",
-            "Describe a situation where your code failed in production.",
-            "How do you approach writing maintainable code?",
-            "Tell me about your experience with code reviews."
+            "Describe a Python bug you fixed.",
+            "Tell me about a project challenge."
+        ]
+    },
+
+    "java_developer": {
+        "general": [
+            "Tell me about your Java experience.",
+            "Why do you use Java?"
+        ],
+        "technical": [
+            "What is JVM?",
+            "Difference between JDK and JRE?",
+            "Explain OOP principles.",
+            "What is Spring Boot?",
+            "Difference between HashMap and Hashtable?"
+        ],
+        "behavioral": [
+            "Describe a challenging Java project."
+        ]
+    },
+
+    "react_developer": {
+        "general": [
+            "Tell me about your React experience."
+        ],
+        "technical": [
+            "What are Hooks?",
+            "What is Virtual DOM?",
+            "Difference between state and props?",
+            "Explain useEffect.",
+            "What is Redux?"
+        ],
+        "behavioral": [
+            "Describe a frontend challenge."
+        ]
+    },
+
+    "data_scientist": {
+        "general": [
+            "Tell me about your ML experience."
+        ],
+        "technical": [
+            "What is overfitting?",
+            "Explain train-test split.",
+            "Difference between supervised and unsupervised learning.",
+            "What is random forest?",
+            "What is cross validation?"
+        ],
+        "behavioral": [
+            "Describe your best ML project."
+        ]
+    },
+
+    "devops_engineer": {
+        "general": [
+            "Tell me about your DevOps experience."
+        ],
+        "technical": [
+            "What is Docker?",
+            "What is Kubernetes?",
+            "Explain CI/CD.",
+            "Difference between containers and VMs?",
+            "What is Infrastructure as Code?"
+        ],
+        "behavioral": [
+            "Describe a deployment issue you solved."
         ]
     }
 }
@@ -37,152 +97,132 @@ QUESTION_BANK = {
 # =====================================================
 
 ROLE_MAPPING = {
+
     "python": "python_developer",
     "python_developer": "python_developer",
 
-    "java": "python_developer",
-    "java_developer": "python_developer",
+    "java": "java_developer",
+    "java_developer": "java_developer",
 
-    "javascript": "python_developer",
-    "javascript_developer": "python_developer",
+    "react": "react_developer",
+    "react_developer": "react_developer",
 
-    "react": "python_developer",
-    "react_developer": "python_developer",
+    "javascript": "react_developer",
+    "javascript_developer": "react_developer",
 
-    "full_stack": "python_developer",
-    "full_stack_developer": "python_developer",
+    "data_science": "data_scientist",
+    "data_scientist": "data_scientist",
 
-    "data_science": "python_developer",
-    "data_scientist": "python_developer",
+    "machine_learning": "data_scientist",
 
-    "data_analyst": "python_developer",
+    "devops": "devops_engineer",
+    "devops_engineer": "devops_engineer",
 
-    "devops": "python_developer",
-    "devops_engineer": "python_developer"
+    "full_stack": "react_developer",
+    "full_stack_developer": "react_developer"
 }
 
 # =====================================================
-# GENERATE QUESTIONS
+# QUESTION GENERATOR
 # =====================================================
 
 def generate_questions(role, level):
 
-    role_key = role.lower().strip().replace(" ", "_")
-    role_key = ROLE_MAPPING.get(role_key, "python_developer")
+    role_key = ROLE_MAPPING.get(
+        role.lower().strip(),
+        "python_developer"
+    )
 
     bank = QUESTION_BANK[role_key]
 
+    questions = []
+
     if level == "Beginner":
-        general_count = 3
-        technical_count = 3
-        behavioral_count = 2
+        g, t, b = 2, 3, 2
 
     elif level == "Intermediate":
-        general_count = 2
-        technical_count = 4
-        behavioral_count = 3
+        g, t, b = 2, 4, 2
 
     else:
-        general_count = 2
-        technical_count = 5
-        behavioral_count = 3
-
-    questions = []
+        g, t, b = 2, 5, 3
 
     questions.extend(
         random.sample(
             bank["general"],
-            min(general_count, len(bank["general"]))
+            min(g, len(bank["general"]))
         )
     )
 
     questions.extend(
         random.sample(
             bank["technical"],
-            min(technical_count, len(bank["technical"]))
+            min(t, len(bank["technical"]))
         )
     )
 
     questions.extend(
         random.sample(
             bank["behavioral"],
-            min(behavioral_count, len(bank["behavioral"]))
+            min(b, len(bank["behavioral"]))
         )
     )
 
-    display_role = role.replace("_", " ").title()
-
-    formatted_questions = "\n\n".join(
-        [f"{i+1}. {q}" for i, q in enumerate(questions)]
-    )
-
-    return f"""
-🎯 AI Interview Questions for {display_role} ({level})
-
-{formatted_questions}
-
-------------------------------------------------
-
-💡 TIP:
-Use the STAR Method:
-Situation → Task → Action → Result
-"""
+    return questions
 
 # =====================================================
-# EVALUATE ANSWER
+# ANSWER EVALUATION
 # =====================================================
 
 def evaluate_answer(role, question, answer):
 
-    if not answer or len(answer.strip()) < 10:
-        score = 20
+    words = len(answer.split())
+
+    if words < 15:
+        score = 30
         communication = "Poor"
 
-    elif len(answer.split()) < 20:
-        score = 40
-        communication = "Fair"
+    elif words < 40:
+        score = 55
+        communication = "Average"
 
-    elif len(answer.split()) < 50:
-        score = 65
+    elif words < 80:
+        score = 75
         communication = "Good"
 
-    elif len(answer.split()) < 100:
-        score = 80
-        communication = "Very Good"
-
-    else:
+    elif words < 150:
         score = 90
         communication = "Excellent"
 
-    suggestions = []
-
-    if "example" in answer.lower():
-        suggestions.append("Good use of examples.")
     else:
-        suggestions.append("Add real project examples.")
+        score = 95
+        communication = "Outstanding"
 
-    if any(char.isdigit() for char in answer):
-        suggestions.append("Good use of metrics.")
-    else:
-        suggestions.append("Add measurable impact and numbers.")
+    strengths = []
+
+    if "project" in answer.lower():
+        strengths.append("Project experience mentioned")
+
+    if any(ch.isdigit() for ch in answer):
+        strengths.append("Metrics included")
+
+    if not strengths:
+        strengths.append("Answer addresses question")
 
     feedback = f"""
-AI FEEDBACK REPORT
-==============================
-
 Question:
 {question}
 
-Answer:
-{answer}
-
-Score: {score}/100
+Score:
+{score}/100
 
 Communication:
 {communication}
 
+Strengths:
+{', '.join(strengths)}
+
 Suggestions:
-- {' '.join(suggestions)}
+Use STAR Method and include project examples.
 """
 
     return feedback, score, communication
@@ -193,50 +233,136 @@ Suggestions:
 
 def analyze_resume_ai(resume_text):
 
-    resume_lower = resume_text.lower()
+    text = resume_text.lower()
 
-    if len(resume_text.split()) < 100:
-        return {
-            "valid": False,
-            "message": "Resume too short"
-        }
-
-    detected_skills = []
-
-    skills = [
-        "python",
-        "java",
-        "sql",
-        "react",
-        "docker",
-        "flask",
-        "django"
+    sections = [
+        "education",
+        "experience",
+        "skills",
+        "projects",
+        "internship",
+        "summary",
+        "profile"
     ]
 
-    for skill in skills:
-        if skill in resume_lower:
+    section_count = sum(
+        1 for s in sections
+        if s in text
+    )
+
+    if len(resume_text.split()) < 120 or section_count < 3:
+
+        return {
+            "valid": False,
+            "message": "Uploaded file does not appear to be a professional resume."
+        }
+
+    skill_map = {
+
+        "python": [
+            "Python Developer",
+            "Backend Developer",
+            "Django Developer",
+            "Flask Developer"
+        ],
+
+        "java": [
+            "Java Developer",
+            "Spring Boot Developer",
+            "Backend Engineer"
+        ],
+
+        "react": [
+            "React Developer",
+            "Frontend Developer",
+            "UI Engineer"
+        ],
+
+        "javascript": [
+            "JavaScript Developer",
+            "Frontend Developer"
+        ],
+
+        "sql": [
+            "Data Analyst",
+            "Database Developer"
+        ],
+
+        "machine learning": [
+            "ML Engineer",
+            "AI Engineer",
+            "Data Scientist"
+        ],
+
+        "docker": [
+            "DevOps Engineer"
+        ],
+
+        "aws": [
+            "Cloud Engineer",
+            "DevOps Engineer"
+        ]
+    }
+
+    detected_skills = []
+    roles = []
+
+    for skill, role_list in skill_map.items():
+
+        if skill in text:
+
             detected_skills.append(skill)
 
-    score = min(50 + len(detected_skills) * 7, 100)
+            roles.extend(role_list)
+
+    roles = list(set(roles))
+
+    score = min(
+        60 + len(detected_skills) * 5,
+        100
+    )
 
     return {
+
         "valid": True,
+
         "score": score,
+
         "skills": detected_skills,
+
         "strengths": [
-            "Good technical keywords",
-            "Relevant skill coverage"
+            "Resume structure detected",
+            "Technical skills identified",
+            "Relevant keywords present"
         ],
-        "weaknesses": [],
+
+        "weaknesses": [] if len(detected_skills) >= 3 else [
+            "Add more technical skills",
+            "Include more project details"
+        ],
+
         "missing_skills": [
-            "REST APIs",
             "Git",
+            "REST API",
             "Testing"
         ],
+
+        "recommended_roles": roles,
+
         "recommendations": {
             "best_match": {
-                "role": "Python Developer"
-            }
+                "role": roles[0] if roles else "Software Engineer",
+                "match_percentage": score,
+                "description": "Based on detected skills and experience."
+            },
+            "top_roles": [
+                {
+                    "role": role,
+                    "match_percentage": max(score - i * 5, 60),
+                    "description": "Recommended from resume skills."
+                }
+                for i, role in enumerate(roles[:5])
+            ]
         }
     }
 
@@ -246,57 +372,21 @@ def analyze_resume_ai(resume_text):
 
 def get_ai_suggestions(role, level):
 
-    role_lower = role.lower()
-
-    if "python" in role_lower:
-        return {
-            "key_topics": [
-                "Python",
-                "OOP",
-                "Flask",
-                "Django",
-                "SQL"
-            ],
-            "common_questions": [
-                "What is OOP?",
-                "What are decorators?",
-                "What is Flask?"
-            ],
-            "tips": [
-                "Practice coding daily",
-                "Build projects",
-                "Revise Python fundamentals"
-            ]
-        }
-
-    if "java" in role_lower:
-        return {
-            "key_topics": [
-                "Java",
-                "JVM",
-                "Spring Boot"
-            ],
-            "common_questions": [
-                "Explain JVM",
-                "What is Spring Boot?"
-            ],
-            "tips": [
-                "Practice Java coding",
-                "Learn Spring Framework"
-            ]
-        }
-
     return {
         "key_topics": [
-            "DSA",
-            "System Design",
-            "Communication"
+            "Communication",
+            "Problem Solving",
+            "Projects",
+            "Technical Concepts"
         ],
         "common_questions": [
-            "Tell me about yourself"
+            "Tell me about yourself",
+            "Describe a project",
+            "What challenges did you face?"
         ],
         "tips": [
-            "Practice daily",
-            "Improve communication skills"
+            "Use STAR method",
+            "Give real examples",
+            "Include measurable impact"
         ]
     }
