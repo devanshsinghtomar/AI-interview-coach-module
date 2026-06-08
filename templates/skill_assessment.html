@@ -355,36 +355,66 @@
                     correct: 1
                 }
             ],
-            javascript: [
-                {
-                    question: "What will console.log(typeof NaN) return?",
-                    options: ["'nan'", "'number'", "'undefined'", "'null'"],
-                    correct: 1
-                },
-                {
-                    question: "What is the difference between let and var?",
-                    options: ["No difference", "let is block-scoped, var is function-scoped", "var is newer", "let is faster"],
-                    correct: 1
-                },
-                {
-                    question: "What does the arrow function do?",
-                    options: ["Creates a loop", "Provides a shorter syntax for functions", "Creates variables", "None of the above"],
-                    correct: 1
-                },
-                {
-                    question: "What is closure in JavaScript?",
-                    options: ["A loop", "A function with access to outer scope", "A data type", "An error handler"],
-                    correct: 1
-                },
-                {
-                    question: "What is async/await used for?",
-                    options: ["Creating variables", "Handling asynchronous operations", "Creating loops", "None"],
-                    correct: 1
-                }
-            ]
-        };
+            java: [
+{
+    question: "Which keyword is used to inherit a class in Java?",
+    options: ["implements","inherits","extends","super"],
+    correct: 2
+},
+{
+    question: "Which JVM component executes bytecode?",
+    options: ["Compiler","Interpreter","Editor","Debugger"],
+    correct: 1
+},
+{
+    question: "Java is?",
+    options: ["Platform Independent","Platform Dependent","OS","Database"],
+    correct: 0
+},
+{
+    question: "Which collection allows duplicate values?",
+    options: ["Set","HashSet","List","TreeSet"],
+    correct: 2
+},
+{
+    question: "Which method is entry point of Java?",
+    options: ["run()","start()","main()","execute()"],
+    correct: 2
+}
+],
 
+react: [
+{
+    question: "React is developed by?",
+    options: ["Google","Facebook","Microsoft","Amazon"],
+    correct: 1
+},
+{
+    question: "React uses?",
+    options: ["Virtual DOM","Real DOM","XML","SQL"],
+    correct: 0
+},
+{
+    question: "Which hook manages state?",
+    options: ["useEffect","useState","useRef","useMemo"],
+    correct: 1
+},
+{
+    question: "JSX stands for?",
+    options: ["Java Syntax Extension","JavaScript XML","JSON XML","None"],
+    correct: 1
+},
+{
+    question: "Props are?",
+    options: ["Immutable","Mutable","Database","API"],
+    correct: 0
+}
+]
+        };
+let currentSkill = '';
         function startQuiz(skill) {
+
+    currentSkill = skill;
             document.getElementById('skillsContainer').style.display = 'none';
             document.getElementById('quizContainer').classList.add('active');
             
@@ -416,12 +446,80 @@
             const percentage = (current / total) * 100;
             document.getElementById('progressFill').style.width = percentage + '%';
         }
+        function submitQuiz()
+{
+    const quiz = quizzes[currentSkill];
 
-        function submitQuiz() {
-            alert('✅ Quiz submitted! Your score will be calculated and added to your performance.');
-            document.getElementById('quizContainer').classList.remove('active');
-            document.getElementById('skillsContainer').style.display = 'grid';
+    let score = 0;
+
+    quiz.forEach((q,index)=>
+    {
+        const selected =
+        document.querySelector(
+        `input[name="q${index}"]:checked`
+        );
+
+        if(selected)
+        {
+            const answer =
+            parseInt(selected.value);
+
+            if(answer === q.correct)
+            {
+                score++;
+
+                selected.parentElement.style.border =
+                "2px solid #22c55e";
+            }
+            else
+            {
+                selected.parentElement.style.border =
+                "2px solid red";
+
+                const correctOption =
+                document.querySelector(
+                `input[name="q${index}"][value="${q.correct}"]`
+                );
+
+                if(correctOption)
+                {
+                    correctOption.parentElement.style.border =
+                    "2px solid #22c55e";
+                }
+            }
         }
+    });
+
+    fetch('/submit_skill_quiz',
+    {
+        method:'POST',
+
+        headers:
+        {
+            'Content-Type':'application/json'
+        },
+
+        body:JSON.stringify(
+        {
+            skill:currentSkill,
+            score:score,
+            total:quiz.length
+        })
+    })
+    .then(res=>res.json())
+    .then(data=>
+    {
+        alert(
+        `Quiz Completed!\n\nScore: ${score}/${quiz.length}\nPercentage: ${data.percentage}%`
+        );
+
+        setTimeout(() => {
+            location.href='/performance';
+        },1500);
+    });
+}
+
+        
     </script>
 </body>
 </html>
