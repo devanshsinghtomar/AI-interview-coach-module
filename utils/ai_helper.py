@@ -160,66 +160,87 @@ def generate_questions(role, level):
     """
     Generate AI-powered interview questions based on role and level.
     """
-    
+
     # Normalize role
     role_key = role.lower().replace(" ", "_")
-    
-    # Get question bank for the role or use generic questions
-   role_key = role.lower().replace(" ", "_")
 
-role_mapping = {
-    "python": "python_developer",
-    "python_developer": "python_developer",
+    # Role Mapping
+    role_mapping = {
+        "python": "python_developer",
+        "python_developer": "python_developer",
 
-    "java": "java_developer",
-    "java_developer": "java_developer",
+        "java": "java_developer",
+        "java_developer": "java_developer",
 
-    "javascript": "javascript_developer",
-    "javascript_developer": "javascript_developer",
+        "javascript": "javascript_developer",
+        "javascript_developer": "javascript_developer",
 
-    "data_science": "data_scientist",
-    "data_scientist": "data_scientist",
+        "data_science": "data_scientist",
+        "data_scientist": "data_scientist",
 
-    "full_stack": "full_stack_developer",
-    "full_stack_developer": "full_stack_developer",
+        "full_stack": "full_stack_developer",
+        "full_stack_developer": "full_stack_developer",
 
-    "devops": "devops_engineer",
-    "devops_engineer": "devops_engineer"
-}
+        "devops": "devops_engineer",
+        "devops_engineer": "devops_engineer"
+    }
 
-role_key = role_mapping.get(role_key)
+    # Get correct question bank
+    role_key = role_mapping.get(role_key)
 
-if role_key:
-    bank = QUESTION_BANK[role_key]
-else:
-    bank = QUESTION_BANK["python_developer"]
-    
+    if role_key:
+        bank = QUESTION_BANK[role_key]
+    else:
+        bank = QUESTION_BANK["python_developer"]
+
     # Select question mix based on level
     if level == "Beginner":
         general_count = 3
         technical_count = 3
         behavioral_count = 2
+
     elif level == "Intermediate":
         general_count = 2
         technical_count = 4
         behavioral_count = 3
+
     else:  # Advanced
         general_count = 2
         technical_count = 5
         behavioral_count = 3
-    
+
     # Select random questions
     questions = []
-    questions.extend(random.sample(bank["general"], min(general_count, len(bank["general"]))))
-    questions.extend(random.sample(bank["technical"], min(technical_count, len(bank["technical"]))))
-    questions.extend(random.sample(bank["behavioral"], min(behavioral_count, len(bank["behavioral"]))))
-    
+
+    questions.extend(
+        random.sample(
+            bank["general"],
+            min(general_count, len(bank["general"]))
+        )
+    )
+
+    questions.extend(
+        random.sample(
+            bank["technical"],
+            min(technical_count, len(bank["technical"]))
+        )
+    )
+
+    questions.extend(
+        random.sample(
+            bank["behavioral"],
+            min(behavioral_count, len(bank["behavioral"]))
+        )
+    )
+
+    display_role = role.replace("_", " ").title()
+
     formatted_questions = "\n\n".join(
         [f"{i+1}. {q}" for i, q in enumerate(questions)]
     )
-    
+
     return f"""
-🎯 AI-Generated Interview Questions for {role.title()} ({level})
+🎯 AI-Generated Interview Questions for {display_role} ({level})
 
 {formatted_questions}
 
