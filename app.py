@@ -497,43 +497,25 @@ def performance():
 # SKILL ASSESSMENT
 # ==================================================
 
-@app.route("/skill-assessment")
-def skill_assessment():
-
-    if "user_id" not in session:
-        flash("Please login first")
-        return redirect("/")
-
-    return render_template("skill_assessment.html")
-    @app.route("/submit_skill_quiz", methods=["POST"])
+@app.route("/submit_skill_quiz", methods=["POST"])
 def submit_skill_quiz():
-
-    if "user_id" not in session:
-        return jsonify({"success": False})
 
     data = request.get_json()
 
-    skill = data["skill"]
-    score = data["score"]
-    total = data["total"]
+    skill = data.get("skill")
+    score = data.get("score")
+    total = data.get("total")
 
-    percentage = int((score / total) * 100)
+    percentage = round((score / total) * 100, 2)
 
     conn = get_db()
     cur = conn.cursor()
 
     cur.execute("""
-        INSERT INTO skill_assessments
-        (
-            user_id,
-            skill,
-            score,
-            total_questions,
-            percentage
-        )
-        VALUES (?,?,?,?,?)
-    """,
-    (
+        INSERT INTO skill_quiz_results
+        (user_id, skill, score, total_questions, percentage)
+        VALUES (?, ?, ?, ?, ?)
+    """, (
         session["user_id"],
         skill,
         score,
@@ -548,8 +530,6 @@ def submit_skill_quiz():
         "success": True,
         "percentage": percentage
     })
-
-
 # ==================================================
 # DOWNLOAD REPORT
 # ==================================================
