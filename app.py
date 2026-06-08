@@ -382,14 +382,12 @@ def upload_resume():
         return redirect("/")
 
     if "resume" not in request.files:
-
         flash("No file selected")
         return redirect("/resume")
 
     resume = request.files["resume"]
 
     if resume.filename == "":
-
         flash("Please select a resume file")
         return redirect("/resume")
 
@@ -402,39 +400,48 @@ def upload_resume():
 
     try:
 
-        resume_text = extract_resume_text(
-            filepath
-        )
-        
-        # AI Analysis
-       analysis = analyze_resume_ai(resume_text)
+        resume_text = extract_resume_text(filepath)
 
-if not analysis.get("valid", True):
+        analysis = analyze_resume_ai(resume_text)
 
-    flash(analysis["message"])
+        if not analysis.get("valid", True):
 
-    return render_template(
-        "resume_result.html",
-        analysis=analysis,
-        resume_text=""
-    )
+            flash(analysis["message"])
+
+            return render_template(
+                "resume_result.html",
+                resume_text="",
+                analysis={
+                    "score": 0,
+                    "strengths": [],
+                    "weaknesses": [],
+                    "recommendations": [analysis["message"]]
+                },
+                recommendations=None
+            )
+
+        recommendations = analysis["recommendations"]
 
     except Exception as e:
 
-        resume_text = f"""
-❌ Resume Processing Error
-
-{str(e)}
-"""
-        analysis = None
+        return render_template(
+            "resume_result.html",
+            resume_text="",
+            analysis={
+                "score": 0,
+                "strengths": [],
+                "weaknesses": [str(e)],
+                "recommendations": [str(e)]
+            },
+            recommendations=None
+        )
 
     return render_template(
         "resume_result.html",
         resume_text=resume_text,
-        analysis=analysis
+        analysis=analysis,
+        recommendations=recommendations
     )
-
-
 # ==================================================
 # PERFORMANCE
 # ==================================================
