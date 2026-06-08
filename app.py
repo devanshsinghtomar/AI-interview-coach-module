@@ -266,14 +266,24 @@ def generate_questions(role, level):
         level = (level or "Beginner").capitalize()
 
         role_mapping = {
-            "python": "python_developer",
-            "python_developer": "python_developer",
-            "java": "python_developer",
-            "javascript": "python_developer",
-            "data_science": "python_developer",
-            "full_stack": "python_developer",
-            "devops": "python_developer"
-        }
+    "python": "python_developer",
+    "python_developer": "python_developer",
+
+    "java": "java_developer",
+    "java_developer": "java_developer",
+
+    "javascript": "javascript_developer",
+    "javascript_developer": "javascript_developer",
+
+    "data_science": "data_scientist",
+    "data_scientist": "data_scientist",
+
+    "full_stack": "full_stack_developer",
+    "full_stack_developer": "full_stack_developer",
+
+    "devops": "devops_engineer",
+    "devops_engineer": "devops_engineer"
+}
 
         role_key = role_mapping.get(role_key, "python_developer")
 
