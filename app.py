@@ -229,13 +229,6 @@ def dashboard():
         flash("Please login first")
         return redirect("/")
 
-    @app.route("/dashboard")
-def dashboard():
-
-    if "user_id" not in session:
-        flash("Please login first")
-        return redirect("/")
-
     conn = get_db()
     cur = conn.cursor()
 
@@ -280,7 +273,6 @@ def dashboard():
     )
 
     row = cur.fetchone()
-
     resume_score = row["score"] if row else 0
 
     conn.close()
@@ -293,72 +285,6 @@ def dashboard():
         resume_score=resume_score,
         quiz_count=quiz_count
     )
-
-from flask import jsonify
-
-@app.route("/api/quiz/<skill>")
-def get_quiz(skill):
-
-    quiz_data = {
-        "python": [
-            {
-                "question": "What is Python?",
-                "options": [
-                    "Programming Language",
-                    "Database",
-                    "Browser",
-                    "Operating System"
-                ],
-                "answer": 0
-            },
-            {
-                "question": "Which keyword creates a function?",
-                "options": [
-                    "func",
-                    "create",
-                    "def",
-                    "lambda"
-                ],
-                "answer": 2
-            }
-        ],
-
-        "sql": [
-            {
-                "question": "Which clause filters records?",
-                "options": [
-                    "GROUP BY",
-                    "ORDER BY",
-                    "WHERE",
-                    "LIMIT"
-                ],
-                "answer": 2
-            }
-        ]
-    }
-
-    return jsonify({
-        "questions": quiz_data.get(skill, [])
-    })
-
-from flask import request
-
-@app.route("/submit_quiz", methods=["POST"])
-def submit_quiz():
-
-    data = request.get_json()
-
-    score = data.get("score")
-
-    print("Quiz Score:", score)
-
-    # Save to database here
-
-    return jsonify({
-        "success": True
-    })
-
-
 # ==================================================
 # INTERVIEW PAGE
 # ==================================================
@@ -370,7 +296,7 @@ def interview():
         flash("Please login first")
         return redirect("/")
 
-    return render_template("index.html")
+   return render_template("interview.html")
 
 # ==================================================
 # GENERATE QUESTIONS ROUTE
@@ -678,6 +604,18 @@ def upload_resume():
             "resume_analysis.html",
             analysis=None
         )
+
+@app.route("/resume-analysis")
+def resume_analysis():
+
+    if "user_id" not in session:
+        flash("Please login first")
+        return redirect("/")
+
+    return render_template(
+        "resume_analysis.html",
+        analysis=None
+    )
 # ==================================================
 # PERFORMANCE
 # ==================================================
@@ -693,74 +631,61 @@ def performance():
     cur = conn.cursor()
 
     try:
-        # Interview records
+
         cur.execute("""
             SELECT *
             FROM interviews
             WHERE user_id=?
             ORDER BY id DESC
         """, (session["user_id"],))
-
         records = cur.fetchall()
 
-        # Skill quiz records
         cur.execute("""
             SELECT *
             FROM skill_quiz_results
             WHERE user_id=?
             ORDER BY id DESC
         """, (session["user_id"],))
-
         quiz_results = cur.fetchall()
 
     except Exception as e:
+
         records = []
         quiz_results = []
         flash(f"Error loading performance: {str(e)}")
 
-    finally:
-        conn.close()
-
     average_score = 0
-resume_score = 0
 
-if records:
-    average_score = round(
-        sum(r["score"] for r in records)
-        / len(records)
+    if records:
+        average_score = round(
+            sum(r["score"] for r in records) / len(records)
+        )
+
+    cur.execute(
+        """
+        SELECT score
+        FROM resume_analyses
+        WHERE user_id=?
+        ORDER BY id DESC
+        LIMIT 1
+        """,
+        (session["user_id"],)
     )
 
-conn = get_db()
-cur = conn.cursor()
+    row = cur.fetchone()
+    resume_score = row["score"] if row else 0
 
-cur.execute(
-    """
-    SELECT score
-    FROM resume_analyses
-    WHERE user_id=?
-    ORDER BY id DESC
-    LIMIT 1
-    """,
-    (session["user_id"],)
-)
+    conn.close()
 
-row = cur.fetchone()
-
-if row:
-    resume_score = row["score"]
-
-conn.close()
-
-return render_template(
-    "performance.html",
-    records=records,
-    quiz_results=quiz_results,
-    total_interviews=len(records),
-    total_quizzes=len(quiz_results),
-    average_score=average_score,
-    resume_score=resume_score
-)
-
+    return render_template(
+        "performance.html",
+        records=records,
+        quiz_results=quiz_results,
+        total_interviews=len(records),
+        total_quizzes=len(quiz_results),
+        average_score=average_score,
+        resume_score=resume_score
+    )
 # ==================================================
 # SKILL ASSESSMENT
 # ==================================================
