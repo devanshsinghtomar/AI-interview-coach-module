@@ -229,9 +229,69 @@ def dashboard():
         flash("Please login first")
         return redirect("/")
 
+    @app.route("/dashboard")
+def dashboard():
+
+    if "user_id" not in session:
+        flash("Please login first")
+        return redirect("/")
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute(
+        "SELECT COUNT(*) FROM interviews WHERE user_id=?",
+        (session["user_id"],)
+    )
+    total_interviews = cur.fetchone()[0]
+
+    cur.execute(
+        """
+        SELECT AVG(score)
+        FROM interviews
+        WHERE user_id=?
+        """,
+        (session["user_id"],)
+    )
+
+    avg = cur.fetchone()[0]
+    average_score = round(avg or 0)
+
+    cur.execute(
+        """
+        SELECT COUNT(*)
+        FROM skill_quiz_results
+        WHERE user_id=?
+        """,
+        (session["user_id"],)
+    )
+
+    quiz_count = cur.fetchone()[0]
+
+    cur.execute(
+        """
+        SELECT score
+        FROM resume_analyses
+        WHERE user_id=?
+        ORDER BY id DESC
+        LIMIT 1
+        """,
+        (session["user_id"],)
+    )
+
+    row = cur.fetchone()
+
+    resume_score = row["score"] if row else 0
+
+    conn.close()
+
     return render_template(
         "dashboard.html",
-        name=session.get("name", "User")
+        name=session.get("name", "User"),
+        total_interviews=total_interviews,
+        average_score=average_score,
+        resume_score=resume_score,
+        quiz_count=quiz_count
     )
 
 from flask import jsonify
