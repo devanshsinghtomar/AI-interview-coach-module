@@ -291,12 +291,11 @@ def dashboard():
 
 @app.route("/interview")
 def interview():
-
     if "user_id" not in session:
         flash("Please login first")
         return redirect("/")
 
-   return render_template("interview.html")
+    return render_template("interview.html")
 
 # ==================================================
 # GENERATE QUESTIONS ROUTE
@@ -318,7 +317,6 @@ def generate_questions_route():
         "interview.html",
         questions=questions
     )
-
 
 # ==================================================
 # GENERATE QUESTIONS
