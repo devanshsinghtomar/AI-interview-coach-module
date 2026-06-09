@@ -372,6 +372,27 @@ def interview():
 
     return render_template("index.html")
 
+# ==================================================
+# GENERATE QUESTIONS ROUTE
+# ==================================================
+
+@app.route("/generate_questions", methods=["POST"])
+def generate_questions_route():
+
+    if "user_id" not in session:
+        flash("Please login first")
+        return redirect("/")
+
+    role = request.form.get("role")
+    level = request.form.get("level")
+
+    questions = generate_questions(role, level)
+
+    return render_template(
+        "interview.html",
+        questions=questions
+    )
+
 
 # ==================================================
 # GENERATE QUESTIONS
