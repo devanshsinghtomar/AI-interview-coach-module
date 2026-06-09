@@ -700,11 +700,45 @@ def performance():
     finally:
         conn.close()
 
-    return render_template(
-        "performance.html",
-        records=records,
-        quiz_results=quiz_results
+    average_score = 0
+resume_score = 0
+
+if records:
+    average_score = round(
+        sum(r["score"] for r in records)
+        / len(records)
     )
+
+conn = get_db()
+cur = conn.cursor()
+
+cur.execute(
+    """
+    SELECT score
+    FROM resume_analyses
+    WHERE user_id=?
+    ORDER BY id DESC
+    LIMIT 1
+    """,
+    (session["user_id"],)
+)
+
+row = cur.fetchone()
+
+if row:
+    resume_score = row["score"]
+
+conn.close()
+
+return render_template(
+    "performance.html",
+    records=records,
+    quiz_results=quiz_results,
+    total_interviews=len(records),
+    total_quizzes=len(quiz_results),
+    average_score=average_score,
+    resume_score=resume_score
+)
 
 # ==================================================
 # SKILL ASSESSMENT
