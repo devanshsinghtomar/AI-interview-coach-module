@@ -566,6 +566,51 @@ def upload_resume():
         analysis=analysis,
         recommendations=recommendations
     )
+    @app.route("/resume-analysis", methods=["GET"])
+def resume_analysis_page():
+
+    if "user_id" not in session:
+        flash("Please login first")
+        return redirect("/")
+
+    analysis = {
+        "ats_score": 84,
+        "keyword_match": 78,
+        "readability": 91,
+
+        "skills": [
+            "Python",
+            "Flask",
+            "SQL",
+            "Machine Learning"
+        ],
+
+        "matched_keywords": [
+            "Python",
+            "REST API",
+            "Git"
+        ],
+
+        "missing_keywords": [
+            "Docker",
+            "AWS"
+        ],
+
+        "recommendations": [
+            "Add quantified achievements",
+            "Include Docker projects",
+            "Highlight leadership experience"
+        ],
+
+        "summary": "Strong Python developer profile with backend experience.",
+
+        "report_url": "/download_report"
+    }
+
+    return render_template(
+        "resume_analysis.html",
+        analysis=analysis
+    )
 # ==================================================
 # PERFORMANCE
 # ==================================================
