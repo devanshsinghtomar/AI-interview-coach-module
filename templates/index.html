@@ -1,333 +1,302 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Interview Setup</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<title>InterviewAI</title>
 
-    <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
-    <style>
-        *{
-            margin:0;
-            padding:0;
-            box-sizing:border-box;
-            font-family:'Poppins',sans-serif;
-        }
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-        body{
-            min-height:100vh;
-            background:#0f172a;
-            display:flex;
-            justify-content:center;
-            align-items:center;
-            padding:20px;
-        }
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 
-        .container{
-            width:100%;
-            max-width:900px;
-        }
-
-        .card{
-            background:#1e293b;
-            border-radius:25px;
-            padding:40px;
-            box-shadow:0 15px 40px rgba(0,0,0,.3);
-        }
-
-        .header{
-            text-align:center;
-            margin-bottom:35px;
-        }
-
-        .header h1{
-            color:white;
-            font-size:38px;
-            margin-bottom:10px;
-        }
-
-        .header p{
-            color:#94a3b8;
-            font-size:16px;
-        }
-
-        .features{
-            display:grid;
-            grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-            gap:20px;
-            margin-bottom:35px;
-        }
-
-        .feature{
-            background:#0f172a;
-            padding:20px;
-            border-radius:15px;
-            text-align:center;
-            transition:.3s;
-        }
-
-        .feature:hover{
-            transform:translateY(-5px);
-        }
-
-        .feature i{
-            font-size:35px;
-            color:#6366f1;
-            margin-bottom:10px;
-        }
-
-        .feature h4{
-            color:white;
-            margin-bottom:8px;
-        }
-
-        .feature p{
-            color:#94a3b8;
-            font-size:14px;
-        }
-
-        label{
-            color:white;
-            font-weight:500;
-            margin-bottom:8px;
-            display:block;
-        }
-
-        .form-control{
-            width:100%;
-            padding:14px;
-            border:none;
-            border-radius:12px;
-            background:#334155;
-            color:white;
-            margin-bottom:20px;
-            outline:none;
-        }
-
-        .form-control:focus{
-            border:2px solid #6366f1;
-        }
-
-        select{
-            appearance:none;
-        }
-
-        .btn-generate{
-            width:100%;
-            padding:15px;
-            border:none;
-            border-radius:12px;
-            background:linear-gradient(135deg,#6366f1,#8b5cf6);
-            color:white;
-            font-size:16px;
-            font-weight:600;
-            cursor:pointer;
-            transition:.3s;
-        }
-
-        .btn-generate:hover{
-            transform:translateY(-3px);
-            box-shadow:0 10px 25px rgba(99,102,241,.4);
-        }
-
-        .bottom-links{
-            display:flex;
-            justify-content:center;
-            margin-top:20px;
-        }
-
-        .back-btn{
-            text-decoration:none;
-            color:white;
-            background:#334155;
-            padding:12px 25px;
-            border-radius:12px;
-            transition:.3s;
-        }
-
-        .back-btn:hover{
-            background:#475569;
-        }
-
-        .stats{
-            display:grid;
-            grid-template-columns:repeat(3,1fr);
-            gap:20px;
-            margin-bottom:30px;
-        }
-
-        .stat-card{
-            background:#0f172a;
-            padding:20px;
-            border-radius:15px;
-            text-align:center;
-        }
-
-        .stat-card h2{
-            color:#6366f1;
-            font-size:28px;
-        }
-
-        .stat-card p{
-            color:#94a3b8;
-            margin-top:5px;
-        }
-
-        @media(max-width:768px){
-
-            .stats{
-                grid-template-columns:1fr;
-            }
-
-            .features{
-                grid-template-columns:1fr;
-            }
-
-            .card{
-                padding:25px;
-            }
-
-            .header h1{
-                font-size:30px;
-            }
-        }
-    </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 </head>
 
 <body>
 
-<div class="container">
+<div class="cursor-glow"></div>
 
-    <div class="card">
+<!-- NAVBAR -->
 
-        <div class="header">
-            <h1>
-                <i class="fas fa-microphone"></i>
-                AI Interview Setup
-            </h1>
+<nav class="navbar">
 
-            <p>
-                Generate personalized interview questions powered by AI
-            </p>
-        </div>
+<div class="logo">
+INTERVIEW<span>AI</span>
+</div>
 
-        <div class="stats">
+<ul class="nav-links">
+<li><a href="#features">Features</a></li>
+<li><a href="#how-it-works">How It Works</a></li>
+<li><a href="#pricing">Pricing</a></li>
+</ul>
 
-            <div class="stat-card">
-                <h2>100+</h2>
-                <p>Interview Questions</p>
-            </div>
+<div class="nav-buttons">
+<a href="/login" class="login-btn">Log In</a>
+<a href="/signup" class="primary-btn">Start Free</a>
+</div>
 
-            <div class="stat-card">
-                <h2>AI</h2>
-                <p>Powered Evaluation</p>
-            </div>
+</nav>
 
-            <div class="stat-card">
-                <h2>24/7</h2>
-                <p>Practice Anytime</p>
-            </div>
+<!-- HERO -->
 
-        </div>
+<section class="hero">
 
-        <div class="features">
+<div class="hero-left">
 
-            <div class="features">
+<div class="hero-badge">
+AI-POWERED INTERVIEW COACHING
+</div>
 
-    <a href="/generate_questions" class="feature" style="text-decoration:none;">
-        <i class="fas fa-brain"></i>
-        <h4>AI Questions</h4>
-        <p>Generate role-specific interview questions</p>
-    </a>
+<h1>
+ACE <span>EVERY</span><br>
+INTERVIEW
+</h1>
 
-    <a href="/performance" class="feature" style="text-decoration:none;">
-        <i class="fas fa-chart-line"></i>
-        <h4>Performance</h4>
-        <p>Track your interview improvement</p>
-    </a>
+<p>
+Practice with AI that thinks like your interviewer.
+Get real-time feedback, analyze your resume,
+and land offers at top companies.
+</p>
 
-    <a href="/feedback" class="feature" style="text-decoration:none;">
-        <i class="fas fa-star"></i>
-        <h4>Feedback</h4>
-        <p>Get detailed AI-powered feedback</p>
-    </a>
+<div class="hero-buttons">
+
+<a href="/signup" class="hero-primary">
+START FREE TRIAL →
+</a>
+
+<a href="#demo" class="hero-secondary">
+▶ WATCH DEMO
+</a>
 
 </div>
 
-        <form action="/generate_questions" method="POST">
+<div class="hero-stats">
 
-            <label>
-                <i class="fas fa-briefcase"></i>
-                Target Role
-            </label>
+<div class="stat">
+94% Success Rate
+</div>
 
-           <select name="role" class="form-control" required>
+<div class="stat">
+50K+ Users
+</div>
 
-    <option value="">Select Role</option>
-
-    <option value="python_developer">
-        Python Developer
-    </option>
-
-    <option value="java_developer">
-        Java Developer
-    </option>
-
-    <option value="javascript_developer">
-        JavaScript Developer
-    </option>
-
-    <option value="data_scientist">
-        Data Scientist
-    </option>
-
-    <option value="full_stack_developer">
-        Full Stack Developer
-    </option>
-
-    <option value="devops_engineer">
-        DevOps Engineer
-    </option>
-
-</select>
-
-            <label>
-                <i class="fas fa-layer-group"></i>
-                Experience Level
-            </label>
-
-            <select name="level" class="form-control">
-
-                <option value="Beginner">Beginner</option>
-                <option value="Intermediate">Intermediate</option>
-                <option value="Advanced">Advanced</option>
-
-            </select>
-
-            <button class="btn-generate" type="submit">
-                <i class="fas fa-bolt"></i>
-                Generate Interview Questions
-            </button>
-
-        </form>
-
-        <div class="bottom-links">
-
-            <a href="/dashboard" class="back-btn">
-                <i class="fas fa-arrow-left"></i>
-                Back to Dashboard
-            </a>
-
-        </div>
-
-    </div>
+<div class="stat">
+10M+ Questions
+</div>
 
 </div>
+
+</div>
+
+<div class="hero-right">
+
+<div class="interview-card">
+
+<div class="card-header">
+
+<div class="ai-info">
+<div class="avatar">AI</div>
+
+<div>
+<h3>AI Interviewer</h3>
+<p>Senior Engineer @ Google</p>
+</div>
+</div>
+
+<div class="live-dot">
+● Live
+</div>
+
+</div>
+
+<div class="question-box">
+
+<h4>CURRENT QUESTION</h4>
+
+<p>
+Design a distributed rate limiter that can handle
+1 million requests per second across multiple data centers.
+</p>
+
+</div>
+
+<div class="answer-box">
+
+<div class="user-header">
+You
+</div>
+
+<p>
+I'd start with a token bucket algorithm
+using Redis as the shared state store...
+</p>
+
+</div>
+
+<div class="metrics">
+
+<div class="metric">
+<h2>87</h2>
+<p>Clarity</p>
+</div>
+
+<div class="metric">
+<h2>72</h2>
+<p>Depth</p>
+</div>
+
+<div class="metric">
+<h2>94</h2>
+<p>Speed</p>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<!-- FEATURES -->
+
+<section class="features" id="features">
+
+<div class="section-title">
+<h5>EVERYTHING YOU NEED</h5>
+<h2>
+TRAIN LIKE THE <br>
+<span>TOP 1%</span>
+</h2>
+</div>
+
+<div class="feature-grid">
+
+<div class="feature-card">
+<h3>AI Mock Interviews</h3>
+<p>
+Practice with adaptive AI interviewers
+that simulate real-world interviews.
+</p>
+</div>
+
+<div class="feature-card">
+<h3>Resume Analyzer</h3>
+<p>
+ATS score, keyword matching,
+skill extraction and improvement suggestions.
+</p>
+</div>
+
+<div class="feature-card">
+<h3>Skill Quizzes</h3>
+<p>
+Adaptive quizzes targeting technical,
+behavioral and aptitude skills.
+</p>
+</div>
+
+<div class="feature-card">
+<h3>Performance Analytics</h3>
+<p>
+Track growth with detailed charts,
+scores and AI insights.
+</p>
+</div>
+
+<div class="feature-card">
+<h3>Career Recommendations</h3>
+<p>
+Discover ideal career paths
+based on your interview performance.
+</p>
+</div>
+
+<div class="feature-card">
+<h3>Real-Time Feedback</h3>
+<p>
+Get instant coaching on confidence,
+clarity and technical accuracy.
+</p>
+</div>
+
+</div>
+
+</section>
+
+<!-- HOW IT WORKS -->
+
+<section class="how-it-works" id="how-it-works">
+
+<div class="section-title">
+
+<h5>SIMPLE PROCESS</h5>
+
+<h2>
+HOW IT<br>
+<span>WORKS</span>
+</h2>
+
+</div>
+
+<div class="steps">
+
+<div class="step">
+
+<div class="step-number">01</div>
+
+<h3>Set Your Target</h3>
+
+<p>
+Choose role, company and experience level.
+</p>
+
+</div>
+
+<div class="step">
+
+<div class="step-number">02</div>
+
+<h3>Practice & Get Coached</h3>
+
+<p>
+Answer questions and receive instant feedback.
+</p>
+
+</div>
+
+<div class="step">
+
+<div class="step-number">03</div>
+
+<h3>Track & Improve</h3>
+
+<p>
+Analyze progress and eliminate weaknesses.
+</p>
+
+</div>
+
+</div>
+
+</section>
+
+<footer>
+
+<div class="footer-logo">
+INTERVIEW<span>AI</span>
+</div>
+
+<p>
+© 2026 InterviewAI. All rights reserved.
+</p>
+
+</footer>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
 
 </body>
 </html>
