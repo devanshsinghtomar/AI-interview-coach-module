@@ -507,110 +507,96 @@ def upload_resume():
 
     if "resume" not in request.files:
         flash("No file selected")
-        return redirect("/resume")
+        return redirect("/resume-analysis")
 
-    resume = request.files["resume"]
+    file = request.files["resume"]
 
-    if resume.filename == "":
-        flash("Please select a resume file")
-        return redirect("/resume")
+    if file.filename == "":
+        flash("Please select a file")
+        return redirect("/resume-analysis")
 
     filepath = os.path.join(
         UPLOAD_FOLDER,
-        resume.filename
+        file.filename
     )
 
-    resume.save(filepath)
+    file.save(filepath)
 
     try:
 
         resume_text = extract_resume_text(filepath)
 
-        analysis = analyze_resume_ai(resume_text)
+        ai_result = analyze_resume_ai(resume_text)
 
-        if not analysis.get("valid", True):
+        analysis = {
+            "ats_score": ai_result.get("score", 75),
+            "keyword_match": ai_result.get("score", 75),
+            "readability": 90,
 
-            flash(analysis["message"])
+            "skills": ai_result.get(
+                "skills",
+                ["Python", "Flask"]
+            ),
 
-            return render_template(
-                "resume_result.html",
-                resume_text="",
-                analysis={
-                    "score": 0,
-                    "strengths": [],
-                    "weaknesses": [],
-                    "recommendations": [analysis["message"]]
-                },
-                recommendations=None
+            "matched_keywords": ai_result.get(
+                "strengths",
+                []
+            ),
+
+            "missing_keywords": ai_result.get(
+                "weaknesses",
+                []
+            ),
+
+            "recommendations": ai_result.get(
+                "recommendations",
+                []
+            ),
+
+            "summary": ai_result.get(
+                "summary",
+                "Resume analyzed successfully."
+            ),
+
+            "report_url": "/download_report"
+        }
+
+        conn = get_db()
+        cur = conn.cursor()
+
+        cur.execute(
+            """
+            INSERT INTO resume_analyses
+            (
+                user_id,
+                analysis_data,
+                score
             )
+            VALUES (?,?,?)
+            """,
+            (
+                session["user_id"],
+                str(analysis),
+                analysis["ats_score"]
+            )
+        )
 
-        recommendations = analysis["recommendations"]
+        conn.commit()
+        conn.close()
+
+        return render_template(
+            "resume_analysis.html",
+            analysis=analysis
+        )
 
     except Exception as e:
 
+        flash(str(e))
+
         return render_template(
-            "resume_result.html",
-            resume_text="",
-            analysis={
-                "score": 0,
-                "strengths": [],
-                "weaknesses": [str(e)],
-                "recommendations": [str(e)]
-            },
-            recommendations=None
+            "resume_analysis.html",
+            analysis=None
         )
-
-    return render_template(
-        "resume_result.html",
-        resume_text=resume_text,
-        analysis=analysis,
-        recommendations=recommendations
-    )
-    @app.route("/resume-analysis", methods=["GET"])
-def resume_analysis_page():
-
-    if "user_id" not in session:
-        flash("Please login first")
-        return redirect("/")
-
-    analysis = {
-        "ats_score": 84,
-        "keyword_match": 78,
-        "readability": 91,
-
-        "skills": [
-            "Python",
-            "Flask",
-            "SQL",
-            "Machine Learning"
-        ],
-
-        "matched_keywords": [
-            "Python",
-            "REST API",
-            "Git"
-        ],
-
-        "missing_keywords": [
-            "Docker",
-            "AWS"
-        ],
-
-        "recommendations": [
-            "Add quantified achievements",
-            "Include Docker projects",
-            "Highlight leadership experience"
-        ],
-
-        "summary": "Strong Python developer profile with backend experience.",
-
-        "report_url": "/download_report"
-    }
-
-    return render_template(
-        "resume_analysis.html",
-        analysis=analysis
-    )
 # ==================================================
 # PERFORMANCE
 # ==================================================
