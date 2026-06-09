@@ -234,6 +234,70 @@ def dashboard():
         name=session.get("name", "User")
     )
 
+from flask import jsonify
+
+@app.route("/api/quiz/<skill>")
+def get_quiz(skill):
+
+    quiz_data = {
+        "python": [
+            {
+                "question": "What is Python?",
+                "options": [
+                    "Programming Language",
+                    "Database",
+                    "Browser",
+                    "Operating System"
+                ],
+                "answer": 0
+            },
+            {
+                "question": "Which keyword creates a function?",
+                "options": [
+                    "func",
+                    "create",
+                    "def",
+                    "lambda"
+                ],
+                "answer": 2
+            }
+        ],
+
+        "sql": [
+            {
+                "question": "Which clause filters records?",
+                "options": [
+                    "GROUP BY",
+                    "ORDER BY",
+                    "WHERE",
+                    "LIMIT"
+                ],
+                "answer": 2
+            }
+        ]
+    }
+
+    return jsonify({
+        "questions": quiz_data.get(skill, [])
+    })
+
+from flask import request
+
+@app.route("/submit_quiz", methods=["POST"])
+def submit_quiz():
+
+    data = request.get_json()
+
+    score = data.get("score")
+
+    print("Quiz Score:", score)
+
+    # Save to database here
+
+    return jsonify({
+        "success": True
+    })
+
 
 # ==================================================
 # INTERVIEW PAGE
