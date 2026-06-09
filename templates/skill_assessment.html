@@ -1,568 +1,596 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Skill Assessment | AI Interview Coach</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
-        }
 
-        body {
-            background: linear-gradient(135deg, #0f172a 0%, #1a1f3a 50%, #0f172a 100%);
-            color: white;
-            min-height: 100vh;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        .sidebar {
-            position: fixed;
-            width: 260px;
-            height: 100%;
-            background: linear-gradient(180deg, #111827 0%, #0d1117 100%);
-            padding: 25px;
-            overflow-y: auto;
-            box-shadow: 5px 0 20px rgba(0, 0, 0, 0.3);
-            border-right: 2px solid #f59e0b;
-        }
+<title>Skill Assessment | InterviewAI</title>
 
-        .logo {
-            font-size: 24px;
-            font-weight: 800;
-            margin-bottom: 40px;
-            color: white;
-            background: linear-gradient(135deg, #10b981, #14b8a6, #06b6d4);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
+<link rel="stylesheet"
+href="{{ url_for('static', filename='css/style.css') }}">
 
-        .menu a {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            text-decoration: none;
-            color: #cbd5e1;
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 10px;
-            transition: all 0.3s ease;
-            border-left: 3px solid transparent;
-        }
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-        .menu a:hover,
-        .menu a.active {
-            background: linear-gradient(135deg, #f59e0b, #fbbf24);
-            color: white;
-            transform: translateX(5px);
-            border-left-color: #06b6d4;
-        }
+<style>
 
-        .main {
-            margin-left: 260px;
-            padding: 40px;
-        }
+.quiz-container{
+max-width:1000px;
+margin:auto;
+padding:40px;
+}
 
-        .header {
-            background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 50%, #f97316 100%);
-            padding: 40px;
-            border-radius: 25px;
-            margin-bottom: 30px;
-            box-shadow: 0 20px 50px rgba(245, 158, 11, 0.3);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-        }
+.quiz-header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:30px;
+}
 
-        .header h1 {
-            font-size: 34px;
-            margin-bottom: 10px;
-        }
+.quiz-header h1{
+font-size:48px;
+font-weight:900;
+}
 
-        .header p {
-            color: rgba(255, 255, 255, 0.95);
-        }
+.quiz-header span{
+color:#c6ff00;
+}
 
-        .skills-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
+.back-btn{
+padding:12px 20px;
+background:#c6ff00;
+color:black;
+font-weight:700;
+text-decoration:none;
+border-radius:30px;
+}
 
-        .skill-card {
-            background: linear-gradient(135deg, #1e293b 0%, #1e3c4a 100%);
-            border-radius: 15px;
-            padding: 25px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 2px solid rgba(245, 158, 11, 0.1);
-            position: relative;
-            overflow: hidden;
-        }
+.quiz-selector{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+gap:20px;
+margin-top:40px;
+}
 
-        .skill-card::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -50%;
-            width: 200px;
-            height: 200px;
-            background: radial-gradient(circle, rgba(245, 158, 11, 0.2) 0%, transparent 70%);
-            border-radius: 50%;
-        }
+.skill-card{
+background:#111;
+border:1px solid #222;
+padding:30px;
+border-radius:20px;
+cursor:pointer;
+transition:.3s;
+}
 
-        .skill-card:hover {
-            transform: translateY(-10px) scale(1.02);
-            box-shadow: 0 20px 50px rgba(245, 158, 11, 0.3);
-            border-color: #f59e0b;
-            background: linear-gradient(135deg, #2d3e53 0%, #1e3c4a 100%);
-        }
+.skill-card:hover{
+transform:translateY(-8px);
+box-shadow:0 0 30px rgba(198,255,0,.15);
+}
 
-        .skill-card i {
-            font-size: 40px;
-            color: #f59e0b;
-            margin-bottom: 15px;
-            position: relative;
-            z-index: 1;
-        }
+.skill-card h3{
+margin-bottom:10px;
+color:#c6ff00;
+}
 
-        .skill-card h3 {
-            position: relative;
-            z-index: 1;
-            margin-bottom: 10px;
-        }
+.quiz-panel{
+display:none;
+background:#111;
+border:1px solid #222;
+border-radius:25px;
+padding:35px;
+margin-top:30px;
+}
 
-        .difficulty {
-            font-size: 12px;
-            color: #a0aec0;
-            position: relative;
-            z-index: 1;
-        }
+.progress-bar{
+height:12px;
+background:#222;
+border-radius:30px;
+overflow:hidden;
+margin-bottom:25px;
+}
 
-        .quiz-container {
-            background: linear-gradient(135deg, #1e293b 0%, #1a3a3a 100%);
-            border-radius: 20px;
-            padding: 30px;
-            border: 2px solid rgba(245, 158, 11, 0.1);
-            display: none;
-        }
+.progress-fill{
+height:100%;
+width:0%;
+background:#c6ff00;
+transition:.4s;
+}
 
-        .quiz-container.active {
-            display: block;
-        }
+.timer{
+font-size:20px;
+font-weight:800;
+color:#c6ff00;
+margin-bottom:20px;
+}
 
-        .question-card {
-            background: #0f172a;
-            padding: 25px;
-            border-radius: 15px;
-            margin-bottom: 20px;
-            border-left: 4px solid #f59e0b;
-        }
+.question-box{
+margin-bottom:30px;
+}
 
-        .question-card h3 {
-            margin-bottom: 20px;
-            color: #fbbf24;
-        }
+.question-box h2{
+font-size:26px;
+line-height:1.6;
+}
 
-        .options {
-            display: grid;
-            gap: 10px;
-        }
+.option{
+display:block;
+padding:18px;
+background:#181818;
+margin-bottom:15px;
+border-radius:15px;
+cursor:pointer;
+border:1px solid transparent;
+transition:.3s;
+}
 
-        .option {
-            background: #1e293b;
-            padding: 15px;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 2px solid #334155;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
+.option:hover{
+border-color:#c6ff00;
+}
 
-        .option:hover {
-            border-color: #f59e0b;
-            background: #2d3e53;
-            transform: translateX(5px);
-        }
+.option input{
+margin-right:12px;
+}
 
-        .option input[type="radio"] {
-            cursor: pointer;
-        }
+.quiz-actions{
+display:flex;
+justify-content:space-between;
+margin-top:25px;
+}
 
-        .btn {
-            display: inline-block;
-            padding: 12px 28px;
-            border-radius: 12px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-        }
+.btn{
+padding:14px 26px;
+border:none;
+border-radius:30px;
+font-weight:700;
+cursor:pointer;
+}
 
-        .btn-primary {
-            background: linear-gradient(135deg, #f59e0b, #fbbf24, #f97316);
-            color: white;
-            box-shadow: 0 10px 25px rgba(245, 158, 11, 0.3);
-        }
+.btn-primary{
+background:#c6ff00;
+color:black;
+}
 
-        .btn-primary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 40px rgba(245, 158, 11, 0.5);
-        }
+.btn-secondary{
+background:#222;
+color:white;
+}
 
-        .progress-bar {
-            width: 100%;
-            height: 8px;
-            background: #334155;
-            border-radius: 10px;
-            overflow: hidden;
-            margin-bottom: 20px;
-        }
+.result-panel{
+display:none;
+background:#111;
+padding:40px;
+border-radius:25px;
+margin-top:30px;
+border:1px solid #222;
+text-align:center;
+}
 
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #f59e0b, #fbbf24);
-            width: 0%;
-            transition: width 0.3s ease;
-        }
+.result-score{
+font-size:80px;
+font-weight:900;
+color:#c6ff00;
+}
 
-        @media(max-width: 768px) {
-            .sidebar {
-                width: 100%;
-                height: auto;
-                position: relative;
-            }
-            .main {
-                margin-left: 0;
-                padding: 20px;
-            }
-            .header h1 {
-                font-size: 26px;
-            }
-            .skills-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+.result-message{
+font-size:24px;
+margin-top:10px;
+}
+
+.analysis-grid{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:20px;
+margin-top:30px;
+}
+
+.analysis-card{
+background:#181818;
+padding:20px;
+border-radius:15px;
+}
+
+.analysis-card h3{
+color:#c6ff00;
+margin-bottom:10px;
+}
+
+@media(max-width:768px){
+
+.quiz-header{
+flex-direction:column;
+gap:20px;
+}
+
+.analysis-grid{
+grid-template-columns:1fr;
+}
+
+.quiz-actions{
+flex-direction:column;
+gap:15px;
+}
+
+}
+
+</style>
+
 </head>
+
 <body>
-    <div class="sidebar">
-        <div class="logo">
-            <i class="fas fa-robot"></i>
-            AI Coach
-        </div>
-        <div class="menu">
-            <a href="/dashboard">
-                <i class="fas fa-home"></i>
-                Dashboard
-            </a>
-            <a href="/interview">
-                <i class="fas fa-microphone"></i>
-                Mock Interview
-            </a>
-            <a href="/resume">
-                <i class="fas fa-file-alt"></i>
-                Resume Analysis
-            </a>
-            <a href="/performance">
-                <i class="fas fa-chart-line"></i>
-                Performance
-            </a>
-            <a href="/skill-assessment" class="active">
-                <i class="fas fa-brain"></i>
-                Skill Test
-            </a>
-            <a href="/logout">
-                <i class="fas fa-sign-out-alt"></i>
-                Logout
-            </a>
-        </div>
-    </div>
 
-    <div class="main">
-        <div class="header">
-            <h1><i class="fas fa-brain"></i> Skill Assessment</h1>
-            <p>Test your technical knowledge with AI-powered quizzes</p>
-        </div>
+<div class="quiz-container">
 
-        <div id="skillsContainer" class="skills-grid">
-            <div class="skill-card" onclick="startQuiz('python')">
-                <i class="fab fa-python"></i>
-                <h3>Python</h3>
-                <div class="difficulty">5 Questions • Beginner</div>
-            </div>
-            <div class="skill-card" onclick="startQuiz('javascript')">
-                <i class="fab fa-js"></i>
-                <h3>JavaScript</h3>
-                <div class="difficulty">5 Questions • Beginner</div>
-            </div>
-            <div class="skill-card" onclick="startQuiz('java')">
-                <i class="fab fa-java"></i>
-                <h3>Java</h3>
-                <div class="difficulty">5 Questions • Intermediate</div>
-            </div>
-            <div class="skill-card" onclick="startQuiz('react')">
-                <i class="fab fa-react"></i>
-                <h3>React</h3>
-                <div class="difficulty">5 Questions • Intermediate</div>
-            </div>
-        </div>
+<div class="quiz-header">
 
-        <div id="quizContainer" class="quiz-container">
-            <div class="progress-bar">
-                <div class="progress-fill" id="progressFill"></div>
-            </div>
-            <div id="questionsContainer"></div>
-            <button class="btn btn-primary" onclick="submitQuiz()"><i class="fas fa-check"></i> Submit Answers</button>
-        </div>
-    </div>
+<div>
+<h1>Skill <span>Assessment</span></h1>
+<p>Select a skill and begin your assessment.</p>
+</div>
 
-    <script>
-        const quizzes = {
-            python: [
-                {
-                    question: "What is the output of print(2 ** 3)?",
-                    options: ["5", "8", "6", "9"],
-                    correct: 1
-                },
-                {
-                    question: "Which of these is a mutable data type?",
-                    options: ["String", "Tuple", "List", "None"],
-                    correct: 2
-                },
-                {
-                    question: "What does PEP 8 stand for?",
-                    options: ["Python Enhancement Proposal 8", "Python Error Protocol 8", "Python Example Package 8", "Python Extension Package 8"],
-                    correct: 0
-                },
-                {
-                    question: "How do you create a function in Python?",
-                    options: ["function myFunc():", "def myFunc():", "define myFunc():", "func myFunc():"],
-                    correct: 1
-                },
-                {
-                    question: "What is a lambda function?",
-                    options: ["A regular function", "An anonymous function", "A built-in function", "A class method"],
-                    correct: 1
-                }
-            ],
-            java: [
+<a href="/dashboard" class="back-btn">
+← Dashboard
+</a>
+
+</div>
+
+<!-- SKILL SELECTOR -->
+
+<div id="skillSelector" class="quiz-selector">
+
+<div class="skill-card" onclick="startQuiz('python')">
+<h3>Python</h3>
+<p>Programming fundamentals and advanced concepts.</p>
+</div>
+
+<div class="skill-card" onclick="startQuiz('sql')">
+<h3>SQL</h3>
+<p>Queries, joins, optimization and databases.</p>
+</div>
+
+<div class="skill-card" onclick="startQuiz('javascript')">
+<h3>JavaScript</h3>
+<p>Frontend and backend JS concepts.</p>
+</div>
+
+<div class="skill-card" onclick="startQuiz('aptitude')">
+<h3>Aptitude</h3>
+<p>Logical reasoning and quantitative ability.</p>
+</div>
+
+</div>
+
+<!-- QUIZ PANEL -->
+
+<div id="quizPanel" class="quiz-panel">
+
+<div class="progress-bar">
+<div id="progressFill" class="progress-fill"></div>
+</div>
+
+<div class="timer">
+⏱ Time Left:
+<span id="timer">60</span>s
+</div>
+
+<div class="question-box">
+
+<h2 id="questionText">
+Question
+</h2>
+
+</div>
+
+<div id="optionsContainer"></div>
+
+<div class="quiz-actions">
+
+<button class="btn btn-secondary"
+onclick="previousQuestion()">
+Previous
+</button>
+
+<button class="btn btn-primary"
+onclick="nextQuestion()">
+Next
+</button>
+
+</div>
+
+</div>
+
+<!-- RESULT PANEL -->
+
+<div id="resultPanel" class="result-panel">
+
+<h2>Assessment Complete</h2>
+
+<div id="scoreDisplay" class="result-score">
+0%
+</div>
+
+<div id="resultMessage" class="result-message">
+Excellent Work
+</div>
+
+<div class="analysis-grid">
+
+<div class="analysis-card">
+<h3>Strength</h3>
+<p>Technical Fundamentals</p>
+</div>
+
+<div class="analysis-card">
+<h3>Improve</h3>
+<p>Advanced Concepts</p>
+</div>
+
+<div class="analysis-card">
+<h3>Recommendation</h3>
+<p>Practice more mock interviews.</p>
+</div>
+
+</div>
+
+<br>
+
+<a href="/dashboard" class="back-btn">
+Return Dashboard
+</a>
+
+</div>
+
+</div>
+
+<script>
+
+let questions = [];
+let currentQuestion = 0;
+let answers = [];
+let timer = 60;
+let timerInterval;
+
+function startQuiz(skill){
+
+document.getElementById(
+"skillSelector"
+).style.display = "none";
+
+document.getElementById(
+"quizPanel"
+).style.display = "block";
+
+fetch(`/api/quiz/${skill}`)
+
+.then(response => response.json())
+
+.then(data => {
+
+questions = data.questions || [];
+
+if(questions.length === 0){
+
+questions = [
+
 {
-    question: "Which keyword is used to inherit a class in Java?",
-    options: ["implements","inherits","extends","super"],
-    correct: 2
-},
-{
-    question: "Which JVM component executes bytecode?",
-    options: ["Compiler","Interpreter","Editor","Debugger"],
-    correct: 1
-},
-{
-    question: "Java is?",
-    options: ["Platform Independent","Platform Dependent","OS","Database"],
-    correct: 0
-},
-{
-    question: "Which collection allows duplicate values?",
-    options: ["Set","HashSet","List","TreeSet"],
-    correct: 2
-},
-{
-    question: "Which method is entry point of Java?",
-    options: ["run()","start()","main()","execute()"],
-    correct: 2
-}
+question:"What is Python?",
+options:[
+"Language",
+"Database",
+"OS",
+"Browser"
 ],
+answer:0
+},
 
-react: [
 {
-    question: "React is developed by?",
-    options: ["Google","Facebook","Microsoft","Amazon"],
-    correct: 1
-},
-{
-    question: "React uses?",
-    options: ["Virtual DOM","Real DOM","XML","SQL"],
-    correct: 0
-},
-{
-    question: "Which hook manages state?",
-    options: ["useEffect","useState","useRef","useMemo"],
-    correct: 1
-},
-{
-    question: "JSX stands for?",
-    options: ["Java Syntax Extension","JavaScript XML","JSON XML","None"],
-    correct: 1
-},
-{
-    question: "Props are?",
-    options: ["Immutable","Mutable","Database","API"],
-    correct: 0
-}
+question:"Which SQL clause filters records?",
+options:[
+"ORDER BY",
+"WHERE",
+"GROUP BY",
+"HAVING"
 ],
-            javascript: [
-{
-    question: "Which company developed JavaScript?",
-    options: ["Microsoft","Netscape","Google","Oracle"],
-    correct: 1
-},
-{
-    question: "Which symbol is used for comments in JS?",
-    options: ["//","#","<!-- -->","**"],
-    correct: 0
-},
-{
-    question: "Which keyword declares a block-scoped variable?",
-    options: ["var","let","define","new"],
-    correct: 1
-},
-{
-    question: "Which method converts JSON string into object?",
-    options: [
-        "JSON.parse()",
-        "JSON.stringify()",
-        "JSON.convert()",
-        "JSON.object()"
-    ],
-    correct: 0
-},
-{
-    question: "What is the type of NaN?",
-    options: [
-        "string",
-        "undefined",
-        "number",
-        "boolean"
-    ],
-    correct: 2
-}
-],
-        };
-let currentSkill = '';
-        function startQuiz(skill) {
-
-    currentSkill = skill;
-            document.getElementById('skillsContainer').style.display = 'none';
-            document.getElementById('quizContainer').classList.add('active');
-            
-            const quiz = quizzes[skill] || quizzes.python;
-            let html = '';
-            
-            quiz.forEach((q, index) => {
-                html += `
-                    <div class="question-card">
-                        <h3>Question ${index + 1}/${quiz.length}</h3>
-                        <p>${q.question}</p>
-                        <div class="options">
-                            ${q.options.map((opt, i) => `
-                                <label class="option">
-                                    <input type="radio" name="q${index}" value="${i}">
-                                    ${opt}
-                                </label>
-                            `).join('')}
-                        </div>
-                    </div>
-                `;
-            });
-            
-            document.getElementById('questionsContainer').innerHTML = html;
-            updateProgress(0, quiz.length);
-        }
-
-        function updateProgress(current, total) {
-            const percentage = (current / total) * 100;
-            document.getElementById('progressFill').style.width = percentage + '%';
-        }
-       function submitQuiz()
-{
-    const quiz = quizzes[currentSkill];
-
-    if(!quiz)
-    {
-        alert("Please select a skill first");
-        return;
-    }
-
-    let score = 0;
-
-    quiz.forEach((q,index)=>
-    {
-        const selected =
-        document.querySelector(
-        `input[name="q${index}"]:checked`
-        );
-
-        if(selected)
-        {
-            const answer =
-            parseInt(selected.value);
-
-            if(answer === q.correct)
-            {
-                score++;
-
-                selected.parentElement.style.border =
-                "2px solid #22c55e";
-            }
-            else
-            {
-                selected.parentElement.style.border =
-                "2px solid red";
-
-                const correctOption =
-                document.querySelector(
-                `input[name="q${index}"][value="${q.correct}"]`
-                );
-
-                if(correctOption)
-                {
-                    correctOption.parentElement.style.border =
-                    "2px solid #22c55e";
-                }
-            }
-        }
-    });
-
-    fetch('/submit_skill_quiz',
-    {
-        method:'POST',
-
-        headers:
-        {
-            'Content-Type':'application/json'
-        },
-
-        body:JSON.stringify(
-        {
-            skill:currentSkill,
-            score:score,
-            total:quiz.length
-        })
-    })
-    .then(res=>res.json())
-    .then(data=>
-    {
-        alert(
-        `Quiz Completed!\n\nScore: ${score}/${quiz.length}\nPercentage: ${data.percentage}%`
-        );
-
-        setTimeout(() => {
-            location.href='/performance';
-        },1500);
-    });
+answer:1
 }
 
-        
-    </script>
+];
+
+}
+
+loadQuestion();
+
+startTimer();
+
+})
+
+.catch(error => {
+
+console.error(error);
+
+alert(
+"Quiz loading failed."
+);
+
+});
+
+}
+
+function loadQuestion(){
+
+const q = questions[currentQuestion];
+
+document.getElementById(
+"questionText"
+).innerText = q.question;
+
+const optionsContainer =
+document.getElementById(
+"optionsContainer"
+);
+
+optionsContainer.innerHTML = "";
+
+q.options.forEach((option,index)=>{
+
+optionsContainer.innerHTML += `
+<label class="option">
+<input type="radio"
+name="answer"
+value="${index}">
+${option}
+</label>
+`;
+
+});
+
+updateProgress();
+
+}
+
+function updateProgress(){
+
+const progress =
+((currentQuestion+1)
+/
+questions.length)
+*100;
+
+document.getElementById(
+"progressFill"
+).style.width =
+progress + "%";
+
+}
+
+function nextQuestion(){
+
+const selected =
+document.querySelector(
+'input[name="answer"]:checked'
+);
+
+if(selected){
+
+answers[currentQuestion] =
+parseInt(selected.value);
+
+}
+
+if(currentQuestion <
+questions.length-1){
+
+currentQuestion++;
+
+loadQuestion();
+
+}
+else{
+
+finishQuiz();
+
+}
+
+}
+
+function previousQuestion(){
+
+if(currentQuestion > 0){
+
+currentQuestion--;
+
+loadQuestion();
+
+}
+
+}
+
+function startTimer(){
+
+timerInterval =
+setInterval(()=>{
+
+timer--;
+
+document.getElementById(
+"timer"
+).innerText = timer;
+
+if(timer <= 0){
+
+finishQuiz();
+
+}
+
+},1000);
+
+}
+
+function finishQuiz(){
+
+clearInterval(timerInterval);
+
+let score = 0;
+
+questions.forEach((q,index)=>{
+
+if(
+answers[index] === q.answer
+){
+score++;
+}
+
+});
+
+score =
+Math.round(
+(score/questions.length)
+*100
+);
+
+document.getElementById(
+"quizPanel"
+).style.display="none";
+
+document.getElementById(
+"resultPanel"
+).style.display="block";
+
+document.getElementById(
+"scoreDisplay"
+).innerText =
+score + "%";
+
+let msg = "Needs Improvement";
+
+if(score >= 80)
+msg = "Excellent";
+
+else if(score >= 60)
+msg = "Good Progress";
+
+document.getElementById(
+"resultMessage"
+).innerText = msg;
+
+fetch("/submit_quiz",{
+
+method:"POST",
+
+headers:{
+"Content-Type":
+"application/json"
+},
+
+body:JSON.stringify({
+score:score
+})
+
+});
+
+}
+
+</script>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
 </body>
 </html>
