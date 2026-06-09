@@ -631,7 +631,6 @@ def performance():
     cur = conn.cursor()
 
     try:
-
         cur.execute("""
             SELECT *
             FROM interviews
@@ -648,34 +647,33 @@ def performance():
         """, (session["user_id"],))
         quiz_results = cur.fetchall()
 
-    except Exception as e:
+        average_score = 0
 
+        if records:
+            average_score = round(
+                sum(r["score"] for r in records) / len(records)
+            )
+
+        cur.execute("""
+            SELECT score
+            FROM resume_analyses
+            WHERE user_id=?
+            ORDER BY id DESC
+            LIMIT 1
+        """, (session["user_id"],))
+
+        row = cur.fetchone()
+        resume_score = row["score"] if row else 0
+
+    except Exception as e:
         records = []
         quiz_results = []
+        average_score = 0
+        resume_score = 0
         flash(f"Error loading performance: {str(e)}")
 
-    average_score = 0
-
-    if records:
-        average_score = round(
-            sum(r["score"] for r in records) / len(records)
-        )
-
-    cur.execute(
-        """
-        SELECT score
-        FROM resume_analyses
-        WHERE user_id=?
-        ORDER BY id DESC
-        LIMIT 1
-        """,
-        (session["user_id"],)
-    )
-
-    row = cur.fetchone()
-    resume_score = row["score"] if row else 0
-
-    conn.close()
+    finally:
+        conn.close()
 
     return render_template(
         "performance.html",
