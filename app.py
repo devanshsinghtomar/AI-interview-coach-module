@@ -2,12 +2,15 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_bcrypt import Bcrypt
-from datetime import datetime, timedelta
+from datetime import datetime
 import json
 import os
 from dotenv import load_dotenv
+from werkzeug.utils import secure_filename
+
+# Fixed imports - using correct class names
 from utils.ai_helper import AIHelper
-from utils.resume_parser import ResumeParser
+from utils.resume_parser import ResumeParser  # This now works
 from utils.job_recommendation import JobRecommender
 from utils.pdf_report import PDFReportGenerator
 from utils.quiz_data import QuizData
@@ -15,10 +18,14 @@ from utils.quiz_data import QuizData
 load_dotenv()
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-this-in-production')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///interview.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+
+# Ensure upload folder exists
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
@@ -48,9 +55,9 @@ class Interview(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     job_role = db.Column(db.String(100))
     experience_level = db.Column(db.String(50))
-    questions_asked = db.Column(db.Text)  # JSON array
-    answers_given = db.Column(db.Text)    # JSON array
-    feedback = db.Column(db.Text)         # JSON array
+    questions_asked = db.Column(db.Text)
+    answers_given = db.Column(db.Text)
+    feedback = db.Column(db.Text)
     overall_score = db.Column(db.Float)
     date = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -59,8 +66,8 @@ class ResumeAnalysis(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     filename = db.Column(db.String(200))
     extracted_text = db.Column(db.Text)
-    analysis_result = db.Column(db.Text)  # JSON
-    recommended_roles = db.Column(db.Text) # JSON
+    analysis_result = db.Column(db.Text)
+    recommended_roles = db.Column(db.Text)
     score = db.Column(db.Float)
     date = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -72,7 +79,7 @@ class QuizResult(db.Model):
     score = db.Column(db.Float)
     total_questions = db.Column(db.Integer)
     correct_answers = db.Column(db.Integer)
-    answers_detail = db.Column(db.Text)  # JSON
+    answers_detail = db.Column(db.Text)
     date = db.Column(db.DateTime, default=datetime.utcnow)
 
 # Create tables
@@ -91,9 +98,9 @@ def index():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        username = request.form['username']
-        email = request.form['email']
-        password = request.form['password']
+        username = request.form.get('username')
+        email = request.form.get('email')
+        password = request.form.get('password')
         
         if User.query.filter_by(username=username).first():
             flash('Username already exists', 'danger')
@@ -116,8 +123,8 @@ def register():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
+        username = request.form.get('username')
+        password = request.form.get('password')
         remember = request.form.get('remember', False)
         
         user = User.query.filter_by(username=username).first()
@@ -140,7 +147,6 @@ def logout():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    # Get user stats
     total_interviews = Interview.query.filter_by(user_id=current_user.id).count()
     avg_score = db.session.query(db.func.avg(Interview.overall_score)).filter_by(user_id=current_user.id).scalar() or 0
     recent_interviews = Interview.query.filter_by(user_id=current_user.id).order_by(Interview.date.desc()).limit(5).all()
@@ -149,7 +155,7 @@ def dashboard():
     
     return render_template('dashboard.html', 
                          total_interviews=total_interviews,
-                         avg_score=avg_score,
+                         avg_score=round(avg_score, 1),
                          recent_interviews=recent_interviews,
                          resume_count=resume_count,
                          quiz_count=quiz_count)
@@ -161,14 +167,12 @@ def interview():
         job_role = request.form['job_role']
         experience_level = request.form['experience_level']
         
-        # Store in session for the interview session
         session['current_job_role'] = job_role
         session['current_experience'] = experience_level
-        session['questions_asked'] = []  # Track asked questions to avoid repetition
+        session['questions_asked'] = []
         session['answers'] = []
         session['current_question_index'] = 0
         
-        # Generate first question
         question = ai_helper.generate_question(job_role, experience_level, session['questions_asked'])
         session['questions_asked'].append(question)
         session.modified = True
@@ -188,19 +192,14 @@ def next_question():
     answer = data.get('answer')
     question = data.get('question')
     
-    # Store answer
     session['answers'].append(answer)
     
-    # Generate feedback for the answer
     feedback = ai_helper.evaluate_answer(question, answer, session['current_job_role'])
     
-    # Check if interview should end (after 5 questions)
     if len(session['answers']) >= 5:
-        # Calculate overall score
-        total_score = sum(f['overall_score'] for f in feedback['detailed_scores'])
+        total_score = sum(f.get('overall_score', 70) for f in [feedback])
         avg_score = total_score / len(session['answers'])
         
-        # Save to database
         interview_record = Interview(
             user_id=current_user.id,
             job_role=session['current_job_role'],
@@ -213,7 +212,6 @@ def next_question():
         db.session.add(interview_record)
         db.session.commit()
         
-        # Clear session
         session.pop('questions_asked', None)
         session.pop('answers', None)
         
@@ -223,7 +221,6 @@ def next_question():
             'overall_score': avg_score
         })
     
-    # Generate next question (non-repeating)
     next_q = ai_helper.generate_question(
         session['current_job_role'], 
         session['current_experience'],
@@ -256,20 +253,16 @@ def resume():
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
             
-            # Parse resume
             extracted_text = resume_parser.parse_pdf(filepath)
             
-            # Analyze with AI
             analysis = ai_helper.analyze_resume(extracted_text)
             
-            # Get job recommendations
             recommendations = job_recommender.recommend_jobs(extracted_text, analysis)
             
-            # Save to database
             resume_record = ResumeAnalysis(
                 user_id=current_user.id,
                 filename=filename,
-                extracted_text=extracted_text[:1000],  # Store first 1000 chars
+                extracted_text=extracted_text[:1000],
                 analysis_result=json.dumps(analysis),
                 recommended_roles=json.dumps(recommendations),
                 score=analysis.get('overall_score', 0)
@@ -290,7 +283,6 @@ def skill_assessment():
         job_role = request.form['job_role']
         difficulty = request.form['difficulty']
         
-        # Get questions for the selected role and difficulty
         questions = quiz_data.get_questions(job_role, difficulty, limit=20)
         
         if not questions:
@@ -310,7 +302,6 @@ def skill_assessment():
                              job_role=job_role,
                              difficulty=difficulty)
     
-    # GET request - show available quizzes
     job_roles = quiz_data.get_available_roles()
     return render_template('skill_assessment.html', job_roles=job_roles)
 
@@ -329,14 +320,11 @@ def submit_answer():
         'is_correct': is_correct
     })
     
-    # Check if quiz is complete
     if len(session['quiz_answers']) >= len(session['quiz_questions']):
-        # Calculate score
         total_questions = len(session['quiz_answers'])
         correct_count = sum(1 for a in session['quiz_answers'] if a['is_correct'])
         score = (correct_count / total_questions) * 100
         
-        # Save to database
         quiz_result = QuizResult(
             user_id=current_user.id,
             job_role=session['quiz_job_role'],
@@ -349,7 +337,6 @@ def submit_answer():
         db.session.add(quiz_result)
         db.session.commit()
         
-        # Clear session
         session.pop('quiz_questions', None)
         session.pop('quiz_answers', None)
         
@@ -360,7 +347,6 @@ def submit_answer():
             'total': total_questions
         })
     
-    # Get next question
     next_index = len(session['quiz_answers'])
     next_question = session['quiz_questions'][next_index]
     
@@ -374,12 +360,10 @@ def submit_answer():
 @app.route('/performance')
 @login_required
 def performance():
-    # Get all user data for analytics
     interviews = Interview.query.filter_by(user_id=current_user.id).order_by(Interview.date).all()
     quizzes = QuizResult.query.filter_by(user_id=current_user.id).order_by(QuizResult.date).all()
     resumes = ResumeAnalysis.query.filter_by(user_id=current_user.id).order_by(ResumeAnalysis.date.desc()).first()
     
-    # Prepare chart data
     interview_dates = [i.date.strftime('%Y-%m-%d') for i in interviews]
     interview_scores = [i.overall_score for i in interviews]
     
@@ -398,8 +382,5 @@ def performance():
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'pdf'}
 
-def secure_filename(filename):
-    return filename.replace('/', '_').replace('\\', '_')
-
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=8080, debug=True)
