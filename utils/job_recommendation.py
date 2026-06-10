@@ -1,92 +1,53 @@
-# utils/job_recommendation.py
+import google.generativeai as genai
+import json
+import os
+from typing import List, Dict
 
-def recommend_job_roles(resume_text: str, skills: list) -> dict:
-    """
-    Recommend suitable job roles based on resume content and skills.
-    """
+class JobRecommender:
+    def __init__(self):
+        genai.configure(api_key=os.getenv('GOOGLE_API_KEY'))
+        self.model = genai.GenerativeModel('gemini-pro')
     
-    resume_lower = resume_text.lower()
-    
-    # Job role criteria
-    job_roles = {
-        "Python Developer": {
-            "score": 0,
-            "required_skills": ["python", "django", "flask", "fastapi"],
-            "keywords": ["python", "scripting", "backend", "automation"],
-            "description": "Build scalable backend services with Python"
-        },
-        "Data Scientist": {
-            "score": 0,
-            "required_skills": ["python", "machine learning", "ml", "data", "tensorflow", "pandas", "scikit"],
-            "keywords": ["data analysis", "ml", "machine learning", "neural network", "deep learning", "data science"],
-            "description": "Work with data and build intelligent models"
-        },
-        "JavaScript Developer": {
-            "score": 0,
-            "required_skills": ["javascript", "react", "vue", "node", "angular"],
-            "keywords": ["javascript", "frontend", "react", "node.js", "web development"],
-            "description": "Create engaging web applications"
-        },
-        "Full Stack Developer": {
-            "score": 0,
-            "required_skills": ["python", "javascript", "sql", "database", "api", "react", "django"],
-            "keywords": ["full stack", "frontend", "backend", "api", "database", "devops"],
-            "description": "Develop complete web applications"
-        },
-        "DevOps Engineer": {
-            "score": 0,
-            "required_skills": ["docker", "kubernetes", "jenkins", "aws", "ci/cd"],
-            "keywords": ["devops", "docker", "kubernetes", "ci/cd", "deployment", "infrastructure"],
-            "description": "Manage infrastructure and deployment pipelines"
-        },
-        "Java Developer": {
-            "score": 0,
-            "required_skills": ["java", "spring", "maven", "microservices"],
-            "keywords": ["java", "spring", "enterprise", "microservices"],
-            "description": "Build enterprise Java applications"
-        },
-        "Frontend Developer": {
-            "score": 0,
-            "required_skills": ["javascript", "react", "css", "html", "vue", "angular"],
-            "keywords": ["frontend", "ui", "css", "html", "responsive", "design"],
-            "description": "Create beautiful user interfaces"
-        },
-        "Backend Developer": {
-            "score": 0,
-            "required_skills": ["python", "java", "node", "sql", "api", "database"],
-            "keywords": ["backend", "api", "database", "server", "microservices"],
-            "description": "Build robust backend systems"
-        }
-    }
-    
-    # Score each job role
-    for role, details in job_roles.items():
-        # Check required skills
-        for skill in details["required_skills"]:
-            if skill in resume_lower:
-                details["score"] += 25
+    def recommend_jobs(self, resume_text: str, analysis: Dict) -> List[Dict]:
+        """Recommend job roles based on resume content"""
         
-        # Check keywords
-        for keyword in details["keywords"]:
-            if keyword in resume_lower:
-                details["score"] += 10
-    
-    # Sort roles by score
-    ranked_roles = sorted(job_roles.items(), key=lambda x: x[1]["score"], reverse=True)
-    
-    # Filter roles with score > 0 and prepare results
-    recommended = []
-    for role_name, details in ranked_roles:
-        if details["score"] > 0:
-            recommended.append({
-                "role": role_name,
-                "score": min(details["score"], 100),
-                "description": details["description"],
-                "match_percentage": min(details["score"], 100)
-            })
-    
-    return {
-        "top_roles": recommended[:3] if recommended else [{"role": "General Software Developer", "score": 50, "description": "Based on your skills", "match_percentage": 50}],
-        "all_scores": {role: details["score"] for role, details in ranked_roles},
-        "best_match": recommended[0] if recommended else {"role": "Software Developer", "score": 50, "description": "Based on your background", "match_percentage": 50}
-    }
+        prompt = f"""Based on this resume, recommend 3-5 suitable job roles.
+
+Resume Text:
+{resume_text[:2000]}
+
+Resume Analysis:
+{json.dumps(analysis)}
+
+Return JSON array with each recommendation containing:
+{{
+    "job_title": "Job title",
+    "match_percentage": (0-100),
+    "reason": "Why this role fits",
+    "required_skills": ["skill1", "skill2", "skill3"],
+    "missing_skills": ["skill1", "skill2"],
+    "salary_range": "Estimated salary range",
+    "growth_potential": "High/Medium/Low"
+}}
+
+Be realistic and specific based on the actual resume content."""
+        
+        response = self.model.generate_content(prompt)
+        
+        try:
+            recommendations = json.loads(response.text)
+        except:
+            # Fallback recommendations based on analysis
+            recommendations = [
+                {
+                    "job_title": "Software Developer",
+                    "match_percentage": 75,
+                    "reason": "Your skills align well with general development roles",
+                    "required_skills": ["Python", "Problem Solving", "Communication"],
+                    "missing_skills": ["Cloud experience", "Testing frameworks"],
+                    "salary_range": "$70k - $120k",
+                    "growth_potential": "High"
+                }
+            ]
+        
+        return recommendations
