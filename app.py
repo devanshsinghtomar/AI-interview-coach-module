@@ -1,814 +1,405 @@
-from flask import (
-    Flask,
-    render_template,
-    request,
-    redirect,
-    session,
-    flash,
-    send_file,
-    jsonify
-)
-
-import sqlite3
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask_bcrypt import Bcrypt
+from datetime import datetime, timedelta
+import json
 import os
+from dotenv import load_dotenv
+from utils.ai_helper import AIHelper
+from utils.resume_parser import ResumeParser
+from utils.job_recommendation import JobRecommender
+from utils.pdf_report import PDFReportGenerator
+from utils.quiz_data import QuizData
 
-from utils.ai_helper import (
-    generate_questions,
-    evaluate_answer,
-    analyze_resume_ai,
-    get_ai_suggestions
-)
-
-from utils.resume_parser import extract_resume_text
-from utils.pdf_report import generate_report
-
-# ==================================================
-# APP CONFIG
-# ==================================================
+load_dotenv()
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///interview.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['UPLOAD_FOLDER'] = 'static/uploads'
 
-app.secret_key = os.environ.get(
-    "SECRET_KEY",
-    "interviewcoach-secret-key"
-)
+db = SQLAlchemy(app)
+bcrypt = Bcrypt(app)
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please login to access this page.'
 
-app.config['SESSION_PERMANENT'] = True
-app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 hours
+# Initialize helpers
+ai_helper = AIHelper()
+resume_parser = ResumeParser()
+job_recommender = JobRecommender()
+quiz_data = QuizData()
 
-UPLOAD_FOLDER = "static/uploads"
-REPORT_FOLDER = "reports"
+# Database Models
+class User(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(128), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    interviews = db.relationship('Interview', backref='user', lazy=True)
+    resumes = db.relationship('ResumeAnalysis', backref='user', lazy=True)
+    quiz_results = db.relationship('QuizResult', backref='user', lazy=True)
 
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-os.makedirs(REPORT_FOLDER, exist_ok=True)
+class Interview(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    job_role = db.Column(db.String(100))
+    experience_level = db.Column(db.String(50))
+    questions_asked = db.Column(db.Text)  # JSON array
+    answers_given = db.Column(db.Text)    # JSON array
+    feedback = db.Column(db.Text)         # JSON array
+    overall_score = db.Column(db.Float)
+    date = db.Column(db.DateTime, default=datetime.utcnow)
 
-# ==================================================
-# DATABASE
-# ==================================================
+class ResumeAnalysis(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    filename = db.Column(db.String(200))
+    extracted_text = db.Column(db.Text)
+    analysis_result = db.Column(db.Text)  # JSON
+    recommended_roles = db.Column(db.Text) # JSON
+    score = db.Column(db.Float)
+    date = db.Column(db.DateTime, default=datetime.utcnow)
 
-def get_db():
-    conn = sqlite3.connect("interview.db")
-    conn.row_factory = sqlite3.Row
-    return conn
+class QuizResult(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    job_role = db.Column(db.String(100))
+    difficulty = db.Column(db.String(50))
+    score = db.Column(db.Float)
+    total_questions = db.Column(db.Integer)
+    correct_answers = db.Column(db.Integer)
+    answers_detail = db.Column(db.Text)  # JSON
+    date = db.Column(db.DateTime, default=datetime.utcnow)
 
+# Create tables
+with app.app_context():
+    db.create_all()
 
-def init_db():
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
-    conn = get_db()
-    cur = conn.cursor()
+# Routes
+@app.route('/')
+def index():
+    return render_template('index.html')
 
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS users(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT,
-        email TEXT UNIQUE,
-        password TEXT
-    )
-    """)
-
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS interviews(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER,
-        role TEXT,
-        question TEXT,
-        answer TEXT,
-        feedback TEXT,
-        score INTEGER,
-        communication_level TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-    """)
-
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS resume_analyses(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER,
-        analysis_data TEXT,
-        score INTEGER,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-    """)
-
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS skill_quiz_results(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER,
-        skill TEXT,
-        score INTEGER,
-        total_questions INTEGER,
-        percentage REAL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-    """)
-
-    conn.commit()
-    conn.close()
-
-init_db()
-
-# ==================================================
-# HOME
-# ==================================================
-
-@app.route("/")
-def home():
-    return render_template("login.html")
-
-
-# ==================================================
-# REGISTER
-# ==================================================
-
-@app.route("/register")
+@app.route('/register', methods=['GET', 'POST'])
 def register():
-    return render_template("register.html")
+    if request.method == 'POST':
+        username = request.form['username']
+        email = request.form['email']
+        password = request.form['password']
+        
+        if User.query.filter_by(username=username).first():
+            flash('Username already exists', 'danger')
+            return redirect(url_for('register'))
+        
+        if User.query.filter_by(email=email).first():
+            flash('Email already registered', 'danger')
+            return redirect(url_for('register'))
+        
+        hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+        user = User(username=username, email=email, password_hash=hashed_password)
+        db.session.add(user)
+        db.session.commit()
+        
+        flash('Registration successful! Please login.', 'success')
+        return redirect(url_for('login'))
+    
+    return render_template('register.html')
 
-
-@app.route("/register_user", methods=["POST"])
-def register_user():
-
-    name = request.form.get("name")
-    email = request.form.get("email")
-    password = request.form.get("password")
-
-    conn = get_db()
-    cur = conn.cursor()
-
-    try:
-
-        cur.execute(
-            """
-            INSERT INTO users(name,email,password)
-            VALUES (?,?,?)
-            """,
-            (name, email, password)
-        )
-
-        conn.commit()
-
-        flash("Account created successfully! Please login.")
-
-    except sqlite3.IntegrityError:
-
-        flash("Email already exists. Please use a different email.")
-        return redirect("/register")
-
-    finally:
-        conn.close()
-
-    return redirect("/")
-
-
-# ==================================================
-# LOGIN
-# ==================================================
-
-@app.route("/login", methods=["POST"])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
-
-    email = request.form.get("email", "").strip()
-    password = request.form.get("password", "").strip()
-
-    if not email or not password:
-        flash("Please enter both email and password")
-        return redirect("/")
-
-    conn = get_db()
-    cur = conn.cursor()
-
-    try:
-        cur.execute(
-            """
-            SELECT * FROM users
-            WHERE email=? AND password=?
-            """,
-            (email, password)
-        )
-
-        user = cur.fetchone()
-
-        if user:
-            session.permanent = True
-            session["user_id"] = user["id"]
-            session["name"] = user["name"]
-            session["email"] = user["email"]
-            return redirect("/dashboard")
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        remember = request.form.get('remember', False)
+        
+        user = User.query.filter_by(username=username).first()
+        if user and bcrypt.check_password_hash(user.password_hash, password):
+            login_user(user, remember=remember)
+            flash(f'Welcome back, {user.username}!', 'success')
+            return redirect(url_for('dashboard'))
         else:
-            flash("Invalid Email or Password. Please try again.")
-            return redirect("/")
+            flash('Invalid username or password', 'danger')
+    
+    return render_template('login.html')
 
-    except Exception as e:
-        flash(f"Login error: {str(e)}")
-        return redirect("/")
-
-    finally:
-        conn.close()
-
-
-# ==================================================
-# LOGOUT
-# ==================================================
-
-@app.route("/logout")
+@app.route('/logout')
+@login_required
 def logout():
+    logout_user()
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('index'))
 
-    session.clear()
-    flash("Logged out successfully!")
-    return redirect("/")
-
-
-# ==================================================
-# DASHBOARD
-# ==================================================
-
-@app.route("/dashboard")
+@app.route('/dashboard')
+@login_required
 def dashboard():
+    # Get user stats
+    total_interviews = Interview.query.filter_by(user_id=current_user.id).count()
+    avg_score = db.session.query(db.func.avg(Interview.overall_score)).filter_by(user_id=current_user.id).scalar() or 0
+    recent_interviews = Interview.query.filter_by(user_id=current_user.id).order_by(Interview.date.desc()).limit(5).all()
+    resume_count = ResumeAnalysis.query.filter_by(user_id=current_user.id).count()
+    quiz_count = QuizResult.query.filter_by(user_id=current_user.id).count()
+    
+    return render_template('dashboard.html', 
+                         total_interviews=total_interviews,
+                         avg_score=avg_score,
+                         recent_interviews=recent_interviews,
+                         resume_count=resume_count,
+                         quiz_count=quiz_count)
 
-    if "user_id" not in session:
-        flash("Please login first")
-        return redirect("/")
-
-    conn = get_db()
-    cur = conn.cursor()
-
-    cur.execute(
-        "SELECT COUNT(*) FROM interviews WHERE user_id=?",
-        (session["user_id"],)
-    )
-    total_interviews = cur.fetchone()[0]
-
-    cur.execute(
-        """
-        SELECT AVG(score)
-        FROM interviews
-        WHERE user_id=?
-        """,
-        (session["user_id"],)
-    )
-
-    avg = cur.fetchone()[0]
-    average_score = round(avg or 0)
-
-    cur.execute(
-        """
-        SELECT COUNT(*)
-        FROM skill_quiz_results
-        WHERE user_id=?
-        """,
-        (session["user_id"],)
-    )
-
-    quiz_count = cur.fetchone()[0]
-
-    cur.execute(
-        """
-        SELECT score
-        FROM resume_analyses
-        WHERE user_id=?
-        ORDER BY id DESC
-        LIMIT 1
-        """,
-        (session["user_id"],)
-    )
-
-    row = cur.fetchone()
-    resume_score = row["score"] if row else 0
-
-    conn.close()
-
-    return render_template(
-        "dashboard.html",
-        name=session.get("name", "User"),
-        total_interviews=total_interviews,
-        average_score=average_score,
-        resume_score=resume_score,
-        quiz_count=quiz_count
-    )
-# ==================================================
-# INTERVIEW PAGE
-# ==================================================
-
-@app.route("/interview")
+@app.route('/interview', methods=['GET', 'POST'])
+@login_required
 def interview():
-    if "user_id" not in session:
-        flash("Please login first")
-        return redirect("/")
+    if request.method == 'POST':
+        job_role = request.form['job_role']
+        experience_level = request.form['experience_level']
+        
+        # Store in session for the interview session
+        session['current_job_role'] = job_role
+        session['current_experience'] = experience_level
+        session['questions_asked'] = []  # Track asked questions to avoid repetition
+        session['answers'] = []
+        session['current_question_index'] = 0
+        
+        # Generate first question
+        question = ai_helper.generate_question(job_role, experience_level, session['questions_asked'])
+        session['questions_asked'].append(question)
+        session.modified = True
+        
+        return render_template('interview.html', 
+                             question=question,
+                             question_num=1,
+                             job_role=job_role,
+                             experience_level=experience_level)
+    
+    return render_template('interview.html', show_setup=True)
 
-    return render_template("interview.html")
-
-# ==================================================
-# GENERATE QUESTIONS ROUTE
-# ==================================================
-
-@app.route("/generate_questions", methods=["POST"])
-def generate_questions_route():
-
-    if "user_id" not in session:
-        flash("Please login first")
-        return redirect("/")
-
-    role = request.form.get("role")
-    level = request.form.get("level")
-
-    questions = generate_questions(role, level)
-
-    return render_template(
-        "interview.html",
-        questions=questions
+@app.route('/next_question', methods=['POST'])
+@login_required
+def next_question():
+    data = request.json
+    answer = data.get('answer')
+    question = data.get('question')
+    
+    # Store answer
+    session['answers'].append(answer)
+    
+    # Generate feedback for the answer
+    feedback = ai_helper.evaluate_answer(question, answer, session['current_job_role'])
+    
+    # Check if interview should end (after 5 questions)
+    if len(session['answers']) >= 5:
+        # Calculate overall score
+        total_score = sum(f['overall_score'] for f in feedback['detailed_scores'])
+        avg_score = total_score / len(session['answers'])
+        
+        # Save to database
+        interview_record = Interview(
+            user_id=current_user.id,
+            job_role=session['current_job_role'],
+            experience_level=session['current_experience'],
+            questions_asked=json.dumps(session['questions_asked']),
+            answers_given=json.dumps(session['answers']),
+            feedback=json.dumps(feedback),
+            overall_score=avg_score
+        )
+        db.session.add(interview_record)
+        db.session.commit()
+        
+        # Clear session
+        session.pop('questions_asked', None)
+        session.pop('answers', None)
+        
+        return jsonify({
+            'completed': True,
+            'feedback': feedback,
+            'overall_score': avg_score
+        })
+    
+    # Generate next question (non-repeating)
+    next_q = ai_helper.generate_question(
+        session['current_job_role'], 
+        session['current_experience'],
+        session['questions_asked']
     )
-
-# ==================================================
-# GENERATE QUESTIONS
-# ==================================================
-
-def generate_questions(role, level):
-    """
-    Safe AI question generator (fixed crash-proof version)
-    """
-
-    try:
-        # -------------------------
-        # Normalize inputs safely
-        # -------------------------
-        role_key = (role or "").lower().strip().replace(" ", "_")
-        level = (level or "Beginner").capitalize()
-
-        role_mapping = {
-    "python": "python_developer",
-    "python_developer": "python_developer",
-
-    "java": "java_developer",
-    "java_developer": "java_developer",
-
-    "javascript": "javascript_developer",
-    "javascript_developer": "javascript_developer",
-
-    "data_science": "data_scientist",
-    "data_scientist": "data_scientist",
-
-    "full_stack": "full_stack_developer",
-    "full_stack_developer": "full_stack_developer",
-
-    "devops": "devops_engineer",
-    "devops_engineer": "devops_engineer"
-}
-
-        role_key = role_mapping.get(role_key, "python_developer")
-
-        # -------------------------
-        # safe bank fetch
-        # -------------------------
-        bank = QUESTION_BANK.get(role_key, QUESTION_BANK["python_developer"])
-
-        # -------------------------
-        # level safe mapping
-        # -------------------------
-        if level == "Beginner":
-            g, t, b = 3, 3, 2
-        elif level == "Intermediate":
-            g, t, b = 2, 4, 3
-        else:
-            g, t, b = 2, 5, 3
-
-        # -------------------------
-        # SAFE sampling
-        # -------------------------
-        questions = []
-
-        questions += random.sample(
-            bank["general"],
-            min(g, len(bank["general"]))
-        )
-
-        questions += random.sample(
-            bank["technical"],
-            min(t, len(bank["technical"]))
-        )
-
-        questions += random.sample(
-            bank["behavioral"],
-            min(b, len(bank["behavioral"]))
-        )
-
-        formatted = "\n\n".join(
-            f"{i+1}. {q}" for i, q in enumerate(questions)
-        )
-
-        display_role = role.replace("_", " ").title()
-
-        return f"""
-🎯 AI Interview Questions for {display_role} ({level})
-
-{formatted}
-
-💡 Tip: Use STAR method for behavioral answers
-"""
-
-    except Exception as e:
-        return f"""
-❌ Question generation failed safely recovered
-
-Error: {str(e)}
-
-👉 Please check role/level input from frontend
-"""
-# ==================================================
-# EVALUATE ANSWER
-# ==================================================
-
-@app.route("/evaluate", methods=["POST"])
-def evaluate():
-
-    if "user_id" not in session:
-        flash("Please login first")
-        return redirect("/")
-
-    role = request.form.get("role")
-    question = request.form.get("question")
-    answer = request.form.get("answer")
-
-    try:
-
-        feedback, score, communication = evaluate_answer(
-            role,
-            question,
-            answer
-        )
-
-        session["feedback"] = feedback
-        session["score"] = score
-
-        conn = get_db()
-        cur = conn.cursor()
-
-        cur.execute(
-            """
-            INSERT INTO interviews
-            (
-                user_id,
-                role,
-                question,
-                answer,
-                feedback,
-                score,
-                communication_level
-            )
-            VALUES (?,?,?,?,?,?,?)
-            """,
-            (
-                session["user_id"],
-                role,
-                question,
-                answer,
-                feedback,
-                score,
-                communication
-            )
-        )
-
-        conn.commit()
-        conn.close()
-
-        return render_template(
-            "result.html",
-            feedback=feedback,
-            score=score
-        )
-
-    except Exception as e:
-
-        return render_template(
-            "result.html",
-            feedback=f"❌ Evaluation Error: {str(e)}",
-            score=0
-        )
-
-
-# ==================================================
-# RESUME PAGE
-# ==================================================
-
-@app.route("/resume")
-def resume():
-
-    if "user_id" not in session:
-        flash("Please login first")
-        return redirect("/")
-
-    return render_template("resume_upload.html")
-
-
-# ==================================================
-# RESUME UPLOAD
-# ==================================================
-
-@app.route("/upload_resume", methods=["POST"])
-def upload_resume():
-
-    if "user_id" not in session:
-        flash("Please login first")
-        return redirect("/")
-
-    if "resume" not in request.files:
-        flash("No file selected")
-        return redirect("/resume-analysis")
-
-    file = request.files["resume"]
-
-    if file.filename == "":
-        flash("Please select a file")
-        return redirect("/resume-analysis")
-
-    filepath = os.path.join(
-        UPLOAD_FOLDER,
-        file.filename
-    )
-
-    file.save(filepath)
-
-    try:
-
-        resume_text = extract_resume_text(filepath)
-
-        ai_result = analyze_resume_ai(resume_text)
-
-        analysis = {
-            "ats_score": ai_result.get("score", 75),
-            "keyword_match": ai_result.get("score", 75),
-            "readability": 90,
-
-            "skills": ai_result.get(
-                "skills",
-                ["Python", "Flask"]
-            ),
-
-            "matched_keywords": ai_result.get(
-                "strengths",
-                []
-            ),
-
-            "missing_keywords": ai_result.get(
-                "weaknesses",
-                []
-            ),
-
-            "recommendations": ai_result.get(
-                "recommendations",
-                []
-            ),
-
-            "summary": ai_result.get(
-                "summary",
-                "Resume analyzed successfully."
-            ),
-
-            "report_url": "/download_report"
-        }
-
-        conn = get_db()
-        cur = conn.cursor()
-
-        cur.execute(
-            """
-            INSERT INTO resume_analyses
-            (
-                user_id,
-                analysis_data,
-                score
-            )
-            VALUES (?,?,?)
-            """,
-            (
-                session["user_id"],
-                str(analysis),
-                analysis["ats_score"]
-            )
-        )
-
-        conn.commit()
-        conn.close()
-
-        return render_template(
-            "resume_analysis.html",
-            analysis=analysis
-        )
-
-    except Exception as e:
-
-        flash(str(e))
-
-        return render_template(
-            "resume_analysis.html",
-            analysis=None
-        )
-
-@app.route("/resume-analysis")
-def resume_analysis():
-
-    if "user_id" not in session:
-        flash("Please login first")
-        return redirect("/")
-
-    return render_template(
-        "resume_analysis.html",
-        analysis=None
-    )
-# ==================================================
-# PERFORMANCE
-# ==================================================
-
-@app.route("/performance")
-def performance():
-
-    if "user_id" not in session:
-        flash("Please login first")
-        return redirect("/")
-
-    conn = get_db()
-    cur = conn.cursor()
-
-    try:
-        cur.execute("""
-            SELECT *
-            FROM interviews
-            WHERE user_id=?
-            ORDER BY id DESC
-        """, (session["user_id"],))
-        records = cur.fetchall()
-
-        cur.execute("""
-            SELECT *
-            FROM skill_quiz_results
-            WHERE user_id=?
-            ORDER BY id DESC
-        """, (session["user_id"],))
-        quiz_results = cur.fetchall()
-
-        average_score = 0
-
-        if records:
-            average_score = round(
-                sum(r["score"] for r in records) / len(records)
-            )
-
-        cur.execute("""
-            SELECT score
-            FROM resume_analyses
-            WHERE user_id=?
-            ORDER BY id DESC
-            LIMIT 1
-        """, (session["user_id"],))
-
-        row = cur.fetchone()
-        resume_score = row["score"] if row else 0
-
-    except Exception as e:
-        records = []
-        quiz_results = []
-        average_score = 0
-        resume_score = 0
-        flash(f"Error loading performance: {str(e)}")
-
-    finally:
-        conn.close()
-
-    return render_template(
-        "performance.html",
-        records=records,
-        quiz_results=quiz_results,
-        total_interviews=len(records),
-        total_quizzes=len(quiz_results),
-        average_score=average_score,
-        resume_score=resume_score
-    )
-# ==================================================
-# SKILL ASSESSMENT
-# ==================================================
-
-@app.route("/skill-assessment")
-def skill_assessment():
-
-    if "user_id" not in session:
-        flash("Please login first")
-        return redirect("/")
-
-    return render_template("skill_assessment.html")
-
-
-@app.route("/submit_skill_quiz", methods=["POST"])
-def submit_skill_quiz():
-
-    if "user_id" not in session:
-        return jsonify({"error": "Not logged in"}), 401
-
-    data = request.get_json()
-
-    skill = data.get("skill")
-    score = data.get("score")
-    total = data.get("total")
-
-    percentage = round((score / total) * 100, 2)
-
-    conn = get_db()
-    cur = conn.cursor()
-
-    cur.execute("""
-        INSERT INTO skill_quiz_results
-        (user_id, skill, score, total_questions, percentage)
-        VALUES (?, ?, ?, ?, ?)
-    """, (
-        session["user_id"],
-        skill,
-        score,
-        total,
-        percentage
-    ))
-
-    conn.commit()
-    conn.close()
-
+    session['questions_asked'].append(next_q)
+    session.modified = True
+    
     return jsonify({
-        "success": True,
-        "percentage": percentage
+        'completed': False,
+        'next_question': next_q,
+        'feedback': feedback
     })
-# ==================================================
-# DOWNLOAD REPORT
-# ==================================================
 
-@app.route("/download_report")
-def download_report():
+@app.route('/resume', methods=['GET', 'POST'])
+@login_required
+def resume():
+    if request.method == 'POST':
+        if 'resume' not in request.files:
+            flash('No file uploaded', 'danger')
+            return redirect(url_for('resume'))
+        
+        file = request.files['resume']
+        if file.filename == '':
+            flash('No file selected', 'danger')
+            return redirect(url_for('resume'))
+        
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(filepath)
+            
+            # Parse resume
+            extracted_text = resume_parser.parse_pdf(filepath)
+            
+            # Analyze with AI
+            analysis = ai_helper.analyze_resume(extracted_text)
+            
+            # Get job recommendations
+            recommendations = job_recommender.recommend_jobs(extracted_text, analysis)
+            
+            # Save to database
+            resume_record = ResumeAnalysis(
+                user_id=current_user.id,
+                filename=filename,
+                extracted_text=extracted_text[:1000],  # Store first 1000 chars
+                analysis_result=json.dumps(analysis),
+                recommended_roles=json.dumps(recommendations),
+                score=analysis.get('overall_score', 0)
+            )
+            db.session.add(resume_record)
+            db.session.commit()
+            
+            return render_template('resume_result.html', 
+                                 analysis=analysis, 
+                                 recommendations=recommendations)
+    
+    return render_template('resume_upload.html')
 
-    if "user_id" not in session:
-        flash("Please login first")
-        return redirect("/")
+@app.route('/skill-assessment', methods=['GET', 'POST'])
+@login_required
+def skill_assessment():
+    if request.method == 'POST':
+        job_role = request.form['job_role']
+        difficulty = request.form['difficulty']
+        
+        # Get questions for the selected role and difficulty
+        questions = quiz_data.get_questions(job_role, difficulty, limit=20)
+        
+        if not questions:
+            flash('No questions available for this selection', 'warning')
+            return redirect(url_for('skill_assessment'))
+        
+        session['quiz_questions'] = questions
+        session['quiz_job_role'] = job_role
+        session['quiz_difficulty'] = difficulty
+        session['quiz_answers'] = []
+        session['quiz_current'] = 0
+        
+        return render_template('quiz_take.html', 
+                             question=questions[0],
+                             question_num=1,
+                             total=len(questions),
+                             job_role=job_role,
+                             difficulty=difficulty)
+    
+    # GET request - show available quizzes
+    job_roles = quiz_data.get_available_roles()
+    return render_template('skill_assessment.html', job_roles=job_roles)
 
-    feedback = session.get(
-        "feedback",
-        "No feedback available"
-    )
-
-    filepath = os.path.join(
-        REPORT_FOLDER,
-        f"report_{session.get('user_id',0)}.pdf"
-    )
-
-    try:
-        generate_report(
-            "AI Interview Report",
-            feedback,
-            filepath
+@app.route('/submit_answer', methods=['POST'])
+@login_required
+def submit_answer():
+    data = request.json
+    user_answer = data.get('answer')
+    correct_answer = data.get('correct')
+    is_correct = (user_answer == correct_answer)
+    
+    session['quiz_answers'].append({
+        'question': data.get('question'),
+        'user_answer': user_answer,
+        'correct_answer': correct_answer,
+        'is_correct': is_correct
+    })
+    
+    # Check if quiz is complete
+    if len(session['quiz_answers']) >= len(session['quiz_questions']):
+        # Calculate score
+        total_questions = len(session['quiz_answers'])
+        correct_count = sum(1 for a in session['quiz_answers'] if a['is_correct'])
+        score = (correct_count / total_questions) * 100
+        
+        # Save to database
+        quiz_result = QuizResult(
+            user_id=current_user.id,
+            job_role=session['quiz_job_role'],
+            difficulty=session['quiz_difficulty'],
+            score=score,
+            total_questions=total_questions,
+            correct_answers=correct_count,
+            answers_detail=json.dumps(session['quiz_answers'])
         )
+        db.session.add(quiz_result)
+        db.session.commit()
+        
+        # Clear session
+        session.pop('quiz_questions', None)
+        session.pop('quiz_answers', None)
+        
+        return jsonify({
+            'completed': True,
+            'score': score,
+            'correct': correct_count,
+            'total': total_questions
+        })
+    
+    # Get next question
+    next_index = len(session['quiz_answers'])
+    next_question = session['quiz_questions'][next_index]
+    
+    return jsonify({
+        'completed': False,
+        'next_question': next_question,
+        'question_num': next_index + 1,
+        'total': len(session['quiz_questions'])
+    })
 
-        return send_file(
-            filepath,
-            as_attachment=True
-        )
-    except Exception as e:
-        flash(f"Error generating report: {str(e)}")
-        return redirect("/dashboard")
+@app.route('/performance')
+@login_required
+def performance():
+    # Get all user data for analytics
+    interviews = Interview.query.filter_by(user_id=current_user.id).order_by(Interview.date).all()
+    quizzes = QuizResult.query.filter_by(user_id=current_user.id).order_by(QuizResult.date).all()
+    resumes = ResumeAnalysis.query.filter_by(user_id=current_user.id).order_by(ResumeAnalysis.date.desc()).first()
+    
+    # Prepare chart data
+    interview_dates = [i.date.strftime('%Y-%m-%d') for i in interviews]
+    interview_scores = [i.overall_score for i in interviews]
+    
+    quiz_dates = [q.date.strftime('%Y-%m-%d') for q in quizzes]
+    quiz_scores = [q.score for q in quizzes]
+    
+    return render_template('performance.html',
+                         interviews=interviews,
+                         quizzes=quizzes,
+                         latest_resume=resumes,
+                         interview_dates=json.dumps(interview_dates),
+                         interview_scores=json.dumps(interview_scores),
+                         quiz_dates=json.dumps(quiz_dates),
+                         quiz_scores=json.dumps(quiz_scores))
 
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'pdf'}
 
-# ==================================================
-# FEEDBACK PAGE (Optional)
-# ==================================================
+def secure_filename(filename):
+    return filename.replace('/', '_').replace('\\', '_')
 
-@app.route("/feedback")
-def feedback():
-
-    if "user_id" not in session:
-        flash("Please login first")
-        return redirect("/")
-
-    return redirect("/performance")
-
-
-# ==================================================
-# ERROR HANDLER
-# ==================================================
-
-@app.errorhandler(404)
-def not_found(error):
-    if "user_id" in session:
-        return render_template(
-            "dashboard.html",
-            name=session.get("name", "User")
-        )
-    return redirect("/")
-
-
-# ==================================================
-# RUN APP
-# ==================================================
-
-if __name__ == "__main__":
-
-    port = int(
-        os.environ.get("PORT", 5000)
-    )
-
-    app.run(
-        host="0.0.0.0",
-        port=port,
-        debug=False
-    )
+if __name__ == '__main__':
+    app.run(debug=True)
