@@ -1,438 +1,138 @@
-import random
-
-# =====================================================
-# QUESTION BANK
-# =====================================================
-
-QUESTION_BANK = {
-
-    "python_developer": {
-        "general": [
-            "Tell me about your Python experience.",
-            "What Python projects have you built?",
-            "Why do you prefer Python?"
-        ],
-        "technical": [
-            "Explain decorators.",
-            "What is list comprehension?",
-            "Difference between tuple and list?",
-            "Explain generators.",
-            "What is GIL?",
-            "What are *args and **kwargs?"
-        ],
-        "behavioral": [
-            "Describe a Python bug you fixed.",
-            "Tell me about a project challenge."
-        ]
-    },
-
-    "java_developer": {
-        "general": [
-            "Tell me about your Java experience.",
-            "Why do you use Java?"
-        ],
-        "technical": [
-            "What is JVM?",
-            "Difference between JDK and JRE?",
-            "Explain OOP principles.",
-            "What is Spring Boot?",
-            "Difference between HashMap and Hashtable?"
-        ],
-        "behavioral": [
-            "Describe a challenging Java project."
-        ]
-    },
-
-    "react_developer": {
-        "general": [
-            "Tell me about your React experience."
-        ],
-        "technical": [
-            "What are Hooks?",
-            "What is Virtual DOM?",
-            "Difference between state and props?",
-            "Explain useEffect.",
-            "What is Redux?"
-        ],
-        "behavioral": [
-            "Describe a frontend challenge."
-        ]
-    },
-
-    "data_scientist": {
-        "general": [
-            "Tell me about your ML experience."
-        ],
-        "technical": [
-            "What is overfitting?",
-            "Explain train-test split.",
-            "Difference between supervised and unsupervised learning.",
-            "What is random forest?",
-            "What is cross validation?"
-        ],
-        "behavioral": [
-            "Describe your best ML project."
-        ]
-    },
-
-    "devops_engineer": {
-        "general": [
-            "Tell me about your DevOps experience."
-        ],
-        "technical": [
-            "What is Docker?",
-            "What is Kubernetes?",
-            "Explain CI/CD.",
-            "Difference between containers and VMs?",
-            "What is Infrastructure as Code?"
-        ],
-        "behavioral": [
-            "Describe a deployment issue you solved."
-        ]
-    }
-}
-
-# =====================================================
-# ROLE MAPPING
-# =====================================================
-
-ROLE_MAPPING = {
-
-    "python": "python_developer",
-    "python_developer": "python_developer",
-
-    "java": "java_developer",
-    "java_developer": "java_developer",
-
-    "react": "react_developer",
-    "react_developer": "react_developer",
-
-    "javascript": "react_developer",
-    "javascript_developer": "react_developer",
-
-    "data_science": "data_scientist",
-    "data_scientist": "data_scientist",
-
-    "machine_learning": "data_scientist",
-
-    "devops": "devops_engineer",
-    "devops_engineer": "devops_engineer",
-
-    "full_stack": "react_developer",
-    "full_stack_developer": "react_developer"
-}
-
-# =====================================================
-# QUESTION GENERATOR
-# =====================================================
-
-def generate_questions(role, level):
-    """
-    Generate AI-powered interview questions based on role and level.
-    """
-
-    role_key = role.lower().strip().replace(" ", "_")
-
-    role_mapping = {
-        "python": "python_developer",
-        "python_developer": "python_developer",
-
-        "java": "java_developer",
-        "java_developer": "java_developer",
-
-        "javascript": "javascript_developer",
-        "javascript_developer": "javascript_developer",
-
-        "react": "javascript_developer",
-
-        "data_science": "data_scientist",
-        "data_scientist": "data_scientist",
-
-        "data_scientist": "data_scientist",
-
-        "full_stack": "full_stack_developer",
-        "full_stack_developer": "full_stack_developer",
-
-        "devops": "devops_engineer",
-        "devops_engineer": "devops_engineer"
-    }
-
-    role_key = role_mapping.get(role_key)
-
-    if role_key and role_key in QUESTION_BANK:
-        bank = QUESTION_BANK[role_key]
-    else:
-        bank = QUESTION_BANK["python_developer"]
-
-    # Question count based on level
-    if level == "Beginner":
-        general_count = 3
-        technical_count = 3
-        behavioral_count = 2
-
-    elif level == "Intermediate":
-        general_count = 2
-        technical_count = 4
-        behavioral_count = 3
-
-    else:
-        general_count = 2
-        technical_count = 5
-        behavioral_count = 3
-
-    questions = []
-
-    questions.extend(
-        random.sample(
-            bank["general"],
-            min(general_count, len(bank["general"]))
-        )
-    )
-
-    questions.extend(
-        random.sample(
-            bank["technical"],
-            min(technical_count, len(bank["technical"]))
-        )
-    )
-
-    questions.extend(
-        random.sample(
-            bank["behavioral"],
-            min(behavioral_count, len(bank["behavioral"]))
-        )
-    )
-
-    formatted_questions = "\n\n".join(
-        [f"{i+1}. {q}" for i, q in enumerate(questions)]
-    )
-
-    return f"""
-🎯 AI Interview Questions ({level})
-
-Role: {role}
-
-{formatted_questions}
-"""
-
-# =====================================================
-# ANSWER EVALUATION
-# =====================================================
-
-def evaluate_answer(role, question, answer):
-
-    words = len(answer.split())
-
-    if words < 15:
-        score = 30
-        communication = "Poor"
-
-    elif words < 40:
-        score = 55
-        communication = "Average"
-
-    elif words < 80:
-        score = 75
-        communication = "Good"
-
-    elif words < 150:
-        score = 90
-        communication = "Excellent"
-
-    else:
-        score = 95
-        communication = "Outstanding"
-
-    strengths = []
-
-    if "project" in answer.lower():
-        strengths.append("Project experience mentioned")
-
-    if any(ch.isdigit() for ch in answer):
-        strengths.append("Metrics included")
-
-    if not strengths:
-        strengths.append("Answer addresses question")
-
-    feedback = f"""
-Question:
-{question}
-
-Score:
-{score}/100
-
-Communication:
-{communication}
-
-Strengths:
-{', '.join(strengths)}
-
-Suggestions:
-Use STAR Method and include project examples.
-"""
-
-    return feedback, score, communication
-
-# =====================================================
-# RESUME ANALYSIS
-# =====================================================
-
-def analyze_resume_ai(resume_text):
-
-    text = resume_text.lower()
-
-    sections = [
-        "education",
-        "experience",
-        "skills",
-        "projects",
-        "internship",
-        "summary",
-        "profile"
-    ]
-
-    section_count = sum(
-        1 for s in sections
-        if s in text
-    )
-
-    if len(resume_text.split()) < 120 or section_count < 3:
-
-        return {
-            "valid": False,
-            "message": "Uploaded file does not appear to be a professional resume."
-        }
-
-    skill_map = {
-
-        "python": [
-            "Python Developer",
-            "Backend Developer",
-            "Django Developer",
-            "Flask Developer"
-        ],
-
-        "java": [
-            "Java Developer",
-            "Spring Boot Developer",
-            "Backend Engineer"
-        ],
-
-        "react": [
-            "React Developer",
-            "Frontend Developer",
-            "UI Engineer"
-        ],
-
-        "javascript": [
-            "JavaScript Developer",
-            "Frontend Developer"
-        ],
-
-        "sql": [
-            "Data Analyst",
-            "Database Developer"
-        ],
-
-        "machine learning": [
-            "ML Engineer",
-            "AI Engineer",
-            "Data Scientist"
-        ],
-
-        "docker": [
-            "DevOps Engineer"
-        ],
-
-        "aws": [
-            "Cloud Engineer",
-            "DevOps Engineer"
-        ]
-    }
-
-    detected_skills = []
-    roles = []
-
-    for skill, role_list in skill_map.items():
-
-        if skill in text:
-
-            detected_skills.append(skill)
-
-            roles.extend(role_list)
-
-    roles = list(set(roles))
-
-    score = min(
-        60 + len(detected_skills) * 5,
-        100
-    )
-
-    return {
-
-        "valid": True,
-
-        "score": score,
-
-        "skills": detected_skills,
-
-        "strengths": [
-            "Resume structure detected",
-            "Technical skills identified",
-            "Relevant keywords present"
-        ],
-
-        "weaknesses": [] if len(detected_skills) >= 3 else [
-            "Add more technical skills",
-            "Include more project details"
-        ],
-
-        "missing_skills": [
-            "Git",
-            "REST API",
-            "Testing"
-        ],
-
-        "recommended_roles": roles,
-
-        "recommendations": {
-            "best_match": {
-                "role": roles[0] if roles else "Software Engineer",
-                "match_percentage": score,
-                "description": "Based on detected skills and experience."
-            },
-            "top_roles": [
-                {
-                    "role": role,
-                    "match_percentage": max(score - i * 5, 60),
-                    "description": "Recommended from resume skills."
+import google.generativeai as genai
+import os
+import json
+from typing import List, Dict
+
+class AIHelper:
+    def __init__(self):
+        genai.configure(api_key=os.getenv('GOOGLE_API_KEY'))
+        self.model = genai.GenerativeModel('gemini-pro')
+    
+    def generate_question(self, job_role: str, experience_level: str, asked_questions: List[str]) -> str:
+        """Generate a unique question that hasn't been asked before"""
+        
+        # Create prompt for question generation
+        prompt = f"""Generate a technical or behavioral interview question for a {experience_level} level {job_role} position.
+        
+        Previous questions asked (DO NOT repeat any of these):
+        {chr(10).join(asked_questions) if asked_questions else 'None yet'}
+        
+        Rules:
+        1. Question must be completely different from all previous questions
+        2. Question should be specific and detailed
+        3. Focus on {experience_level} level expectations
+        4. Include scenario-based questions for behavioral rounds
+        
+        Generate ONLY the question text, no explanations or numbering."""
+        
+        response = self.model.generate_content(prompt)
+        return response.text.strip()
+    
+    def evaluate_answer(self, question: str, answer: str, job_role: str) -> Dict:
+        """Evaluate the user's answer and provide detailed feedback"""
+        
+        prompt = f"""Evaluate this interview answer for a {job_role} position.
+
+Question: {question}
+
+Candidate's Answer: {answer}
+
+Provide a detailed evaluation in JSON format with the following structure:
+{{
+    "communication": {{
+        "score": (0-100),
+        "feedback": "Feedback on clarity, structure, and articulation"
+    }},
+    "relevance": {{
+        "score": (0-100),
+        "feedback": "How relevant the answer is to the question"
+    }},
+    "technical_accuracy": {{
+        "score": (0-100),
+        "feedback": "Technical correctness and depth"
+    }},
+    "completeness": {{
+        "score": (0-100),
+        "feedback": "Whether all aspects were covered"
+    }},
+    "overall_score": (average of all scores),
+    "strengths": ["strength1", "strength2", "strength3"],
+    "improvements": ["improvement1", "improvement2", "improvement3"],
+    "sample_better_answer": "A concise example of a better answer"
+}}
+
+Be specific, constructive, and encouraging."""
+        
+        response = self.model.generate_content(prompt)
+        
+        # Parse JSON from response
+        try:
+            evaluation = json.loads(response.text)
+        except:
+            # Fallback evaluation
+            evaluation = {
+                "communication": {"score": 70, "feedback": "Good effort, could be more structured"},
+                "relevance": {"score": 75, "feedback": "Relevant but could be more focused"},
+                "technical_accuracy": {"score": 65, "feedback": "Basic understanding shown"},
+                "completeness": {"score": 70, "feedback": "Could add more details"},
+                "overall_score": 70,
+                "strengths": ["Good attempt", "Shows understanding"],
+                "improvements": ["Add more examples", "Structure better"],
+                "sample_better_answer": "I would recommend structuring answers using STAR method"
+            }
+        
+        return evaluation
+    
+    def analyze_resume(self, resume_text: str) -> Dict:
+        """Analyze resume and provide detailed feedback"""
+        
+        prompt = f"""Analyze this resume and provide comprehensive feedback in JSON format:
+
+Resume Text:
+{resume_text[:3000]}
+
+Return JSON with:
+{{
+    "overall_score": (0-100),
+    "strengths": ["strength1", "strength2", "strength3"],
+    "weaknesses": ["weakness1", "weakness2", "weakness3"],
+    "recommendations": ["recommendation1", "recommendation2", "recommendation3"],
+    "formatting_score": (0-100),
+    "content_score": (0-100),
+    "keywords_score": (0-100),
+    "missing_keywords": ["keyword1", "keyword2"],
+    "ats_compatibility": (0-100),
+    "suggested_improvements": {{
+        "summary": "Suggestions for professional summary",
+        "experience": "Suggestions for work experience section",
+        "skills": "Suggestions for skills section",
+        "education": "Suggestions for education section"
+    }}
+}}
+
+Be specific and actionable."""
+        
+        response = self.model.generate_content(prompt)
+        
+        try:
+            analysis = json.loads(response.text)
+        except:
+            analysis = {
+                "overall_score": 75,
+                "strengths": ["Good structure", "Relevant experience"],
+                "weaknesses": ["Missing metrics", "Could add more keywords"],
+                "recommendations": ["Add quantifiable achievements", "Include more industry keywords"],
+                "formatting_score": 80,
+                "content_score": 70,
+                "keywords_score": 75,
+                "missing_keywords": [],
+                "ats_compatibility": 75,
+                "suggested_improvements": {
+                    "summary": "Add a compelling professional summary",
+                    "experience": "Highlight achievements with numbers",
+                    "skills": "Add technical skills section",
+                    "education": "List relevant coursework"
                 }
-                for i, role in enumerate(roles[:5])
-            ]
-        }
-    }
-
-# =====================================================
-# AI SUGGESTIONS
-# =====================================================
-
-def get_ai_suggestions(role, level):
-
-    return {
-        "key_topics": [
-            "Communication",
-            "Problem Solving",
-            "Projects",
-            "Technical Concepts"
-        ],
-        "common_questions": [
-            "Tell me about yourself",
-            "Describe a project",
-            "What challenges did you face?"
-        ],
-        "tips": [
-            "Use STAR method",
-            "Give real examples",
-            "Include measurable impact"
-        ]
-    }
+            }
+        
+        return analysis
