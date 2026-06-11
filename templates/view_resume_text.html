@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Extracted Resume Text - AI Interview Coach{% endblock %}
+
+{% block content %}
+<div style="max-width: 900px; margin: 0 auto;">
+    <div class="card" style="padding: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2>📄 Extracted Resume Content</h2>
+            <a href="/resume-analysis" class="btn btn-secondary">← Back</a>
+        </div>
+        
+        <div style="background: #f7fafc; padding: 1rem; border-radius: 10px; margin-bottom: 1rem;">
+            <strong>Filename:</strong> {{ resume.filename }}<br>
+            <strong>Uploaded:</strong> {{ resume.date.strftime('%Y-%m-%d %H:%M') }}<br>
+            <strong>Score:</strong> {{ resume.score }}%
+        </div>
+        
+        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1.5rem; max-height: 500px; overflow-y: auto; font-family: monospace; white-space: pre-wrap; line-height: 1.6;">
+            {{ resume.extracted_text or "No text could be extracted from this PDF. Please ensure it's a text-based PDF file." }}
+        </div>
+        
+        <div style="margin-top: 1.5rem;">
+            <a href="/resume-analysis" class="btn btn-primary">Upload Another Resume</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
