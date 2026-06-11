@@ -1,106 +1,57 @@
 {% extends "base.html" %}
 
-{% block title %}Quiz - AI Interview Coach{% endblock %}
-
 {% block content %}
 <div style="max-width: 700px; margin: 0 auto;">
     <div class="card" style="padding: 2rem;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
             <span style="background: #667eea; color: white; padding: 0.25rem 0.75rem; border-radius: 20px;">{{ category }}</span>
-            <span>Question {{ question_num }} of {{ total }}</span>
+            <span>Question {{ num }} of {{ total }}</span>
         </div>
         
-        <div style="margin-bottom: 2rem;">
-            <h3 style="margin-bottom: 1rem;">{{ question.question }}</h3>
-        </div>
+        <h3 style="margin-bottom: 1rem;">{{ question.question }}</h3>
         
         <div id="options">
             {% for option in question.options %}
-            <div class="option" data-value="{{ option }}" data-correct="{{ question.correct }}" style="padding: 1rem; margin-bottom: 0.75rem; border: 2px solid #e2e8f0; border-radius: 10px; cursor: pointer; transition: all 0.3s;">
+            <div class="option" data-value="{{ option }}" style="padding: 1rem; margin-bottom: 0.75rem; border: 2px solid #e2e8f0; border-radius: 10px; cursor: pointer;">
                 {{ option }}
             </div>
             {% endfor %}
         </div>
         
-        <button id="submitBtn" class="btn btn-primary" style="width: 100%; margin-top: 1rem;" disabled>Submit Answer</button>
-        
-        <div id="feedbackDiv" style="margin-top: 1.5rem; display: none;"></div>
+        <button id="submitBtn" class="btn btn-primary" style="width: 100%; margin-top: 1rem;" disabled>Submit</button>
+        <div id="feedbackDiv" style="margin-top: 1rem;"></div>
     </div>
 </div>
 
 <script>
-    let selectedAnswer = null;
-    let selectedElement = null;
-    
-    document.querySelectorAll('.option').forEach(opt => {
-        opt.addEventListener('click', () => {
-            document.querySelectorAll('.option').forEach(o => {
-                o.style.background = 'white';
-                o.style.borderColor = '#e2e8f0';
-            });
-            opt.style.background = '#667eea20';
-            opt.style.borderColor = '#667eea';
-            selectedAnswer = opt.dataset.value;
-            selectedElement = opt;
-            document.getElementById('submitBtn').disabled = false;
-        });
+let selected = null;
+document.querySelectorAll('.option').forEach(opt => {
+    opt.onclick = () => {
+        document.querySelectorAll('.option').forEach(o => o.style.background = 'white');
+        opt.style.background = '#667eea20';
+        selected = opt.dataset.value;
+        document.getElementById('submitBtn').disabled = false;
+    };
+});
+
+document.getElementById('submitBtn').onclick = async () => {
+    if (!selected) return;
+    const response = await fetch('/submit-quiz', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            answer: selected,
+            correct: '{{ question.correct }}',
+            question: '{{ question.question }}',
+            explanation: '{{ question.explanation }}'
+        })
     });
-    
-    document.getElementById('submitBtn').addEventListener('click', async () => {
-        if (!selectedAnswer) return;
-        
-        const submitBtn = document.getElementById('submitBtn');
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Checking answer...';
-        
-        try {
-            const response = await fetch('/submit-quiz-answer', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    answer: selectedAnswer,
-                    correct: '{{ question.correct }}',
-                    question: '{{ question.question }}',
-                    explanation: '{{ question.explanation }}'
-                })
-            });
-            const data = await response.json();
-            
-            if (data.completed) {
-                window.location.href = '/quiz-results';
-            } else {
-                // Show feedback with correct answer
-                const isCorrect = selectedAnswer === '{{ question.correct }}';
-                const feedbackDiv = document.getElementById('feedbackDiv');
-                feedbackDiv.style.display = 'block';
-                
-                if (isCorrect) {
-                    feedbackDiv.innerHTML = `
-                        <div style="background: #48bb78; color: white; padding: 1rem; border-radius: 10px;">
-                            ✅ <strong>Correct!</strong><br>
-                            {{ question.explanation }}
-                        </div>
-                    `;
-                } else {
-                    feedbackDiv.innerHTML = `
-                        <div style="background: #ef4444; color: white; padding: 1rem; border-radius: 10px;">
-                            ❌ <strong>Incorrect!</strong><br>
-                            Correct answer: <strong>{{ question.correct }}</strong><br>
-                            {{ question.explanation }}
-                        </div>
-                    `;
-                }
-                
-                // Load next question after delay
-                setTimeout(() => {
-                    window.location.reload();
-                }, 3000);
-            }
-        } catch (error) {
-            alert('Error submitting answer. Please try again.');
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Submit Answer';
-        }
-    });
+    const data = await response.json();
+    if (data.completed) {
+        window.location.href = '/quiz-complete';
+    } else {
+        window.location.reload();
+    }
+};
 </script>
 {% endblock %}
