@@ -1,166 +1,52 @@
 {% extends "base.html" %}
 
-{% block title %}Mock Interview - AI Interview Coach{% endblock %}
-
-{% block extra_css %}
-<style>
-    .question-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 2rem;
-        border-radius: 15px;
-        margin-bottom: 1.5rem;
-    }
-    
-    .answer-textarea {
-        width: 100%;
-        padding: 1rem;
-        border: 2px solid #e2e8f0;
-        border-radius: 10px;
-        font-size: 1rem;
-        font-family: inherit;
-        resize: vertical;
-        min-height: 150px;
-    }
-    
-    .answer-textarea:focus {
-        outline: none;
-        border-color: #667eea;
-    }
-    
-    .feedback-card {
-        background: #f0fff4;
-        border-left: 4px solid #48bb78;
-        padding: 1rem;
-        border-radius: 10px;
-        margin-top: 1rem;
-    }
-    
-    .loading {
-        display: inline-block;
-        width: 20px;
-        height: 20px;
-        border: 3px solid #f3f3f3;
-        border-top: 3px solid #667eea;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-</style>
-{% endblock %}
-
 {% block content %}
 <div style="max-width: 800px; margin: 0 auto;">
     <div class="card" style="padding: 2rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-            <div>
-                <span style="background: #667eea; color: white; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.875rem;">
-                    🎤 {{ role }}
-                </span>
-            </div>
-            <div style="color: #666;">
-                Question <span id="questionNum">{{ question_num }}</span> of <span id="totalQuestions">{{ total }}</span>
-            </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
+            <span style="background: #667eea; color: white; padding: 0.25rem 0.75rem; border-radius: 20px;">{{ role }}</span>
+            <span>Question {{ question_num }} of {{ total }}</span>
         </div>
         
-        <div class="question-card">
-            <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">Question:</h3>
-            <p id="questionText" style="font-size: 1.1rem; line-height: 1.6;">{{ question }}</p>
+        <div style="background: #f7fafc; padding: 1.5rem; border-radius: 15px; margin-bottom: 1.5rem;">
+            <h3>Question:</h3>
+            <p style="font-size: 1.1rem;">{{ question }}</p>
         </div>
         
         <form id="answerForm">
-            <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Your Answer:</label>
-                <textarea id="answerInput" name="answer" class="answer-textarea" required placeholder="Type your answer here... Be detailed and specific for better scores!"></textarea>
-            </div>
-            <input type="hidden" id="questionInput" name="question" value="{{ question }}">
-            <button type="submit" id="submitBtn" class="btn btn-primary" style="width: 100%;">
-                Submit Answer →
-            </button>
+            <textarea name="answer" rows="6" required placeholder="Type your detailed answer here..." style="width: 100%; padding: 1rem; border: 2px solid #e2e8f0; border-radius: 10px;"></textarea>
+            <input type="hidden" name="question" value="{{ question }}">
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Submit Answer</button>
         </form>
         
-        <div id="feedbackContainer" style="margin-top: 1.5rem;"></div>
+        <div id="feedbackDiv" style="margin-top: 1rem;"></div>
     </div>
 </div>
 
 <script>
-    let currentQuestionNum = {{ question_num }};
-    const totalQuestions = {{ total }};
+document.getElementById('answerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const response = await fetch('/submit-mock-answer', { method: 'POST', body: formData });
+    const data = await response.json();
     
-    document.getElementById('answerForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const answer = document.getElementById('answerInput').value.trim();
-        if (!answer) {
-            alert('Please provide an answer before submitting.');
-            return;
-        }
-        
-        const submitBtn = document.getElementById('submitBtn');
-        const originalText = submitBtn.textContent;
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="loading"></span> Submitting...';
-        
-        const formData = new FormData(e.target);
-        
-        try {
-            const response = await fetch('/submit-mock-answer', {
-                method: 'POST',
-                body: formData
-            });
-            
-            const data = await response.json();
-            
-            if (data.completed) {
-                // Interview completed
-                window.location.href = '/interview-results?score=' + data.total_score;
-            } else {
-                // Show feedback
-                const feedbackDiv = document.getElementById('feedbackContainer');
-                feedbackDiv.innerHTML = `
-                    <div class="feedback-card">
-                        <strong>✅ Answer Submitted!</strong><br>
-                        Your score for this question: <strong>${data.score}%</strong>
-                        <div style="margin-top: 0.5rem; font-size: 0.875rem;">
-                            ${data.score >= 70 ? 'Great answer! Keep it up!' : data.score >= 50 ? 'Good answer! Add more details next time.' : 'Try to provide more detailed answers for better scores.'}
-                        </div>
-                    </div>
-                `;
-                
-                // Update to next question after short delay
-                setTimeout(() => {
-                    // Clear feedback
-                    feedbackDiv.innerHTML = '';
-                    
-                    // Update question
-                    document.getElementById('questionText').textContent = data.next_question;
-                    document.getElementById('questionInput').value = data.next_question;
-                    document.getElementById('answerInput').value = '';
-                    document.getElementById('questionNum').textContent = data.question_num;
-                    currentQuestionNum = data.question_num;
-                    
-                    // Scroll to top
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                }, 2000);
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('Error submitting answer. Please try again.');
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = originalText;
-        }
-    });
-    
-    // Auto-resize textarea
-    const textarea = document.getElementById('answerInput');
-    textarea.addEventListener('input', function() {
-        this.style.height = 'auto';
-        this.style.height = Math.min(this.scrollHeight, 300) + 'px';
-    });
+    if (data.completed) {
+        window.location.href = '/interview-results?score=' + data.total_score;
+    } else {
+        document.getElementById('feedbackDiv').innerHTML = `
+            <div style="background: ${data.score >= 70 ? '#48bb78' : data.score >= 50 ? '#f59e0b' : '#ef4444'}; color: white; padding: 1rem; border-radius: 10px;">
+                <strong>Score: ${data.score}%</strong><br>
+                ${data.feedback}
+            </div>
+        `;
+        document.querySelector('textarea').value = '';
+        document.querySelector('input[name="question"]').value = data.next_question;
+        document.querySelector('h3 + p').textContent = data.next_question;
+        document.querySelector('span:last-child').textContent = `Question ${data.question_num} of ${data.total}`;
+        setTimeout(() => {
+            document.getElementById('feedbackDiv').innerHTML = '';
+        }, 3000);
+    }
+});
 </script>
 {% endblock %}
