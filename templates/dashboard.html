@@ -54,3 +54,32 @@
     </div>
 </div>
 {% endblock %}
+<!-- Add this after the resume score card -->
+<div class="card" style="text-align: center;">
+    <div style="font-size: 2.5rem; font-weight: bold; color: #667eea;">{{ avg_quiz_score }}%</div>
+    <div style="color: #666;">Average Quiz Score</div>
+    <div style="font-size: 0.875rem; color: #999; margin-top: 0.5rem;">{{ quiz_count }} quizzes taken</div>
+</div>
+
+<!-- Add recent quizzes section -->
+<div class="card" style="margin-top: 1rem;">
+    <h3 style="margin-bottom: 1rem;">📊 Recent Quiz Results</h3>
+    {% if recent_quizzes %}
+        {% for quiz in recent_quizzes %}
+        <div style="padding: 0.75rem 0; border-bottom: 1px solid #e2e8f0;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="font-weight: 600;">{{ quiz.category }} ({{ quiz.difficulty }})</div>
+                    <div style="font-size: 0.875rem; color: #666;">{{ quiz.date.strftime('%Y-%m-%d') }}</div>
+                </div>
+                <div style="background: #48bb78; color: white; padding: 0.25rem 0.75rem; border-radius: 20px;">Score: {{ quiz.score }}%</div>
+            </div>
+            <div style="font-size: 0.875rem; color: #666; margin-top: 0.25rem;">
+                {{ quiz.correct_answers }}/{{ quiz.total_questions }} correct
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p style="color: #666;">No quizzes taken yet. Start your first quiz!</p>
+    {% endif %}
+</div>
