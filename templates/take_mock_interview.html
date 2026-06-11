@@ -32,33 +32,43 @@
     document.getElementById('answerForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const formData = new FormData(e.target);
+        const submitBtn = e.target.querySelector('button');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Submitting...';
         
-        const response = await fetch('/submit-mock-answer', {
-            method: 'POST',
-            body: formData
-        });
-        const data = await response.json();
-        
-        if (data.completed) {
-            window.location.href = '/interview-results';
-        } else {
-            // Update page with next question
-            document.querySelector('textarea[name="answer"]').value = '';
-            document.querySelector('input[name="question"]').value = data.next_question;
-            document.querySelector('h3 + p').textContent = data.next_question;
-            document.querySelector('span:last-child').textContent = `Question ${data.question_num} of ${data.total}`;
+        try {
+            const response = await fetch('/submit-mock-answer', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
             
-            // Show feedback
-            const feedbackDiv = document.getElementById('feedback');
-            feedbackDiv.style.display = 'block';
-            feedbackDiv.innerHTML = `
-                <div style="background: #48bb78; color: white; padding: 1rem; border-radius: 10px;">
-                    <strong>Score: ${data.score}%</strong> - Good answer! Continue to next question.
-                </div>
-            `;
-            setTimeout(() => {
-                feedbackDiv.style.display = 'none';
-            }, 3000);
+            if (data.completed) {
+                window.location.href = '/interview-results';
+            } else {
+                // Update page with next question
+                document.querySelector('textarea[name="answer"]').value = '';
+                document.querySelector('input[name="question"]').value = data.next_question;
+                document.querySelector('h3 + p').textContent = data.next_question;
+                document.querySelector('span:last-child').textContent = `Question ${data.question_num} of ${data.total}`;
+                
+                // Show feedback
+                const feedbackDiv = document.getElementById('feedback');
+                feedbackDiv.style.display = 'block';
+                feedbackDiv.innerHTML = `
+                    <div style="background: #48bb78; color: white; padding: 1rem; border-radius: 10px;">
+                        <strong>Score: ${data.score}%</strong> - Good answer! Continue to next question.
+                    </div>
+                `;
+                setTimeout(() => {
+                    feedbackDiv.style.display = 'none';
+                }, 3000);
+            }
+        } catch (error) {
+            alert('Error submitting answer. Please try again.');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Submit Answer →';
         }
     });
 </script>
