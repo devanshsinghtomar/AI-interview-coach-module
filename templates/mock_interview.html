@@ -2,27 +2,109 @@
 
 {% block title %}Mock Interview - AI Interview Coach{% endblock %}
 
+{% block extra_css %}
+<style>
+    .role-card {
+        cursor: pointer;
+        transition: all 0.3s;
+        border: 2px solid #e2e8f0;
+    }
+    
+    .role-card:hover {
+        transform: translateY(-5px);
+        border-color: #667eea;
+        box-shadow: 0 10px 30px rgba(102,126,234,0.2);
+    }
+    
+    .role-card.selected {
+        border-color: #667eea;
+        background: #667eea10;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div style="max-width: 600px; margin: 0 auto;">
+<div style="max-width: 900px; margin: 0 auto;">
     <div class="card" style="padding: 2rem;">
-        <h2 style="text-align: center; margin-bottom: 1rem;">🎤 Mock Interview</h2>
+        <h2 style="text-align: center; margin-bottom: 0.5rem;">🎤 Mock Interview</h2>
         <p style="text-align: center; color: #666; margin-bottom: 2rem;">Choose a role to practice with AI-generated questions</p>
         
-        <form method="POST" action="/start-mock-interview">
-            <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Select Job Role</label>
-                <select name="role" required style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1rem;">
+        <form id="interviewForm" method="POST" action="/start-mock-interview">
+            <div style="margin-bottom: 2rem;">
+                <label style="display: block; margin-bottom: 1rem; font-weight: 600;">Select Your Target Role:</label>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
                     {% for role in roles %}
-                    <option value="{{ role }}">{{ role }}</option>
+                    <div class="role-card card" data-role="{{ role }}" style="padding: 1rem; text-align: center; cursor: pointer;">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">
+                            {% if 'Python' in role %}🐍
+                            {% elif 'JavaScript' in role %}📜
+                            {% elif 'Data' in role %}📊
+                            {% elif 'Full' in role %}🌐
+                            {% elif 'DevOps' in role %}⚙️
+                            {% elif 'Java' in role %}☕
+                            {% elif 'Cloud' in role %}☁️
+                            {% else %}💻
+                            {% endif %}
+                        </div>
+                        <div style="font-weight: 600;">{{ role }}</div>
+                        <div style="font-size: 0.75rem; color: #666; margin-top: 0.25rem;">10 questions</div>
+                    </div>
                     {% endfor %}
-                </select>
+                </div>
+                <input type="hidden" name="role" id="selectedRole" required>
             </div>
-            <button type="submit" class="btn btn-primary" style="width: 100%;">Start Interview →</button>
+            
+            <div style="background: #f7fafc; padding: 1rem; border-radius: 10px; margin-bottom: 1.5rem;">
+                <div style="display: flex; justify-content: space-around; text-align: center;">
+                    <div>
+                        <div style="font-size: 1.5rem; font-weight: bold; color: #667eea;">10</div>
+                        <div style="font-size: 0.875rem;">Questions</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 1.5rem; font-weight: bold; color: #667eea;">AI</div>
+                        <div style="font-size: 0.875rem;">Scoring</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 1.5rem; font-weight: bold; color: #667eea;">5-10</div>
+                        <div style="font-size: 0.875rem;">Minutes</div>
+                    </div>
+                </div>
+            </div>
+            
+            <button type="submit" id="startBtn" class="btn btn-primary" style="width: 100%;" disabled>
+                Select a role to start →
+            </button>
         </form>
-        
-        <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
-            <p style="font-size: 0.875rem; color: #666; text-align: center;">Each interview has 10 questions. Answer naturally to get scored!</p>
-        </div>
     </div>
 </div>
+
+<script>
+    let selectedRole = null;
+    
+    document.querySelectorAll('.role-card').forEach(card => {
+        card.addEventListener('click', () => {
+            // Remove selected class from all
+            document.querySelectorAll('.role-card').forEach(c => {
+                c.classList.remove('selected');
+                c.style.borderColor = '#e2e8f0';
+            });
+            
+            // Add selected class to clicked card
+            card.classList.add('selected');
+            card.style.borderColor = '#667eea';
+            
+            // Set selected role
+            selectedRole = card.dataset.role;
+            document.getElementById('selectedRole').value = selectedRole;
+            document.getElementById('startBtn').disabled = false;
+        });
+    });
+    
+    document.getElementById('interviewForm').addEventListener('submit', (e) => {
+        if (!selectedRole) {
+            e.preventDefault();
+            alert('Please select a role first');
+        }
+    });
+</script>
 {% endblock %}
