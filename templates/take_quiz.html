@@ -47,22 +47,31 @@
     document.getElementById('submitBtn').addEventListener('click', async () => {
         if (!selectedAnswer) return;
         
-        const response = await fetch('/submit-quiz-answer', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                answer: selectedAnswer,
-                correct: '{{ question.correct }}',
-                question: '{{ question.question }}'
-            })
-        });
-        const data = await response.json();
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Submitting...';
         
-        if (data.completed) {
-            window.location.href = '/quiz-results';
-        } else {
-            // Update page with next question
-            window.location.reload();
+        try {
+            const response = await fetch('/submit-quiz-answer', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    answer: selectedAnswer,
+                    correct: '{{ question.correct }}',
+                    question: '{{ question.question }}'
+                })
+            });
+            const data = await response.json();
+            
+            if (data.completed) {
+                window.location.href = '/quiz-results';
+            } else {
+                window.location.reload();
+            }
+        } catch (error) {
+            alert('Error submitting answer. Please try again.');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Submit Answer';
         }
     });
 </script>
