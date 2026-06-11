@@ -1,93 +1,65 @@
 {% extends "base.html" %}
 
-{% block title %}Performance - AI Interview Coach{% endblock %}
-
 {% block content %}
 <div>
-    <h1 style="margin-bottom: 2rem;">📈 Performance Analytics</h1>
+    <h1>📈 Performance Analytics</h1>
     
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 2rem 0;">
         <div class="card" style="text-align: center;">
             <div style="font-size: 2rem; font-weight: bold; color: #667eea;">{{ interviews|length }}</div>
-            <div style="color: #666;">Interviews Completed</div>
+            <div>Interviews</div>
         </div>
         <div class="card" style="text-align: center;">
-            <div style="font-size: 2rem; font-weight: bold; color: #667eea;">{{ total_quizzes }}</div>
-            <div style="color: #666;">Quiz Attempts</div>
-        </div>
-        <div class="card" style="text-align: center;">
-            <div style="font-size: 2rem; font-weight: bold; color: #667eea;">{{ avg_quiz_score }}%</div>
-            <div style="color: #666;">Average Quiz Score</div>
+            <div style="font-size: 2rem; font-weight: bold; color: #667eea;">{{ quizzes|length }}</div>
+            <div>Quizzes</div>
         </div>
     </div>
     
-    {% if interviews %}
-    <div class="card" style="margin-bottom: 2rem;">
-        <h3 style="margin-bottom: 1rem;">Interview Progress</h3>
-        <canvas id="interviewChart" style="max-height: 300px;"></canvas>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin: 2rem 0;">
+        <div class="card">
+            <h3>Interview Scores Trend</h3>
+            <canvas id="interviewChart"></canvas>
+        </div>
+        <div class="card">
+            <h3>Quiz Scores Trend</h3>
+            <canvas id="quizChart"></canvas>
+        </div>
     </div>
-    {% endif %}
     
     <div class="card">
-        <h3 style="margin-bottom: 1rem;">Recent Activity</h3>
-        {% if interviews or quizzes %}
-            {% for interview in interviews[:5] %}
-            <div style="padding: 1rem; border-bottom: 1px solid #e2e8f0;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <div style="font-weight: 600;">🎤 {{ interview.job_role }}</div>
-                        <div style="font-size: 0.875rem; color: #666;">{{ interview.date.strftime('%Y-%m-%d') }}</div>
-                    </div>
-                    <div style="background: #667eea20; color: #667eea; padding: 0.25rem 0.75rem; border-radius: 20px;">Score: {{ interview.score }}%</div>
-                </div>
-            </div>
-            {% endfor %}
-            {% for quiz in quizzes[:5] %}
-            <div style="padding: 1rem; border-bottom: 1px solid #e2e8f0;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <div style="font-weight: 600;">🧠 {{ quiz.category }} Quiz</div>
-                        <div style="font-size: 0.875rem; color: #666;">{{ quiz.date.strftime('%Y-%m-%d') }}</div>
-                    </div>
-                    <div style="background: #667eea20; color: #667eea; padding: 0.25rem 0.75rem; border-radius: 20px;">Score: {{ quiz.score }}%</div>
-                </div>
-            </div>
-            {% endfor %}
-        {% else %}
-            <p style="text-align: center; color: #666; padding: 2rem;">No activity yet. Start practicing!</p>
-        {% endif %}
+        <h3>Performance by Role</h3>
+        <canvas id="pieChart" style="max-width: 400px; margin: 0 auto;"></canvas>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    {% if interviews %}
-    const ctx = document.getElementById('interviewChart').getContext('2d');
-    new Chart(ctx, {
+    const interviewData = {{ interview_data|safe }};
+    const quizData = {{ quiz_data|safe }};
+    const roleData = {{ role_performance|tojson|safe }};
+    
+    new Chart(document.getElementById('interviewChart'), {
         type: 'line',
         data: {
-            labels: {{ interview_dates|safe }},
-            datasets: [{
-                label: 'Interview Scores',
-                data: {{ interview_scores|safe }},
-                borderColor: '#667eea',
-                backgroundColor: '#667eea20',
-                tension: 0.3,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100,
-                    title: { display: true, text: 'Score (%)' }
-                }
-            }
+            labels: interviewData.dates,
+            datasets: [{ label: 'Score %', data: interviewData.scores, borderColor: '#667eea', fill: false }]
         }
     });
-    {% endif %}
+    
+    new Chart(document.getElementById('quizChart'), {
+        type: 'line',
+        data: {
+            labels: [{% for q in quizzes %}'{{ q.date.strftime("%Y-%m-%d") }}',{% endfor %}],
+            datasets: [{ label: 'Score %', data: [{% for q in quizzes %}{{ q.score }},{% endfor %}], borderColor: '#48bb78', fill: false }]
+        }
+    });
+    
+    new Chart(document.getElementById('pieChart'), {
+        type: 'pie',
+        data: {
+            labels: Object.keys(roleData),
+            datasets: [{ data: Object.values(roleData), backgroundColor: ['#667eea', '#48bb78', '#f59e0b', '#ef4444', '#8b5cf6'] }]
+        }
+    });
 </script>
 {% endblock %}
