@@ -5,35 +5,42 @@
 {% block content %}
 <div style="max-width: 1000px; margin: 0 auto;">
     <div class="card" style="padding: 2rem;">
-        <h2>📊 Resume Analysis Results</h2>
+        <h2 style="margin-bottom: 1rem;">📊 Resume Analysis Results</h2>
+        
+        <!-- Overall Score and Quality Rating -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1rem; border-radius: 15px; text-align: center; color: white;">
+                <div style="font-size: 0.875rem; opacity: 0.9;">Match Score</div>
+                <div style="font-size: 2.5rem; font-weight: bold;">{{ analysis.overall_score }}%</div>
+            </div>
+            <div style="background: {{ analysis.quality_color }}; padding: 1rem; border-radius: 15px; text-align: center; color: white;">
+                <div style="font-size: 0.875rem; opacity: 0.9;">Resume Quality</div>
+                <div style="font-size: 1.5rem; font-weight: bold;">{{ analysis.quality_rating }}</div>
+            </div>
+        </div>
         
         <!-- Best Match Role -->
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1.5rem; border-radius: 15px; margin: 1rem 0; color: white;">
-            <div style="font-size: 0.875rem; opacity: 0.9;">🎯 Best Match</div>
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1.5rem; border-radius: 15px; margin-bottom: 1.5rem; color: white;">
+            <div style="font-size: 0.875rem; opacity: 0.9;">🎯 Best Match for Your Resume</div>
             <div style="font-size: 1.8rem; font-weight: bold; margin: 0.5rem 0;">{{ analysis.best_role }}</div>
-            <div>Match Score: <strong>{{ analysis.overall_score }}%</strong></div>
-            <div style="margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <div style="display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap;">
                 <form action="/start-mock-interview-direct" method="POST" style="display: inline;">
                     <input type="hidden" name="role" value="{{ analysis.best_role }}">
-                    <button type="submit" style="background: white; color: #667eea; padding: 0.5rem 1rem; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">🎤 Take Mock Interview</button>
+                    <button type="submit" style="background: white; color: #667eea; padding: 0.75rem 1.5rem; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 1rem;">
+                        🎤 Take Mock Interview
+                    </button>
                 </form>
                 <form action="/start-quiz-direct" method="POST" style="display: inline;">
                     <input type="hidden" name="category" value="{{ analysis.best_role }}">
-                    <button type="submit" style="background: rgba(255,255,255,0.2); color: white; padding: 0.5rem 1rem; border: 1px solid white; border-radius: 5px; cursor: pointer; font-weight: bold;">📝 Take Skill Quiz</button>
+                    <button type="submit" style="background: rgba(255,255,255,0.2); color: white; padding: 0.75rem 1.5rem; border: 2px solid white; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 1rem;">
+                        📝 Take Skill Quiz
+                    </button>
                 </form>
             </div>
         </div>
         
-        <!-- Score Bar -->
-        <div style="margin: 1rem 0;">
-            <div style="background: #e2e8f0; border-radius: 10px; height: 10px; overflow: hidden;">
-                <div style="background: linear-gradient(90deg, #667eea, #764ba2); width: {{ analysis.overall_score }}%; height: 100%;"></div>
-            </div>
-            <div style="font-size: 0.875rem; color: #666; margin-top: 0.5rem;">{{ analysis.word_count }} words analyzed</div>
-        </div>
-        
         <!-- Suitable Job Roles Dialog Box -->
-        <div style="border: 2px solid #667eea; border-radius: 15px; margin: 1.5rem 0; overflow: hidden;">
+        <div style="border: 2px solid #667eea; border-radius: 15px; margin-bottom: 1.5rem; overflow: hidden;">
             <div style="background: #667eea; color: white; padding: 1rem; font-weight: bold; font-size: 1.1rem;">
                 💼 Suitable Job Roles Based on Your Resume
             </div>
@@ -43,38 +50,46 @@
                     <div style="border-bottom: 1px solid #e2e8f0; padding: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
                         <div>
                             <div style="font-weight: bold; font-size: 1.1rem;">{{ role.role }}</div>
-                            <div style="font-size: 0.875rem; color: #666;">Match Score: <strong style="color: #667eea;">{{ role.match_percentage }}%</strong></div>
+                            <div style="font-size: 0.875rem; color: #666; margin-top: 0.25rem;">
+                                Match Score: <strong style="color: #667eea;">{{ role.match_percentage }}%</strong>
+                            </div>
                             {% if role.matched_skills %}
                             <div style="font-size: 0.75rem; color: #888; margin-top: 0.25rem;">
-                                Skills: {{ role.matched_skills|join(', ') }}
+                                Detected Skills: {{ role.matched_skills|join(', ') }}
                             </div>
                             {% endif %}
                         </div>
                         <div style="display: flex; gap: 0.5rem;">
                             <form action="/start-mock-interview-direct" method="POST" style="display: inline;">
                                 <input type="hidden" name="role" value="{{ role.role }}">
-                                <button type="submit" style="background: #667eea; color: white; padding: 0.5rem 1rem; border: none; border-radius: 5px; cursor: pointer;">🎤 Interview</button>
+                                <button type="submit" style="background: #667eea; color: white; padding: 0.5rem 1rem; border: none; border-radius: 8px; cursor: pointer; font-weight: 500;">
+                                    🎤 Interview
+                                </button>
                             </form>
                             <form action="/start-quiz-direct" method="POST" style="display: inline;">
                                 <input type="hidden" name="category" value="{{ role.role }}">
-                                <button type="submit" style="background: #48bb78; color: white; padding: 0.5rem 1rem; border: none; border-radius: 5px; cursor: pointer;">📝 Quiz</button>
+                                <button type="submit" style="background: #48bb78; color: white; padding: 0.5rem 1rem; border: none; border-radius: 8px; cursor: pointer; font-weight: 500;">
+                                    📝 Quiz
+                                </button>
                             </form>
                         </div>
                     </div>
                     {% endfor %}
                 {% else %}
                     <div style="padding: 2rem; text-align: center; color: #666;">
-                        No additional roles found. Your best match is {{ analysis.best_role }}.
+                        No additional matching roles found. Your best match is <strong>{{ analysis.best_role }}</strong>.
                     </div>
                 {% endif %}
             </div>
         </div>
         
         <!-- Extracted Resume Text Section -->
-        <div style="border: 1px solid #e2e8f0; border-radius: 15px; margin: 1.5rem 0; overflow: hidden;">
+        <div style="border: 1px solid #e2e8f0; border-radius: 15px; margin-bottom: 1.5rem; overflow: hidden;">
             <div style="background: #4a5568; color: white; padding: 1rem; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
                 <span>📄 Extracted Resume Content</span>
-                <button onclick="toggleText()" style="background: rgba(255,255,255,0.2); color: white; padding: 0.25rem 0.75rem; border: none; border-radius: 5px; cursor: pointer;">Show/Hide</button>
+                <button onclick="toggleText()" style="background: rgba(255,255,255,0.2); color: white; padding: 0.25rem 0.75rem; border: none; border-radius: 5px; cursor: pointer;">
+                    Show/Hide
+                </button>
             </div>
             <div id="extractedText" style="padding: 1rem; display: none; max-height: 400px; overflow-y: auto; background: #f7fafc; font-family: monospace; font-size: 0.875rem; white-space: pre-wrap; line-height: 1.5;">
                 {% if analysis.full_text %}
@@ -85,21 +100,41 @@
             </div>
         </div>
         
+        <!-- Resume Statistics -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+            <div style="background: #f0f0f0; padding: 0.75rem; border-radius: 10px; text-align: center;">
+                <div style="font-size: 1.5rem; font-weight: bold; color: #667eea;">{{ analysis.word_count }}</div>
+                <div style="font-size: 0.75rem; color: #666;">Words Analyzed</div>
+            </div>
+            <div style="background: #f0f0f0; padding: 0.75rem; border-radius: 10px; text-align: center;">
+                <div style="font-size: 1.5rem; font-weight: bold; color: #667eea;">{{ '✓' if analysis.has_email else '✗' }}</div>
+                <div style="font-size: 0.75rem; color: #666;">Email Address</div>
+            </div>
+            <div style="background: #f0f0f0; padding: 0.75rem; border-radius: 10px; text-align: center;">
+                <div style="font-size: 1.5rem; font-weight: bold; color: #667eea;">{{ '✓' if analysis.has_phone else '✗' }}</div>
+                <div style="font-size: 0.75rem; color: #666;">Phone Number</div>
+            </div>
+            <div style="background: #f0f0f0; padding: 0.75rem; border-radius: 10px; text-align: center;">
+                <div style="font-size: 1.5rem; font-weight: bold; color: #667eea;">{{ '✓' if analysis.has_github or analysis.has_linkedin else '✗' }}</div>
+                <div style="font-size: 0.75rem; color: #666;">Online Profile</div>
+            </div>
+        </div>
+        
         <!-- Strengths and Improvements -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.5rem 0;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
             <div style="background: #f0fff4; padding: 1rem; border-radius: 10px; border: 1px solid #c6f6d5;">
                 <h3 style="margin-bottom: 0.5rem; color: #22543d;">✅ Strengths</h3>
                 <ul style="list-style: none; padding: 0;">
                     {% for strength in analysis.strengths %}
-                    <li style="padding: 0.25rem 0;">{{ strength }}</li>
+                    <li style="padding: 0.25rem 0; font-size: 0.875rem;">{{ strength }}</li>
                     {% endfor %}
                 </ul>
             </div>
             <div style="background: #fff5f5; padding: 1rem; border-radius: 10px; border: 1px solid #fed7d7;">
-                <h3 style="margin-bottom: 0.5rem; color: #742a2a;">📈 Improvements</h3>
+                <h3 style="margin-bottom: 0.5rem; color: #742a2a;">📈 Areas for Improvement</h3>
                 <ul style="list-style: none; padding: 0;">
                     {% for improvement in analysis.improvements %}
-                    <li style="padding: 0.25rem 0;">{{ improvement }}</li>
+                    <li style="padding: 0.25rem 0; font-size: 0.875rem;">{{ improvement }}</li>
                     {% endfor %}
                 </ul>
             </div>
@@ -107,18 +142,18 @@
         
         <!-- Detected Skills -->
         {% if analysis.skills_found %}
-        <div style="margin: 1rem 0;">
-            <h3>💡 Detected Skills</h3>
-            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
+        <div style="margin-bottom: 1.5rem;">
+            <h3 style="margin-bottom: 0.5rem;">💡 Detected Skills</h3>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
                 {% for skill in analysis.skills_found %}
-                <span style="background: #667eea20; color: #667eea; padding: 0.25rem 0.75rem; border-radius: 20px;">{{ skill|title }}</span>
+                <span style="background: #667eea20; color: #667eea; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.875rem;">{{ skill|title }}</span>
                 {% endfor %}
             </div>
         </div>
         {% endif %}
         
         <!-- Action Buttons -->
-        <div style="display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap;">
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
             <a href="/resume-analysis" class="btn btn-secondary" style="flex: 1; text-align: center; text-decoration: none;">📤 Upload Another Resume</a>
             <a href="/dashboard" class="btn btn-primary" style="flex: 1; text-align: center; text-decoration: none;">🏠 Go to Dashboard</a>
         </div>
