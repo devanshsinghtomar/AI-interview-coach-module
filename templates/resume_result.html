@@ -3,49 +3,117 @@
 {% block title %}Resume Results - AI Interview Coach{% endblock %}
 
 {% block content %}
-<div style="max-width: 800px; margin: 0 auto;">
+<div style="max-width: 900px; margin: 0 auto;">
     <div class="card" style="padding: 2rem;">
-        <h2 style="text-align: center; margin-bottom: 1rem;">📊 Resume Analysis Results</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2>📊 Resume Analysis Results</h2>
+            <span style="background: #48bb78; color: white; padding: 0.25rem 0.75rem; border-radius: 20px;">{{ analysis.overall_score }}% Match</span>
+        </div>
         
-        <div style="text-align: center; margin: 2rem 0;">
-            <div style="font-size: 3rem; font-weight: bold; color: #667eea;">{{ analysis.score }}%</div>
-            <div style="color: #666;">Overall Score</div>
-            <div style="background: #e2e8f0; border-radius: 10px; height: 10px; width: 100%; margin-top: 1rem; overflow: hidden;">
-                <div style="background: linear-gradient(90deg, #667eea, #764ba2); width: {{ analysis.score }}%; height: 100%;"></div>
+        <!-- Best Match Role -->
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1.5rem; border-radius: 15px; margin-bottom: 1.5rem; color: white;">
+            <div style="font-size: 0.875rem; opacity: 0.9;">🎯 Best Match</div>
+            <div style="font-size: 1.5rem; font-weight: bold; margin: 0.5rem 0;">{{ analysis.best_role }}</div>
+            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                <a href="/start-mock-interview-direct?role={{ analysis.best_role }}" class="btn" style="background: white; color: #667eea; text-decoration: none;">🎤 Take Mock Interview</a>
+                <a href="/start-quiz-direct?category={{ analysis.best_role }}" class="btn" style="background: rgba(255,255,255,0.2); color: white; text-decoration: none;">📝 Take Skill Quiz</a>
             </div>
         </div>
         
+        <!-- Overall Score Bar -->
         <div style="margin-bottom: 1.5rem;">
-            <h3 style="margin-bottom: 0.75rem;">✅ Strengths</h3>
-            <ul style="list-style: none; padding: 0;">
-                {% for strength in analysis.strengths %}
-                <li style="padding: 0.5rem 0; border-bottom: 1px solid #e2e8f0;">✓ {{ strength }}</li>
-                {% endfor %}
-            </ul>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                <span>Overall Resume Score</span>
+                <span>{{ analysis.overall_score }}%</span>
+            </div>
+            <div style="background: #e2e8f0; border-radius: 10px; height: 10px; overflow: hidden;">
+                <div style="background: linear-gradient(90deg, #667eea, #764ba2); width: {{ analysis.overall_score }}%; height: 100%;"></div>
+            </div>
+            <div style="font-size: 0.875rem; color: #666; margin-top: 0.5rem;">{{ analysis.word_count }} words analyzed</div>
         </div>
         
+        <!-- Suggested Job Roles -->
         <div style="margin-bottom: 1.5rem;">
-            <h3 style="margin-bottom: 0.75rem;">📈 Areas for Improvement</h3>
-            <ul style="list-style: none; padding: 0;">
-                {% for improvement in analysis.improvements %}
-                <li style="padding: 0.5rem 0; border-bottom: 1px solid #e2e8f0;">→ {{ improvement }}</li>
+            <h3 style="margin-bottom: 1rem;">💼 Other Recommended Roles</h3>
+            <div style="display: grid; gap: 1rem;">
+                {% for role in analysis.suggested_roles %}
+                <div style="border: 2px solid #e2e8f0; border-radius: 15px; padding: 1rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                        <div>
+                            <div style="font-weight: 600; font-size: 1.1rem;">{{ role.role }}</div>
+                            <div style="font-size: 0.875rem; color: #666; margin-top: 0.25rem;">
+                                Match: {{ role.match_percentage }}% | Skills: {{ role.matched_skills|join(', ') }}
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <a href="/start-mock-interview-direct?role={{ role.role }}" class="btn btn-primary" style="padding: 0.5rem 1rem; text-decoration: none;">Interview</a>
+                            <a href="/start-quiz-direct?category={{ role.role }}" class="btn btn-secondary" style="padding: 0.5rem 1rem; text-decoration: none;">Quiz</a>
+                        </div>
+                    </div>
+                </div>
                 {% endfor %}
-            </ul>
+            </div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+            <div>
+                <h3 style="margin-bottom: 0.75rem;">✅ Strengths</h3>
+                <ul style="list-style: none; padding: 0;">
+                    {% for strength in analysis.strengths %}
+                    <li style="padding: 0.5rem 0; border-bottom: 1px solid #e2e8f0;">✓ {{ strength }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div>
+                <h3 style="margin-bottom: 0.75rem;">📈 Areas for Improvement</h3>
+                <ul style="list-style: none; padding: 0;">
+                    {% for improvement in analysis.improvements %}
+                    <li style="padding: 0.5rem 0; border-bottom: 1px solid #e2e8f0;">→ {{ improvement }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
         </div>
         
         <div>
-            <h3 style="margin-bottom: 0.75rem;">💡 Skills Detected</h3>
+            <h3 style="margin-bottom: 0.75rem;">💡 Detected Skills</h3>
             <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
                 {% for skill in analysis.skills_found %}
-                <span style="background: #667eea20; color: #667eea; padding: 0.25rem 0.75rem; border-radius: 20px;">{{ skill }}</span>
+                <span style="background: #667eea20; color: #667eea; padding: 0.25rem 0.75rem; border-radius: 20px;">{{ skill|title }}</span>
                 {% endfor %}
             </div>
         </div>
         
         <div style="margin-top: 2rem; display: flex; gap: 1rem;">
-            <a href="/resume-analysis" class="btn btn-secondary" style="flex: 1; text-align: center;">Upload Another</a>
+            <a href="/resume-analysis" class="btn btn-secondary" style="flex: 1; text-align: center;">Upload Another Resume</a>
             <a href="/dashboard" class="btn btn-primary" style="flex: 1; text-align: center;">Go to Dashboard</a>
         </div>
     </div>
 </div>
+
+<script>
+    // Add this function to handle direct interview start
+    function startInterview(role) {
+        fetch('/start-mock-interview-direct', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: `role=${encodeURIComponent(role)}`
+        }).then(response => {
+            if(response.ok) {
+                window.location.href = '/take-mock-interview';
+            }
+        });
+    }
+    
+    function startQuiz(category) {
+        fetch('/start-quiz-direct', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: `category=${encodeURIComponent(category)}`
+        }).then(response => {
+            if(response.ok) {
+                window.location.href = '/take-quiz';
+            }
+        });
+    }
+</script>
 {% endblock %}
