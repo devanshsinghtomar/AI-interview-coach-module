@@ -458,7 +458,7 @@ def start_quiz_direct():
     flash(f'Starting {category} quiz!', 'success')
     return redirect(url_for('take_quiz'))
 
-# ============ MOCK INTERVIEW ROUTES ============
+# ============ MOCK INTERVIEW ROUTES (FIXED) ============
 @app.route('/mock-interview')
 @login_required
 def mock_interview():
@@ -468,85 +468,148 @@ def mock_interview():
 @app.route('/start-mock-interview', methods=['POST'])
 @login_required
 def start_mock_interview():
-    role = request.form.get('role')
-    questions = INTERVIEW_QUESTIONS.get(role, INTERVIEW_QUESTIONS['Python Developer'])
-    random.shuffle(questions)
-    
-    session['interview_role'] = role
-    session['interview_questions'] = questions[:10]
-    session['interview_answers'] = []
-    session['interview_current'] = 0
-    
-    return redirect(url_for('take_mock_interview'))
+    try:
+        role = request.form.get('role')
+        print(f"Starting interview for role: {role}")  # Debug log
+        
+        if not role:
+            flash('Please select a role', 'danger')
+            return redirect(url_for('mock_interview'))
+        
+        # Get questions for the selected role
+        if role in INTERVIEW_QUESTIONS:
+            questions = INTERVIEW_QUESTIONS[role].copy()
+        else:
+            questions = INTERVIEW_QUESTIONS['Python Developer'].copy()
+        
+        random.shuffle(questions)
+        
+        # Store in session
+        session['interview_role'] = role
+        session['interview_questions'] = questions[:5]  # 5 questions per interview
+        session['interview_answers'] = []
+        session['interview_scores'] = []
+        session['interview_current'] = 0
+        
+        print(f"Session created: {session.get('interview_role')}, {len(session.get('interview_questions', []))} questions")
+        
+        return redirect(url_for('take_mock_interview'))
+        
+    except Exception as e:
+        print(f"Error starting interview: {str(e)}")
+        flash('Error starting interview. Please try again.', 'danger')
+        return redirect(url_for('mock_interview'))
 
 @app.route('/take-mock-interview')
 @login_required
 def take_mock_interview():
-    if 'interview_questions' not in session:
+    try:
+        # Check if session exists
+        if 'interview_questions' not in session:
+            print("No interview in session, redirecting to start")
+            flash('Please start a new interview first', 'warning')
+            return redirect(url_for('mock_interview'))
+        
+        questions = session.get('interview_questions', [])
+        current = session.get('interview_current', 0)
+        
+        print(f"Taking interview: Question {current + 1} of {len(questions)}")
+        
+        # Check if interview is complete
+        if current >= len(questions):
+            print("Interview complete, redirecting to results")
+            return redirect(url_for('interview_results'))
+        
+        # Get current question
+        current_question = questions[current]
+        
+        return render_template('take_mock_interview.html',
+                             question=current_question,
+                             question_num=current + 1,
+                             total=len(questions),
+                             role=session.get('interview_role', 'Unknown'))
+                             
+    except Exception as e:
+        print(f"Error in take_mock_interview: {str(e)}")
+        flash('Error loading interview. Please try again.', 'danger')
         return redirect(url_for('mock_interview'))
-    
-    questions = session['interview_questions']
-    current = session.get('interview_current', 0)
-    
-    if current >= len(questions):
-        return redirect(url_for('interview_results'))
-    
-    return render_template('take_mock_interview.html',
-                         question=questions[current],
-                         question_num=current + 1,
-                         total=len(questions),
-                         role=session['interview_role'])
 
 @app.route('/submit-mock-answer', methods=['POST'])
 @login_required
 def submit_mock_answer():
-    answer = request.form.get('answer')
-    question = request.form.get('question')
-    
-    words = len(answer.split())
-    if words > 100:
-        score = random.randint(75, 95)
-    elif words > 50:
-        score = random.randint(60, 85)
-    elif words > 20:
-        score = random.randint(45, 70)
-    else:
-        score = random.randint(30, 55)
-    
-    session['interview_answers'].append({'question': question, 'answer': answer, 'score': score})
-    session['interview_current'] = session.get('interview_current', 0) + 1
-    session.modified = True
-    
-    questions = session['interview_questions']
-    current_idx = session['interview_current']
-    
-    if current_idx >= len(questions):
-        for item in session['interview_answers']:
-            interview = Interview(
-                user_id=current_user.id,
-                job_role=session['interview_role'],
-                question=item['question'],
-                answer=item['answer'][:500],
-                score=item['score']
-            )
-            db.session.add(interview)
-        db.session.commit()
+    try:
+        answer = request.form.get('answer')
+        question = request.form.get('question')
         
-        total_score = sum(item['score'] for item in session['interview_answers']) / len(session['interview_answers'])
-        session.pop('interview_questions', None)
-        session.pop('interview_answers', None)
-        session.pop('interview_current', None)
-        session.pop('interview_role', None)
+        if not answer or not question:
+            return jsonify({'error': 'Missing answer or question'}), 400
         
-        return jsonify({'completed': True, 'total_score': round(total_score, 1)})
-    
-    return jsonify({
-        'completed': False,
-        'next_question': questions[current_idx],
-        'question_num': current_idx + 1,
-        'total': len(questions),
-        'score': score
-    })
+        # Calculate score based on answer quality
+        word_count = len(answer.split())
+        if word_count > 100:
+            score = random.randint(75, 95)
+        elif word_count > 50:
+            score = random.randint(60, 85)
+        elif word_count > 20:
+            score = random.randint(45, 70)
+        else:
+            score = random.randint(30, 55)
+        
+        # Store answer and score
+        session['interview_answers'].append({
+            'question': question,
+            'answer': answer,
+            'score': score
+        })
+        session['interview_scores'].append(score)
+        session['interview_current'] = session.get('interview_current', 0) + 1
+        session.modified = True
+        
+        questions = session.get('interview_questions', [])
+        current_idx = session.get('interview_current', 0)
+        
+        # Check if interview is complete
+        if current_idx >= len(questions):
+            # Save to database
+            for item in session['interview_answers']:
+                interview = Interview(
+                    user_id=current_user.id,
+                    job_role=session.get('interview_role', 'Unknown'),
+                    question=item['question'],
+                    answer=item['answer'][:500],
+                    score=item['score']
+                )
+                db.session.add(interview)
+            db.session.commit()
+            
+            # Calculate total score
+            total_score = sum(session['interview_scores']) / len(session['interview_scores'])
+            
+            # Clear session
+            session.pop('interview_questions', None)
+            session.pop('interview_answers', None)
+            session.pop('interview_scores', None)
+            session.pop('interview_current', None)
+            session.pop('interview_role', None)
+            
+            return jsonify({
+                'completed': True,
+                'total_score': round(total_score, 1)
+            })
+        
+        # Return next question
+        next_question = questions[current_idx]
+        return jsonify({
+            'completed': False,
+            'next_question': next_question,
+            'question_num': current_idx + 1,
+            'total': len(questions),
+            'score': score
+        })
+        
+    except Exception as e:
+        print(f"Error submitting answer: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/interview-results')
 @login_required
