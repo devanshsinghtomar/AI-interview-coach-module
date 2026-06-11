@@ -1,42 +1,63 @@
 {% extends "base.html" %}
 
-{% block title %}Resume Analysis - AI Interview Coach{% endblock %}
-
 {% block content %}
 <div style="max-width: 600px; margin: 0 auto;">
     <div class="card" style="padding: 2rem; text-align: center;">
-        <div style="font-size: 4rem; margin-bottom: 1rem;">📄</div>
-        <h2 style="margin-bottom: 1rem;">Resume Analysis</h2>
-        <p style="color: #666; margin-bottom: 2rem;">Upload your resume (PDF, DOC, DOCX, or TXT) for AI-powered analysis</p>
+        <div style="font-size: 4rem;">📄</div>
+        <h2>Resume Analysis</h2>
+        <p>Upload your resume (PDF format) for AI-powered analysis</p>
         
-        <form method="POST" enctype="multipart/form-data">
-            <div style="border: 2px dashed #cbd5e0; border-radius: 10px; padding: 2rem; margin-bottom: 1.5rem; cursor: pointer;" onclick="document.getElementById('fileInput').click()">
-                <div style="font-size: 3rem; margin-bottom: 0.5rem;">📁</div>
-                <p>Click to upload or drag and drop</p>
-                <p style="font-size: 0.875rem; color: #666; margin-top: 0.5rem;">PDF, DOC, DOCX, TXT files only (Max 5MB)</p>
-                <input type="file" name="resume" id="fileInput" accept=".pdf,.doc,.docx,.txt" style="display: none;" required>
+        <form id="uploadForm" method="POST" enctype="multipart/form-data">
+            <div id="dropZone" style="border: 2px dashed #cbd5e0; border-radius: 10px; padding: 2rem; margin: 1rem 0; cursor: pointer;">
+                <div id="uploadIcon" style="font-size: 3rem;">📁</div>
+                <p id="uploadText">Click or drag to upload PDF</p>
+                <p style="font-size: 0.875rem; color: #666;">PDF files only (Max 5MB)</p>
+                <input type="file" name="resume" id="fileInput" accept=".pdf" style="display: none;" required>
             </div>
-            <button type="submit" class="btn btn-primary" style="width: 100%;">Analyze Resume →</button>
+            <button type="submit" id="submitBtn" class="btn btn-primary" style="width: 100%;">Analyze Resume</button>
         </form>
-        
-        <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
-            <p style="font-size: 0.875rem; color: #666;">Your resume will be analyzed for:</p>
-            <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 1rem; flex-wrap: wrap;">
-                <span style="background: #f0f0f0; padding: 0.25rem 0.75rem; border-radius: 20px;">Skills Detection</span>
-                <span style="background: #f0f0f0; padding: 0.25rem 0.75rem; border-radius: 20px;">Job Role Matching</span>
-                <span style="background: #f0f0f0; padding: 0.25rem 0.75rem; border-radius: 20px;">Strengths Analysis</span>
-                <span style="background: #f0f0f0; padding: 0.25rem 0.75rem; border-radius: 20px;">Improvement Suggestions</span>
-            </div>
-        </div>
     </div>
 </div>
 
 <script>
-    document.getElementById('fileInput').addEventListener('change', function(e) {
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const uploadText = document.getElementById('uploadText');
+    const uploadIcon = document.getElementById('uploadIcon');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    dropZone.addEventListener('click', () => fileInput.click());
+    
+    fileInput.addEventListener('change', (e) => {
         if (e.target.files[0]) {
             const fileName = e.target.files[0].name;
-            const fileSize = (e.target.files[0].size / 1024 / 1024).toFixed(2);
-            alert(`Selected: ${fileName}\nSize: ${fileSize} MB`);
+            uploadText.innerHTML = `✅ Selected: ${fileName}`;
+            uploadIcon.innerHTML = '✅';
+            dropZone.style.borderColor = '#48bb78';
+            submitBtn.disabled = false;
+        }
+    });
+    
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = '#667eea';
+    });
+    
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.style.borderColor = '#cbd5e0';
+    });
+    
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const file = e.dataTransfer.files[0];
+        if (file && file.name.endsWith('.pdf')) {
+            fileInput.files = e.dataTransfer.files;
+            uploadText.innerHTML = `✅ Selected: ${file.name}`;
+            uploadIcon.innerHTML = '✅';
+            dropZone.style.borderColor = '#48bb78';
+            submitBtn.disabled = false;
+        } else {
+            alert('Please upload a PDF file');
         }
     });
 </script>
