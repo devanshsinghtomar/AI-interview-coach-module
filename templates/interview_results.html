@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Interview Results - AI Interview Coach{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto; text-align: center;">
+    <div class="card" style="padding: 2rem;">
+        <div style="font-size: 4rem; margin-bottom: 1rem;">🎉</div>
+        <h2 style="margin-bottom: 1rem;">Interview Completed!</h2>
+        <p style="color: #666; margin-bottom: 2rem;">Great job completing your mock interview. Keep practicing to improve your skills!</p>
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <a href="/mock-interview" class="btn btn-primary" style="text-decoration: none;">Practice Again</a>
+            <a href="/dashboard" class="btn btn-secondary" style="text-decoration: none;">Go to Dashboard</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
