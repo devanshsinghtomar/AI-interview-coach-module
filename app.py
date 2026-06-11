@@ -6,13 +6,16 @@ from datetime import datetime
 import json
 import os
 import random
-import traceback
+import re
+import PyPDF2
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-change-this-12345'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///interview.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB max
 
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
@@ -42,7 +45,10 @@ class ResumeAnalysis(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     filename = db.Column(db.String(200))
+    extracted_text = db.Column(db.Text)
     score = db.Column(db.Integer)
+    suggested_role = db.Column(db.String(100))
+    suggested_roles = db.Column(db.Text)  # JSON array
     strengths = db.Column(db.Text)
     improvements = db.Column(db.Text)
     skills_found = db.Column(db.Text)
@@ -66,233 +72,173 @@ with app.app_context():
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# ============ 1000+ QUIZ QUESTIONS DATABASE ============
+# ============ SKILLS DATABASE FOR RESUME PARSING ============
+SKILLS_DATABASE = {
+    'Python Developer': {
+        'keywords': ['python', 'django', 'flask', 'pandas', 'numpy', 'scikit-learn', 'tensorflow', 'pytorch', 'fastapi', 'celery'],
+        'required_skills': ['Python', 'SQL', 'Git', 'REST APIs', 'Problem Solving']
+    },
+    'JavaScript Developer': {
+        'keywords': ['javascript', 'react', 'angular', 'vue', 'node.js', 'express', 'typescript', 'jquery', 'redux', 'next.js'],
+        'required_skills': ['JavaScript', 'HTML/CSS', 'React/Angular', 'Node.js', 'REST APIs']
+    },
+    'Data Scientist': {
+        'keywords': ['python', 'data science', 'machine learning', 'statistics', 'pandas', 'scikit-learn', 'tensorflow', 'analytics', 'visualization', 'sql'],
+        'required_skills': ['Python', 'Statistics', 'Machine Learning', 'SQL', 'Data Visualization']
+    },
+    'Full Stack Developer': {
+        'keywords': ['react', 'angular', 'node.js', 'express', 'mongodb', 'postgresql', 'html', 'css', 'javascript', 'typescript', 'rest api', 'graphql'],
+        'required_skills': ['Frontend Framework', 'Backend Development', 'Databases', 'REST APIs', 'Git']
+    },
+    'DevOps Engineer': {
+        'keywords': ['docker', 'kubernetes', 'jenkins', 'aws', 'azure', 'gcp', 'terraform', 'ansible', 'ci/cd', 'linux', 'bash'],
+        'required_skills': ['Docker', 'Kubernetes', 'CI/CD', 'Cloud Platforms', 'Linux']
+    },
+    'Java Developer': {
+        'keywords': ['java', 'spring', 'hibernate', 'maven', 'gradle', 'junit', 'microservices', 'rest api', 'jpa', 'thymeleaf'],
+        'required_skills': ['Java', 'Spring Boot', 'Hibernate', 'SQL', 'Maven/Gradle']
+    },
+    'Cloud Engineer': {
+        'keywords': ['aws', 'azure', 'gcp', 'cloud', 'terraform', 'cloudformation', 'serverless', 'lambda', 'ec2', 's3', 'vpc'],
+        'required_skills': ['Cloud Platform', 'Infrastructure as Code', 'Networking', 'Security', 'Scripting']
+    },
+    'Frontend Developer': {
+        'keywords': ['react', 'angular', 'vue', 'html5', 'css3', 'javascript', 'typescript', 'webpack', 'bootstrap', 'tailwind', 'sass'],
+        'required_skills': ['HTML/CSS', 'JavaScript', 'React/Angular/Vue', 'Responsive Design', 'Web Performance']
+    },
+    'Backend Developer': {
+        'keywords': ['python', 'java', 'node.js', 'go', 'ruby', 'php', 'rest api', 'microservices', 'sql', 'nosql', 'graphql', 'redis'],
+        'required_skills': ['Backend Language', 'Database Management', 'API Design', 'Security', 'System Design']
+    },
+    'Mobile Developer': {
+        'keywords': ['android', 'ios', 'swift', 'kotlin', 'react native', 'flutter', 'mobile', 'app development', 'xcode', 'android studio'],
+        'required_skills': ['Mobile Platform', 'Programming Language', 'UI/UX', 'API Integration', 'App Deployment']
+    }
+}
+
+# Generate Quiz Questions
 def generate_quiz_questions():
     questions_db = {}
-    
-    # Python Questions (200+ questions)
-    python_questions = []
-    python_topics = [
-        "variables", "data types", "loops", "functions", "classes", "inheritance",
-        "decorators", "generators", "context managers", "exception handling",
-        "file handling", "modules", "packages", "list comprehension",
-        "dictionary comprehension", "lambda functions", "map/filter/reduce",
-        "recursion", "algorithm", "data structures", "string manipulation"
-    ]
-    
-    for i in range(1, 201):
-        question = {
-            "question": f"Python Question {i}: " + random.choice([
-                f"What is the output of print(2 ** {i % 10})?",
-                f"Which method is used to add an element to a list in Python?",
-                f"What is the correct syntax to define a {random.choice(python_topics)} in Python?",
-                f"Explain the concept of {random.choice(python_topics)} in Python.",
-                f"What will be the result of {random.randint(1,20)} + {random.randint(1,20)} in Python?",
-                f"How do you handle {random.choice(['files', 'exceptions', 'strings', 'lists'])} in Python?",
-                f"What is the purpose of {random.choice(['__init__', '__str__', '__repr__', '__call__'])} method?",
-                f"Difference between {random.choice(['list and tuple', 'dict and set', 'deep and shallow copy', 'is and =='])}.",
-                f"How to implement {random.choice(['inheritance', 'polymorphism', 'encapsulation', 'abstraction'])} in Python?",
-                f"What are {random.choice(['decorators', 'generators', 'iterators', 'context managers'])} in Python?"
-            ]),
-            "options": ["Option A", "Option B", "Option C", "Option D"],
-            "correct": random.choice(["Option A", "Option B", "Option C", "Option D"]),
-            "difficulty": random.choice(["beginner", "intermediate", "advanced"])
-        }
-        python_questions.append(question)
-    
-    # JavaScript Questions (200+ questions)
-    js_questions = []
-    js_topics = [
-    "hoisting", "closures", "promises", "async/await", "event loop",
-    "prototypes", "this keyword", "arrow functions", "destructuring",
-    "spread operator", "rest parameters", "modules", "classes"
-    ]
-    
-    for i in range(1, 201):
-        question = {
-            "question": f"JavaScript Question {i}: " + random.choice([
-                f"What is {random.choice(js_topics)} in JavaScript?",
-                f"Explain the difference between {random.choice(['var/let/const', '==/===', 'null/undefined', 'call/apply/bind'])}.",
-                f"How does the {random.choice(['event loop', 'prototype chain', 'closure', 'hoisting'])} work in JS?",
-                f"What will be the output of console.log({random.randint(1,10)} + '{random.randint(1,10)}')?",
-                f"How to implement {random.choice(['inheritance', 'asynchronous operations', 'error handling', 'modules'])} in JS?"
-            ]),
-            "options": ["Option A", "Option B", "Option C", "Option D"],
-            "correct": random.choice(["Option A", "Option B", "Option C", "Option D"]),
-            "difficulty": random.choice(["beginner", "intermediate", "advanced"])
-        }
-        js_questions.append(question)
-    
-    # Data Science Questions (150+ questions)
-    ds_questions = []
-    for i in range(1, 151):
-        question = {
-            "question": f"Data Science Question {i}: " + random.choice([
-                f"What is the difference between {random.choice(['supervised/unsupervised', 'classification/regression', 'bagging/boosting', 'L1/L2 regularization'])}?",
-                f"Explain {random.choice(['PCA', 't-SNE', 'K-means', 'Decision Trees', 'Random Forest', 'SVM'])} algorithm.",
-                f"How to handle {random.choice(['missing values', 'outliers', 'imbalanced data', 'multicollinearity'])} in datasets?",
-                f"What evaluation metrics would you use for {random.choice(['classification', 'regression', 'clustering', 'recommendation'])}?",
-                f"Explain {random.choice(['bias-variance tradeoff', 'cross-validation', 'feature engineering', 'overfitting'])}."
-            ]),
-            "options": ["Option A", "Option B", "Option C", "Option D"],
-            "correct": random.choice(["Option A", "Option B", "Option C", "Option D"]),
-            "difficulty": random.choice(["beginner", "intermediate", "advanced"])
-        }
-        ds_questions.append(question)
-    
-    # SQL Questions (150+ questions)
-    sql_questions = []
-    for i in range(1, 151):
-        question = {
-            "question": f"SQL Question {i}: " + random.choice([
-                f"What does the {random.choice(['SELECT', 'JOIN', 'GROUP BY', 'HAVING', 'WHERE'])} clause do?",
-                f"Difference between {random.choice(['INNER/OUTER JOIN', 'UNION/UNION ALL', 'WHERE/HAVING', 'DELETE/TRUNCATE'])}.",
-                f"How to {random.choice(['optimize a query', 'create an index', 'normalize a database', 'handle NULL values'])}?",
-                f"What is {random.choice(['a primary key', 'a foreign key', 'a composite key', 'a unique constraint'])}?",
-                f"Explain {random.choice(['ACID properties', 'database normalization', 'transactions', 'stored procedures'])}."
-            ]),
-            "options": ["Option A", "Option B", "Option C", "Option D"],
-            "correct": random.choice(["Option A", "Option B", "Option C", "Option D"]),
-            "difficulty": random.choice(["beginner", "intermediate", "advanced"])
-        }
-        sql_questions.append(question)
-    
-    # Java Questions (150+ questions)
-    java_questions = []
-    for i in range(1, 151):
-        question = {
-            "question": f"Java Question {i}: " + random.choice([
-                f"What is {random.choice(['JVM', 'JRE', 'JDK', 'Garbage Collection'])}?",
-                f"Difference between {random.choice(['abstract class/interface', 'overloading/overriding', 'String/StringBuilder', 'checked/unchecked exceptions'])}.",
-                f"Explain {random.choice(['multithreading', 'synchronization', 'collections framework', 'lambda expressions'])} in Java.",
-                f"What are {random.choice(['design patterns', 'SOLID principles', 'access modifiers', 'method references'])}?",
-                f"How does {random.choice(['memory management', 'exception handling', 'generics', 'streams'])} work in Java?"
-            ]),
-            "options": ["Option A", "Option B", "Option C", "Option D"],
-            "correct": random.choice(["Option A", "Option B", "Option C", "Option D"]),
-            "difficulty": random.choice(["beginner", "intermediate", "advanced"])
-        }
-        java_questions.append(question)
-    
-    # DevOps Questions (150+ questions)
-    devops_questions = []
-    for i in range(1, 151):
-        question = {
-            "question": f"DevOps Question {i}: " + random.choice([
-                f"What is {random.choice(['Docker', 'Kubernetes', 'Jenkins', 'Ansible', 'Terraform'])}?",
-                f"Explain {random.choice(['CI/CD pipeline', 'infrastructure as code', 'containerization', 'orchestration'])}.",
-                f"Difference between {random.choice(['Docker/Kubernetes', 'Git/GitHub', 'Jenkins/GitLab CI', 'AWS/Azure'])}.",
-                f"How to implement {random.choice(['monitoring', 'logging', 'alerting', 'auto-scaling'])} in production?",
-                f"What are {random.choice(['microservices', 'serverless', 'load balancing', 'service discovery'])}?"
-            ]),
-            "options": ["Option A", "Option B", "Option C", "Option D"],
-            "correct": random.choice(["Option A", "Option B", "Option C", "Option D"]),
-            "difficulty": random.choice(["beginner", "intermediate", "advanced"])
-        }
-        devops_questions.append(question)
-    
-    questions_db = {
-        'Python': python_questions,
-        'JavaScript': js_questions,
-        'Data Science': ds_questions,
-        'SQL': sql_questions,
-        'Java': java_questions,
-        'DevOps': devops_questions
-    }
-    
+    for role in SKILLS_DATABASE.keys():
+        role_questions = []
+        for i in range(1, 101):
+            skill = random.choice(SKILLS_DATABASE[role]['required_skills'])
+            question = {
+                "question": f"{role} Quiz: What is the best practice for {skill} in {role} development?",
+                "options": [
+                    f"Best practice 1 for {skill}",
+                    f"Best practice 2 for {skill}",
+                    f"Best practice 3 for {skill}",
+                    f"Best practice 4 for {skill}"
+                ],
+                "correct": f"Best practice 1 for {skill}",
+                "explanation": f"{skill} is crucial for {role} role.",
+                "difficulty": random.choice(["beginner", "intermediate", "advanced"])
+            }
+            role_questions.append(question)
+        questions_db[role] = role_questions
     return questions_db
 
 QUIZ_QUESTIONS = generate_quiz_questions()
 
-# ============ EXPANDED INTERVIEW QUESTIONS FOR MORE JOB ROLES ============
-INTERVIEW_QUESTIONS = {
-    'Python Developer': [
-        "What are Python decorators and how do you use them?",
-        "Explain the difference between deep copy and shallow copy.",
-        "What is the Global Interpreter Lock (GIL) and how does it affect multithreading?",
-        "Explain list comprehension with an example.",
-        "What are generators and how are they memory efficient?",
-        "How does garbage collection work in Python?",
-        "Explain method resolution order (MRO) in Python.",
-        "What are context managers and how do you implement them?",
-        "Explain async/await in Python with an example.",
-        "What is the difference between __str__ and __repr__?",
-    ],
-    'JavaScript Developer': [
-        "Explain the event loop in JavaScript.",
-        "What is closure? Give a practical example.",
-        "Explain the difference between var, let, and const.",
-        "What are promises and how do they work?",
-        "Explain the concept of hoisting.",
-        "What is the difference between == and ===?",
-        "Explain prototypal inheritance in JavaScript.",
-        "What are arrow functions and how are they different?",
-        "Explain debouncing and throttling.",
-        "What is the spread operator and how is it used?",
-    ],
-    'Data Scientist': [
-        "Explain the difference between supervised and unsupervised learning.",
-        "What is overfitting and how do you prevent it?",
-        "Explain bias-variance tradeoff.",
-        "What evaluation metrics would you use for classification?",
-        "Explain cross-validation and why it's useful.",
-        "What is feature engineering? Give examples.",
-        "Explain PCA and when to use it.",
-        "What is regularization (L1 vs L2)?",
-        "Explain gradient descent and its variants.",
-        "How do you handle imbalanced datasets?",
-    ],
-    'Full Stack Developer': [
-        "Explain RESTful API design principles.",
-        "What is the difference between SQL and NoSQL databases?",
-        "Explain JWT authentication.",
-        "What is CORS and how do you handle it?",
-        "Explain the difference between horizontal and vertical scaling.",
-        "What are microservices?",
-        "Explain database indexing.",
-        "What is the difference between authentication and authorization?",
-        "Explain session management in web apps.",
-        "What is GraphQL and how is it different from REST?",
-    ],
-    'DevOps Engineer': [
-        "Explain CI/CD pipeline and its stages.",
-        "What is Docker and how does containerization work?",
-        "Explain Kubernetes architecture.",
-        "What is infrastructure as code? Give examples.",
-        "Explain blue-green deployment strategy.",
-        "What is the difference between continuous delivery and deployment?",
-        "How do you monitor applications in production?",
-        "Explain the concept of immutable infrastructure.",
-        "What are the key metrics in observability?",
-        "Explain how load balancing works at different layers.",
-    ],
-    'Java Developer': [
-        "Explain the difference between abstract class and interface.",
-        "What is the Java Memory Model?",
-        "Explain multithreading in Java.",
-        "What is the difference between HashMap and Hashtable?",
-        "Explain exception handling in Java.",
-        "What are design patterns? Give examples.",
-        "Explain garbage collection in Java.",
-        "What is the difference between String, StringBuilder, and StringBuffer?",
-        "Explain the Collections Framework.",
-        "What is method overloading vs overriding?",
-    ],
-    'Cloud Engineer': [
-        "Explain the difference between IaaS, PaaS, and SaaS.",
-        "What are the key components of AWS?",
-        "Explain serverless computing.",
-        "What is the difference between scaling up and scaling out?",
-        "Explain cloud security best practices.",
-        "What is infrastructure as code?",
-        "Explain load balancers and their types.",
-        "What is a CDN and why use it?",
-        "Explain disaster recovery strategies.",
-        "What are cloud design patterns?",
+# Interview Questions Database
+INTERVIEW_QUESTIONS = {}
+for role in SKILLS_DATABASE.keys():
+    INTERVIEW_QUESTIONS[role] = [
+        f"What are the key responsibilities of a {role}?",
+        f"What technologies are essential for {role} role?",
+        f"Explain a challenging {role} project you worked on.",
+        f"How do you stay updated with {role} technologies?",
+        f"What is your approach to debugging in {role} development?",
+        f"Describe your experience with {random.choice(SKILLS_DATABASE[role]['required_skills'])}.",
+        f"How do you handle code reviews as a {role}?",
+        f"What's your preferred development methodology for {role} projects?",
+        f"How would you optimize performance in a {role} application?",
+        f"What security considerations are important for {role} development?"
     ]
-}
 
-# Routes
+# ============ RESUME PARSER FUNCTIONS ============
+def extract_text_from_pdf(filepath):
+    try:
+        with open(filepath, 'rb') as file:
+            pdf_reader = PyPDF2.PdfReader(file)
+            text = ""
+            for page in pdf_reader.pages:
+                text += page.extract_text()
+            return text
+    except Exception as e:
+        print(f"PDF extraction error: {e}")
+        return ""
+
+def is_valid_resume(text):
+    text_lower = text.lower()
+    resume_indicators = ['experience', 'education', 'skills', 'work', 'employment', 'project', 'certification', 'summary', 'objective', 'profile']
+    contact_indicators = [r'\b\d{10}\b', r'\b[\w\.-]+@[\w\.-]+\.\w+\b']
+    has_resume_words = sum(1 for word in resume_indicators if word in text_lower) >= 2
+    has_contact = any(re.search(pattern, text) for pattern in contact_indicators)
+    return has_resume_words or has_contact or len(text) > 200
+
+def analyze_resume_content(text):
+    text_lower = text.lower()
+    role_scores = {}
+    role_matched_keywords = {}
+    
+    for role, data in SKILLS_DATABASE.items():
+        score = 0
+        matched = []
+        for keyword in data['keywords']:
+            if keyword in text_lower:
+                score += 10
+                matched.append(keyword)
+        role_scores[role] = score
+        role_matched_keywords[role] = matched
+    
+    sorted_roles = sorted(role_scores.items(), key=lambda x: x[1], reverse=True)
+    best_role = sorted_roles[0][0] if sorted_roles else "Python Developer"
+    best_score = sorted_roles[0][1] if sorted_roles else 0
+    
+    overall_score = min(100, 40 + best_score)
+    
+    strengths = []
+    if best_score >= 50:
+        strengths.append(f"Strong match for {best_role} role")
+        strengths.append(f"Good keyword density with {len(role_matched_keywords[best_role])} relevant terms")
+    if len(text) > 500:
+        strengths.append("Detailed resume with substantial content")
+    if re.search(r'\b\d{4}\b', text):
+        strengths.append("Includes dates and timeline information")
+    
+    improvements = []
+    if best_score < 40:
+        improvements.append(f"Add more {best_role}-specific keywords to your resume")
+    if 'github' not in text_lower and 'portfolio' not in text_lower:
+        improvements.append("Include links to your GitHub or portfolio")
+    if 'achievement' not in text_lower:
+        improvements.append("Quantify your achievements with numbers and metrics")
+    
+    suggested_roles = []
+    for role, score in sorted_roles[:3]:
+        if score >= 20:
+            suggested_roles.append({
+                'role': role,
+                'match_percentage': min(95, score + 20),
+                'matched_skills': role_matched_keywords[role][:5]
+            })
+    
+    if not suggested_roles:
+        suggested_roles = [{'role': 'Python Developer', 'match_percentage': 60, 'matched_skills': ['General skills']}]
+    
+    return {
+        'overall_score': overall_score,
+        'best_role': best_role,
+        'suggested_roles': suggested_roles,
+        'strengths': strengths if strengths else ["Resume uploaded successfully"],
+        'improvements': improvements if improvements else ["Add more specific technical skills"],
+        'skills_found': list(set([skill for skills in role_matched_keywords.values() for skill in skills]))[:10],
+        'word_count': len(text.split())
+    }
+
+# ============ ROUTES ============
 @app.route('/')
 def index():
     if current_user.is_authenticated:
@@ -338,9 +284,7 @@ def register():
             
             flash('Registration successful! Please login.', 'success')
             return redirect(url_for('login'))
-            
         except Exception as e:
-            print(f"Registration error: {traceback.format_exc()}")
             flash('Registration failed', 'danger')
     
     return render_template('register.html')
@@ -395,7 +339,126 @@ def dashboard():
                          recent_interviews=recent_interviews,
                          recent_quizzes=recent_quizzes)
 
-# Mock Interview Routes
+# ============ RESUME ANALYSIS ROUTES ============
+@app.route('/resume-analysis', methods=['GET', 'POST'])
+@login_required
+def resume_analysis():
+    if request.method == 'POST':
+        if 'resume' not in request.files:
+            flash('No file uploaded', 'danger')
+            return redirect(url_for('resume_analysis'))
+        
+        file = request.files['resume']
+        if file.filename == '':
+            flash('No file selected', 'danger')
+            return redirect(url_for('resume_analysis'))
+        
+        allowed_extensions = {'.pdf', '.doc', '.docx', '.txt'}
+        file_ext = os.path.splitext(file.filename)[1].lower()
+        
+        if file_ext not in allowed_extensions:
+            flash('Please upload a PDF, DOC, DOCX, or TXT file', 'danger')
+            return redirect(url_for('resume_analysis'))
+        
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
+        
+        # Extract text
+        extracted_text = ""
+        if file_ext == '.pdf':
+            extracted_text = extract_text_from_pdf(filepath)
+        else:
+            try:
+                with open(filepath, 'r', encoding='utf-8') as f:
+                    extracted_text = f.read()
+            except:
+                extracted_text = ""
+        
+        # Validate resume
+        if not is_valid_resume(extracted_text):
+            flash('⚠️ The uploaded file does not appear to be a resume. Please upload a proper resume document.', 'danger')
+            os.remove(filepath)
+            return redirect(url_for('resume_analysis'))
+        
+        # Analyze
+        analysis = analyze_resume_content(extracted_text)
+        
+        # Save to database
+        resume_record = ResumeAnalysis(
+            user_id=current_user.id,
+            filename=filename,
+            extracted_text=extracted_text[:2000],
+            score=analysis['overall_score'],
+            suggested_role=analysis['best_role'],
+            suggested_roles=json.dumps(analysis['suggested_roles']),
+            strengths=json.dumps(analysis['strengths']),
+            improvements=json.dumps(analysis['improvements']),
+            skills_found=json.dumps(analysis['skills_found'])
+        )
+        db.session.add(resume_record)
+        db.session.commit()
+        
+        flash(f'✅ Resume analyzed successfully! Best match: {analysis["best_role"]}', 'success')
+        return render_template('resume_results.html', analysis=analysis)
+    
+    return render_template('resume_analysis.html')
+
+# ============ HELPER ROUTES FOR DIRECT INTERVIEW/QUIZ FROM RESUME ============
+@app.route('/start-mock-interview-direct', methods=['POST', 'GET'])
+@login_required
+def start_mock_interview_direct():
+    """Start mock interview directly from resume suggestion"""
+    if request.method == 'POST':
+        role = request.form.get('role')
+    else:
+        role = request.args.get('role')
+    
+    if not role:
+        flash('No role specified', 'danger')
+        return redirect(url_for('resume_analysis'))
+    
+    questions = INTERVIEW_QUESTIONS.get(role, INTERVIEW_QUESTIONS['Python Developer'])
+    random.shuffle(questions)
+    
+    session['interview_role'] = role
+    session['interview_questions'] = questions[:10]
+    session['interview_answers'] = []
+    session['interview_current'] = 0
+    
+    flash(f'Starting {role} mock interview!', 'success')
+    return redirect(url_for('take_mock_interview'))
+
+@app.route('/start-quiz-direct', methods=['POST', 'GET'])
+@login_required
+def start_quiz_direct():
+    """Start quiz directly from resume suggestion"""
+    if request.method == 'POST':
+        category = request.form.get('category')
+    else:
+        category = request.args.get('category')
+    
+    if not category:
+        flash('No category specified', 'danger')
+        return redirect(url_for('resume_analysis'))
+    
+    all_questions = QUIZ_QUESTIONS.get(category, [])
+    if not all_questions:
+        flash('No questions available for this category', 'danger')
+        return redirect(url_for('resume_analysis'))
+    
+    selected_questions = random.sample(all_questions, min(10, len(all_questions)))
+    
+    session['quiz_category'] = category
+    session['quiz_difficulty'] = 'intermediate'
+    session['quiz_questions'] = selected_questions
+    session['quiz_answers'] = []
+    session['quiz_current'] = 0
+    
+    flash(f'Starting {category} quiz!', 'success')
+    return redirect(url_for('take_quiz'))
+
+# ============ MOCK INTERVIEW ROUTES ============
 @app.route('/mock-interview')
 @login_required
 def mock_interview():
@@ -490,62 +553,7 @@ def submit_mock_answer():
 def interview_results():
     return render_template('interview_results.html')
 
-# Resume Analysis Routes
-@app.route('/resume-analysis', methods=['GET', 'POST'])
-@login_required
-def resume_analysis():
-    if request.method == 'POST':
-        if 'resume' not in request.files:
-            flash('No file uploaded', 'danger')
-            return redirect(url_for('resume_analysis'))
-        
-        file = request.files['resume']
-        if file.filename == '':
-            flash('No file selected', 'danger')
-            return redirect(url_for('resume_analysis'))
-        
-        if file and file.filename.endswith('.pdf'):
-            filename = file.filename
-            
-            # Calculate score based on filename (demo)
-            score = random.randint(60, 95)
-            strengths = [
-                "Good technical skills section",
-                "Clear work experience",
-                "Professional format",
-                "Relevant keywords found"
-            ]
-            improvements = [
-                "Add more quantifiable achievements",
-                "Include a professional summary",
-                "Highlight key projects"
-            ]
-            skills = ["Python", "JavaScript", "SQL", "React", "Node.js"]
-            
-            resume = ResumeAnalysis(
-                user_id=current_user.id,
-                filename=filename,
-                score=score,
-                strengths=json.dumps(strengths),
-                improvements=json.dumps(improvements),
-                skills_found=json.dumps(skills[:random.randint(3,5)])
-            )
-            db.session.add(resume)
-            db.session.commit()
-            
-            analysis = {
-                'score': score, 
-                'strengths': strengths[:3], 
-                'improvements': improvements[:3], 
-                'skills_found': skills[:random.randint(3,5)]
-            }
-            return render_template('resume_results.html', analysis=analysis)
-        else:
-            flash('Please upload a PDF file', 'danger')
-    
-    return render_template('resume_analysis.html')
-
-# Quiz Routes - Now with 10 questions per quiz
+# ============ QUIZ ROUTES ============
 @app.route('/skill-quiz')
 @login_required
 def skill_quiz():
@@ -561,17 +569,11 @@ def start_quiz():
     
     all_questions = QUIZ_QUESTIONS.get(category, [])
     
-    # Filter by difficulty if needed
-    filtered_questions = [q for q in all_questions if q.get('difficulty', 'intermediate') == difficulty]
-    if not filtered_questions:
-        filtered_questions = all_questions
-    
-    if not filtered_questions:
+    if not all_questions:
         flash('No questions available', 'danger')
         return redirect(url_for('skill_quiz'))
     
-    # Get 10 random questions
-    selected_questions = random.sample(filtered_questions, min(10, len(filtered_questions)))
+    selected_questions = random.sample(all_questions, min(10, len(all_questions)))
     
     session['quiz_category'] = category
     session['quiz_difficulty'] = difficulty
@@ -660,6 +662,7 @@ def submit_quiz_answer():
 def quiz_results():
     return render_template('quiz_results.html')
 
+# ============ PERFORMANCE ROUTES ============
 @app.route('/performance')
 @login_required
 def performance():
