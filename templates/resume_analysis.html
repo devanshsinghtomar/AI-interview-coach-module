@@ -22,10 +22,10 @@
         <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
             <p style="font-size: 0.75rem; color: #888;">Your resume will be analyzed for:</p>
             <div style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap;">
-                <span style="background: #f0f0f0; padding: 0.25rem 0.5rem; border-radius: 15px; font-size: 0.75rem;">Role Matching</span>
-                <span style="background: #f0f0f0; padding: 0.25rem 0.5rem; border-radius: 15px; font-size: 0.75rem;">Skills Detection</span>
-                <span style="background: #f0f0f0; padding: 0.25rem 0.5rem; border-radius: 15px; font-size: 0.75rem;">Quality Score</span>
-                <span style="background: #f0f0f0; padding: 0.25rem 0.5rem; border-radius: 15px; font-size: 0.75rem;">Improvement Tips</span>
+                <span style="background: #f0f0f0; padding: 0.25rem 0.5rem; border-radius: 15px; font-size: 0.75rem;">🎯 Role Matching</span>
+                <span style="background: #f0f0f0; padding: 0.25rem 0.5rem; border-radius: 15px; font-size: 0.75rem;">💡 Skills Detection</span>
+                <span style="background: #f0f0f0; padding: 0.25rem 0.5rem; border-radius: 15px; font-size: 0.75rem;">⭐ Quality Score</span>
+                <span style="background: #f0f0f0; padding: 0.25rem 0.5rem; border-radius: 15px; font-size: 0.75rem;">📈 Improvement Tips</span>
             </div>
         </div>
     </div>
@@ -75,20 +75,4 @@
         dropZone.style.borderColor = '#cbd5e0';
         dropZone.style.background = 'white';
         const file = e.dataTransfer.files[0];
-        if (file && file.name.endsWith('.pdf')) {
-            fileInput.files = e.dataTransfer.files;
-            uploadText.innerHTML = `✅ Selected: ${file.name}`;
-            uploadIcon.innerHTML = '✅';
-            dropZone.style.borderColor = '#48bb78';
-            submitBtn.disabled = false;
-        } else {
-            alert('Please drop a PDF file');
-        }
-    });
-    
-    document.getElementById('uploadForm').addEventListener('submit', () => {
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Analyzing...';
-    });
-</script>
-{% endblock %}
+        if (file && file.name.endsWith('.pdf'))
