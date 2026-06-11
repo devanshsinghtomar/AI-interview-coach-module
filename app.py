@@ -24,7 +24,7 @@ bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
-# Database Models
+# ============ DATABASE MODELS ============
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
@@ -72,32 +72,40 @@ with app.app_context():
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# ============ INTERVIEW QUESTIONS ============
+# ============ INTERVIEW QUESTIONS (10+ ROLES) ============
 INTERVIEW_QUESTIONS_WITH_ANSWERS = {
     'Python Developer': [
         {"question": "What is the difference between a list and a tuple in Python?", "keywords": ["mutable", "immutable", "change", "modify", "fixed"]},
         {"question": "What is a decorator in Python?", "keywords": ["function", "modify", "wrapper", "@", "syntax"]},
         {"question": "Explain the Global Interpreter Lock (GIL).", "keywords": ["mutex", "thread", "execution", "bytecode", "simultaneously"]},
+        {"question": "What is list comprehension? Give an example.", "keywords": ["concise", "create", "list", "loop", "condition"]},
+        {"question": "How does exception handling work in Python?", "keywords": ["try", "except", "finally", "raise", "error"]},
     ],
     'JavaScript Developer': [
         {"question": "What is closure in JavaScript?", "keywords": ["inner function", "outer scope", "variables", "return", "access"]},
         {"question": "Explain the difference between == and ===.", "keywords": ["value", "type", "strict", "equality", "comparison"]},
+        {"question": "What is hoisting in JavaScript?", "keywords": ["declaration", "move", "top", "scope", "var"]},
+        {"question": "What are promises in JavaScript?", "keywords": ["async", "await", "future", "value", "callback"]},
     ],
     'Data Scientist': [
         {"question": "Difference between supervised and unsupervised learning?", "keywords": ["labeled", "unlabeled", "output", "target", "training"]},
         {"question": "What is overfitting and how to prevent it?", "keywords": ["training", "noise", "generalization", "regularization", "validation"]},
+        {"question": "Explain bias-variance tradeoff.", "keywords": ["underfitting", "overfitting", "error", "complexity", "balance"]},
     ],
     'Full Stack Developer': [
         {"question": "What is REST API?", "keywords": ["representational", "state", "transfer", "http", "endpoint"]},
         {"question": "Difference between SQL and NoSQL?", "keywords": ["structured", "unstructured", "schema", "scalability", "flexible"]},
+        {"question": "What is JWT authentication?", "keywords": ["json", "web", "token", "stateless", "signature"]},
     ],
     'DevOps Engineer': [
         {"question": "What is Docker?", "keywords": ["container", "image", "isolate", "deploy", "environment"]},
         {"question": "Explain CI/CD pipeline.", "keywords": ["continuous", "integration", "delivery", "deployment", "automation"]},
+        {"question": "What is Kubernetes?", "keywords": ["orchestration", "container", "cluster", "pods", "scaling"]},
     ],
     'Java Developer': [
         {"question": "Difference between abstract class and interface?", "keywords": ["implementation", "multiple", "inheritance", "abstract", "methods"]},
         {"question": "What is multithreading in Java?", "keywords": ["concurrent", "threads", "parallel", "execution", "runnable"]},
+        {"question": "Explain garbage collection in Java.", "keywords": ["memory", "reclaim", "unused", "objects", "jvm"]},
     ],
     'Cloud Engineer': [
         {"question": "What are the cloud service models?", "keywords": ["iaas", "paas", "saas", "infrastructure", "platform"]},
@@ -115,19 +123,24 @@ QUIZ_QUESTIONS = {
         {"question": "What is the correct way to create a function in Python?", "options": ["def myFunction():", "function myFunction():", "create myFunction():", "func myFunction():"], "correct": "def myFunction():", "explanation": "Functions are defined using the 'def' keyword."},
         {"question": "What does the 'len()' function do?", "options": ["Returns length", "Converts to lowercase", "Rounds a number", "Finds maximum"], "correct": "Returns length", "explanation": "len() returns the number of items."},
         {"question": "Which operator is used for exponentiation?", "options": ["**", "^", "exp()", "&&"], "correct": "**", "explanation": "** is exponentiation operator."},
+        {"question": "What is the output of print(type(10))?", "options": ["<class 'int'>", "<class 'float'>", "<class 'str'>", "<class 'list'>"], "correct": "<class 'int'>", "explanation": "10 is an integer."},
+        {"question": "How do you create a list?", "options": ["[1, 2, 3]", "(1, 2, 3)", "{1, 2, 3}", "<1, 2, 3>"], "correct": "[1, 2, 3]", "explanation": "Lists use square brackets."},
     ],
     'JavaScript': [
         {"question": "How do you declare a variable in JavaScript?", "options": ["let x;", "variable x;", "v x;", "declare x;"], "correct": "let x;", "explanation": "let, const, and var declare variables."},
         {"question": "What does 'console.log()' do?", "options": ["Prints to console", "Shows alert", "Returns value", "Creates log"], "correct": "Prints to console", "explanation": "console.log() outputs to browser console."},
+        {"question": "What is the correct way to write a function?", "options": ["function myFunction() {}", "def myFunction() {}", "create myFunction() {}", "func myFunction() {}"], "correct": "function myFunction() {}", "explanation": "Functions use the 'function' keyword."},
     ],
     'SQL': [
         {"question": "What does SQL stand for?", "options": ["Structured Query Language", "Simple Query Language", "Standard Query Language", "System Query Language"], "correct": "Structured Query Language", "explanation": "SQL stands for Structured Query Language."},
         {"question": "Which SQL statement extracts data?", "options": ["SELECT", "EXTRACT", "GET", "OPEN"], "correct": "SELECT", "explanation": "SELECT retrieves data from database."},
+        {"question": "What does the WHERE clause do?", "options": ["Filters records", "Sorts records", "Groups records", "Joins tables"], "correct": "Filters records", "explanation": "WHERE filters records based on conditions."},
     ]
 }
 
-# ============ RESUME ANALYSIS FUNCTION ============
+# ============ RESUME ANALYSIS FUNCTIONS ============
 def extract_text_from_pdf(filepath):
+    """Extract text from PDF file"""
     try:
         with open(filepath, 'rb') as file:
             pdf_reader = PyPDF2.PdfReader(file)
@@ -136,16 +149,34 @@ def extract_text_from_pdf(filepath):
                 page_text = page.extract_text()
                 if page_text:
                     text += page_text + "\n"
-            return text
+            return text.strip()
     except Exception as e:
         print(f"PDF extraction error: {e}")
         return ""
 
-def analyze_resume_content(text):
-    """Analyze resume and return suggestions with dialog box data"""
+def is_valid_resume(text):
+    """Check if the uploaded document appears to be a resume"""
     text_lower = text.lower()
     
-    # Role keywords for matching
+    resume_keywords = [
+        'experience', 'education', 'skills', 'work', 'employment',
+        'project', 'certification', 'summary', 'objective', 'profile',
+        'accomplishment', 'achievement', 'technical', 'professional'
+    ]
+    
+    email_pattern = r'\b[\w\.-]+@[\w\.-]+\.\w+\b'
+    phone_pattern = r'\b\d{10}\b|\b\d{3}[-.]?\d{3}[-.]?\d{4}\b'
+    
+    has_resume_words = sum(1 for word in resume_keywords if word in text_lower) >= 2
+    has_email = bool(re.search(email_pattern, text))
+    has_phone = bool(re.search(phone_pattern, text))
+    
+    return (has_resume_words or has_email or has_phone) and len(text) > 100
+
+def analyze_resume_content(text):
+    """Analyze resume and return detailed results"""
+    text_lower = text.lower()
+    
     role_keywords = {
         'Python Developer': ['python', 'django', 'flask', 'pandas', 'numpy', 'scikit-learn', 'tensorflow'],
         'JavaScript Developer': ['javascript', 'react', 'angular', 'vue', 'node.js', 'express', 'typescript'],
@@ -157,9 +188,9 @@ def analyze_resume_content(text):
         'Machine Learning Engineer': ['machine learning', 'deep learning', 'tensorflow', 'pytorch', 'keras']
     }
     
-    # Calculate scores for each role
     role_scores = {}
-    role_matched = {}
+    role_matched_skills = {}
+    
     for role, keywords in role_keywords.items():
         score = 0
         matched = []
@@ -168,39 +199,58 @@ def analyze_resume_content(text):
                 score += 15
                 matched.append(keyword)
         role_scores[role] = min(score, 100)
-        role_matched[role] = matched
+        role_matched_skills[role] = matched
     
-    # Get best match
     best_role = max(role_scores, key=role_scores.get) if role_scores else "Python Developer"
     best_score = role_scores.get(best_role, 50)
     
-    # Get all suitable roles (score >= 25)
     suggested_roles = []
     for role, score in sorted(role_scores.items(), key=lambda x: x[1], reverse=True):
-        if score >= 25:
+        if score >= 25 and role != best_role:
             suggested_roles.append({
                 'role': role,
                 'match_percentage': score,
-                'matched_skills': role_matched.get(role, [])[:4]
+                'matched_skills': role_matched_skills.get(role, [])[:4]
             })
     
-    # Generate strengths
-    strengths = []
-    if len(text) > 500:
-        strengths.append("✅ Resume has good length and detailed information")
-    if '@' in text:
-        strengths.append("✅ Contact information properly included")
-    if 'github' in text_lower or 'linkedin' in text_lower:
-        strengths.append("✅ Professional portfolio links included")
-    if best_score >= 70:
-        strengths.append(f"✅ Strong keyword match for {best_role} role")
+    word_count = len(text.split())
+    has_email = '@' in text
+    has_phone = bool(re.search(r'\d{10}', text))
+    has_github = 'github' in text_lower
+    has_linkedin = 'linkedin' in text_lower
     
-    # Generate improvements
+    if word_count > 500 and best_score >= 70 and has_email:
+        quality_rating = "Excellent"
+        quality_color = "#48bb78"
+    elif word_count > 300 and best_score >= 50:
+        quality_rating = "Good"
+        quality_color = "#48bb78"
+    elif word_count > 150:
+        quality_rating = "Average"
+        quality_color = "#f59e0b"
+    else:
+        quality_rating = "Needs Improvement"
+        quality_color = "#ef4444"
+    
+    strengths = []
+    if word_count > 400:
+        strengths.append("✅ Comprehensive resume with substantial content")
+    elif word_count > 200:
+        strengths.append("✅ Good resume length")
+    if has_email and has_phone:
+        strengths.append("✅ Complete contact information provided")
+    if has_github or has_linkedin:
+        strengths.append("✅ Professional online presence detected")
+    if best_score >= 70:
+        strengths.append(f"✅ Strong alignment with {best_role} role")
+    
     improvements = []
-    if len(text) < 300:
-        improvements.append("📈 Add more details about your experience and skills")
+    if word_count < 200:
+        improvements.append("📈 Add more details about your experience and projects")
+    if not has_email:
+        improvements.append("📈 Add your email address for recruiters to contact you")
     if best_score < 50:
-        improvements.append(f"📈 Add more {best_role}-specific keywords to your resume")
+        improvements.append(f"📈 Include more {best_role}-specific keywords and technologies")
     if 'achievement' not in text_lower:
         improvements.append("📈 Quantify your achievements with numbers and metrics")
     
@@ -209,24 +259,30 @@ def analyze_resume_content(text):
     if not improvements:
         improvements = ["📈 Consider adding more quantifiable achievements"]
     
-    # Get unique skills found
     all_skills = []
-    for skills in role_matched.values():
+    for skills in role_matched_skills.values():
         all_skills.extend(skills)
-    unique_skills = list(set(all_skills))[:10]
+    unique_skills = list(set(all_skills))[:12]
     
     return {
         'overall_score': best_score,
         'best_role': best_role,
-        'suggested_roles': suggested_roles[:6],  # Top 6 for dialog box
-        'strengths': strengths,
-        'improvements': improvements,
+        'suggested_roles': suggested_roles[:6],
+        'quality_rating': quality_rating,
+        'quality_color': quality_color,
+        'strengths': strengths[:5],
+        'improvements': improvements[:5],
         'skills_found': unique_skills,
-        'word_count': len(text.split()),
-        'full_text': text[:4000]  # For displaying extracted text
+        'word_count': word_count,
+        'has_email': has_email,
+        'has_phone': has_phone,
+        'has_github': has_github,
+        'has_linkedin': has_linkedin,
+        'full_text': text[:4000]
     }
 
 def evaluate_answer(question_text, user_answer, job_role):
+    """Evaluate interview answer based on keywords"""
     user_answer_lower = user_answer.lower()
     
     question_data = None
@@ -468,8 +524,8 @@ def resume_analysis():
             flash('No file selected', 'danger')
             return redirect(url_for('resume_analysis'))
         
-        if not file.filename.endswith('.pdf'):
-            flash('Please upload a PDF file', 'danger')
+        if not file.filename.lower().endswith('.pdf'):
+            flash('❌ Please upload a PDF file', 'danger')
             return redirect(url_for('resume_analysis'))
         
         try:
@@ -478,10 +534,14 @@ def resume_analysis():
             file.save(filepath)
             
             extracted_text = extract_text_from_pdf(filepath)
+            os.remove(filepath)
             
-            if not extracted_text or len(extracted_text.strip()) < 50:
-                flash('Could not extract text from PDF. Please ensure it\'s a valid text-based PDF.', 'danger')
-                os.remove(filepath)
+            if not extracted_text or len(extracted_text.strip()) < 100:
+                flash('❌ The uploaded document does not appear to be a resume. Could not extract sufficient text.', 'danger')
+                return redirect(url_for('resume_analysis'))
+            
+            if not is_valid_resume(extracted_text):
+                flash('❌ The uploaded document does not appear to be a resume. Please upload a proper resume document.', 'danger')
                 return redirect(url_for('resume_analysis'))
             
             analysis = analyze_resume_content(extracted_text)
@@ -500,8 +560,7 @@ def resume_analysis():
             db.session.add(resume_record)
             db.session.commit()
             
-            flash(f'✅ Resume analyzed successfully! Best match: {analysis["best_role"]}', 'success')
-            
+            flash(f'✅ Resume analyzed successfully! Best match: {analysis["best_role"]} with {analysis["overall_score"]}% match', 'success')
             return render_template('resume_results.html', analysis=analysis)
             
         except Exception as e:
@@ -511,7 +570,7 @@ def resume_analysis():
     
     return render_template('resume_analysis.html')
 
-# ============ HELPER ROUTES ============
+# ============ HELPER ROUTES FOR DIRECT INTERVIEW/QUIZ ============
 @app.route('/start-mock-interview-direct', methods=['POST'])
 @login_required
 def start_mock_interview_direct():
@@ -540,7 +599,6 @@ def start_quiz_direct():
         flash('No category specified', 'danger')
         return redirect(url_for('resume_analysis'))
     
-    # Map role to quiz category
     category_map = {
         'Python Developer': 'Python',
         'JavaScript Developer': 'JavaScript',
@@ -568,7 +626,7 @@ def start_quiz_direct():
     
     return redirect(url_for('take_quiz'))
 
-# ============ QUIZ ROUTES ============
+# ============ SKILL QUIZ ROUTES ============
 @app.route('/skill-quiz')
 @login_required
 def skill_quiz():
@@ -689,6 +747,7 @@ def quiz_results():
     session.pop('quiz_results', None)
     return render_template('quiz_results.html', results=results)
 
+# ============ PERFORMANCE ROUTES ============
 @app.route('/performance')
 @login_required
 def performance():
