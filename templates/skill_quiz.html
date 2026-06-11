@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Skill Quiz - AI Interview Coach{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto;">
+    <div class="card" style="padding: 2rem;">
+        <h2 style="text-align: center; margin-bottom: 1rem;">🧠 Skill Assessment Quiz</h2>
+        <p style="text-align: center; color: #666; margin-bottom: 2rem;">Test your knowledge with 1000+ questions across multiple domains</p>
+        
+        <form method="POST" action="/start-quiz">
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Select Category</label>
+                <select name="category" required style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 10px;">
+                    {% for category in categories %}
+                    <option value="{{ category }}">{{ category }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Difficulty Level</label>
+                <select name="difficulty" required style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 10px;">
+                    <option value="beginner">Beginner</option>
+                    <option value="intermediate">Intermediate</option>
+                    <option value="advanced">Advanced</option>
+                </select>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Start Quiz →</button>
+        </form>
+        
+        <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0;">
+            <div style="display: flex; justify-content: space-around; text-align: center;">
+                <div>
+                    <div style="font-size: 1.5rem; font-weight: bold; color: #667eea;">1000+</div>
+                    <div style="font-size: 0.875rem; color: #666;">Questions</div>
+                </div>
+                <div>
+                    <div style="font-size: 1.5rem; font-weight: bold; color: #667eea;">5+</div>
+                    <div style="font-size: 0.875rem; color: #666;">Categories</div>
+                </div>
+                <div>
+                    <div style="font-size: 1.5rem; font-weight: bold; color: #667eea;">3</div>
+                    <div style="font-size: 0.875rem; color: #666;">Levels</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
