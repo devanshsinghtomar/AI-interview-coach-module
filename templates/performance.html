@@ -15,51 +15,22 @@
         </div>
     </div>
     
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin: 2rem 0;">
-        <div class="card">
-            <h3>Interview Scores Trend</h3>
-            <canvas id="interviewChart"></canvas>
+    <div class="card">
+        <h3>Recent Interviews</h3>
+        {% for i in interviews[:5] %}
+        <div style="padding: 0.5rem 0; border-bottom: 1px solid #e2e8f0;">
+            {{ i.job_role }} - Score: {{ i.score }}% ({{ i.date.strftime('%Y-%m-%d') }})
         </div>
-        <div class="card">
-            <h3>Quiz Scores Trend</h3>
-            <canvas id="quizChart"></canvas>
-        </div>
+        {% endfor %}
     </div>
     
-    <div class="card">
-        <h3>Performance by Role</h3>
-        <canvas id="pieChart" style="max-width: 400px; margin: 0 auto;"></canvas>
+    <div class="card" style="margin-top: 1rem;">
+        <h3>Recent Quizzes</h3>
+        {% for q in quizzes[:5] %}
+        <div style="padding: 0.5rem 0; border-bottom: 1px solid #e2e8f0;">
+            {{ q.category }} - Score: {{ q.score }}% ({{ q.date.strftime('%Y-%m-%d') }})
+        </div>
+        {% endfor %}
     </div>
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    const interviewData = {{ interview_data|safe }};
-    const quizData = {{ quiz_data|safe }};
-    const roleData = {{ role_performance|tojson|safe }};
-    
-    new Chart(document.getElementById('interviewChart'), {
-        type: 'line',
-        data: {
-            labels: interviewData.dates,
-            datasets: [{ label: 'Score %', data: interviewData.scores, borderColor: '#667eea', fill: false }]
-        }
-    });
-    
-    new Chart(document.getElementById('quizChart'), {
-        type: 'line',
-        data: {
-            labels: [{% for q in quizzes %}'{{ q.date.strftime("%Y-%m-%d") }}',{% endfor %}],
-            datasets: [{ label: 'Score %', data: [{% for q in quizzes %}{{ q.score }},{% endfor %}], borderColor: '#48bb78', fill: false }]
-        }
-    });
-    
-    new Chart(document.getElementById('pieChart'), {
-        type: 'pie',
-        data: {
-            labels: Object.keys(roleData),
-            datasets: [{ data: Object.values(roleData), backgroundColor: ['#667eea', '#48bb78', '#f59e0b', '#ef4444', '#8b5cf6'] }]
-        }
-    });
-</script>
 {% endblock %}
