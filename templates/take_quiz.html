@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Quiz - AI Interview Coach{% endblock %}
+
+{% block content %}
+<div style="max-width: 700px; margin: 0 auto;">
+    <div class="card" style="padding: 2rem;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
+            <span style="background: #667eea; color: white; padding: 0.25rem 0.75rem; border-radius: 20px;">{{ category }}</span>
+            <span>Question {{ question_num }} of {{ total }}</span>
+        </div>
+        
+        <div style="margin-bottom: 2rem;">
+            <h3 style="margin-bottom: 1rem;">{{ question.question }}</h3>
+        </div>
+        
+        <div id="options">
+            {% for option in question.options %}
+            <div class="option" data-value="{{ option }}" style="padding: 1rem; margin-bottom: 0.75rem; border: 2px solid #e2e8f0; border-radius: 10px; cursor: pointer; transition: all 0.3s;">
+                {{ option }}
+            </div>
+            {% endfor %}
+        </div>
+        
+        <button id="submitBtn" class="btn btn-primary" style="width: 100%; margin-top: 1rem;" disabled>Submit Answer</button>
+        
+        <div id="feedback" style="margin-top: 1.5rem; display: none;"></div>
+    </div>
+</div>
+
+<script>
+    let selectedAnswer = null;
+    
+    document.querySelectorAll('.option').forEach(opt => {
+        opt.addEventListener('click', () => {
+            document.querySelectorAll('.option').forEach(o => {
+                o.style.background = 'white';
+                o.style.borderColor = '#e2e8f0';
+            });
+            opt.style.background = '#667eea20';
+            opt.style.borderColor = '#667eea';
+            selectedAnswer = opt.dataset.value;
+            document.getElementById('submitBtn').disabled = false;
+        });
+    });
+    
+    document.getElementById('submitBtn').addEventListener('click', async () => {
+        if (!selectedAnswer) return;
+        
+        const response = await fetch('/submit-quiz-answer', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                answer: selectedAnswer,
+                correct: '{{ question.correct }}',
+                question: '{{ question.question }}'
+            })
+        });
+        const data = await response.json();
+        
+        if (data.completed) {
+            window.location.href = '/quiz-results';
+        } else {
+            // Update page with next question
+            window.location.reload();
+        }
+    });
+</script>
+{% endblock %}
