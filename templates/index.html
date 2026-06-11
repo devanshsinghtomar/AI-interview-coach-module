@@ -1,140 +1,34 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Interview Coach</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        .header {
-            text-align: center;
-            padding: 60px 20px;
-            color: white;
-        }
-        
-        .header h1 {
-            font-size: 48px;
-            margin-bottom: 20px;
-        }
-        
-        .header p {
-            font-size: 20px;
-            margin-bottom: 30px;
-            opacity: 0.95;
-        }
-        
-        .btn {
-            display: inline-block;
-            padding: 12px 30px;
-            font-size: 16px;
-            font-weight: 600;
-            text-decoration: none;
-            border-radius: 8px;
-            margin: 0 10px;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-        }
-        
-        .btn-primary {
-            background: white;
-            color: #667eea;
-        }
-        
-        .btn-outline {
-            border: 2px solid white;
-            color: white;
-            background: transparent;
-        }
-        
-        .features {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            padding: 40px 0;
-        }
-        
-        .feature-card {
-            background: white;
-            padding: 30px;
-            border-radius: 16px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            transition: transform 0.3s;
-        }
-        
-        .feature-card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .feature-icon {
-            font-size: 48px;
-            margin-bottom: 20px;
-        }
-        
-        .feature-card h3 {
-            margin-bottom: 15px;
-            color: #333;
-        }
-        
-        .feature-card p {
-            color: #666;
-            line-height: 1.6;
-        }
-        
-        @media (max-width: 768px) {
-            .header h1 { font-size: 32px; }
-            .header p { font-size: 16px; }
-            .btn { display: block; margin: 10px auto; width: 200px; }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>🤖 AI Interview Coach</h1>
-            <p>Practice interviews, analyze your resume, and land your dream job</p>
-            <a href="/login" class="btn btn-primary">Login</a>
-            <a href="/register" class="btn btn-outline">Register</a>
+{% extends "base.html" %}
+
+{% block title %}Home - AI Interview Coach{% endblock %}
+
+{% block content %}
+<div style="text-align: center; padding: 4rem 2rem;">
+    <h1 style="font-size: 3.5rem; color: white; margin-bottom: 1rem;">🎯 AI-Powered Interview Coach</h1>
+    <p style="font-size: 1.2rem; color: rgba(255,255,255,0.9); margin-bottom: 2rem; max-width: 600px; margin-left: auto; margin-right: auto;">
+        Practice with AI-generated questions, analyze your resume, and land your dream job at top companies.
+    </p>
+    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+        <a href="/login" class="btn btn-primary" style="background: white; color: #667eea;">Login</a>
+        <a href="/register" class="btn btn-secondary" style="background: transparent; color: white; border-color: white;">Register</a>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; margin-top: 4rem;">
+        <div class="card" style="background: rgba(255,255,255,0.95);">
+            <div style="font-size: 3rem;">🎤</div>
+            <h3 style="margin: 1rem 0;">Mock Interviews</h3>
+            <p style="color: #666;">Practice with dynamic AI-generated questions tailored to your role</p>
         </div>
-        
-        <div class="features">
-            <div class="feature-card">
-                <div class="feature-icon">🎤</div>
-                <h3>Mock Interviews</h3>
-                <p>Practice with AI-generated questions tailored to your role and experience level</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">📄</div>
-                <h3>Resume Analysis</h3>
-                <p>Get instant feedback on your resume with actionable improvement suggestions</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">📊</div>
-                <h3>Performance Tracking</h3>
-                <p>Track your progress over time and identify areas for improvement</p>
-            </div>
+        <div class="card" style="background: rgba(255,255,255,0.95);">
+            <div style="font-size: 3rem;">📄</div>
+            <h3 style="margin: 1rem 0;">Resume Analysis</h3>
+            <p style="color: #666;">Get instant feedback and actionable improvement suggestions</p>
+        </div>
+        <div class="card" style="background: rgba(255,255,255,0.95);">
+            <div style="font-size: 3rem;">📊</div>
+            <h3 style="margin: 1rem 0;">Skill Quiz</h3>
+            <p style="color: #666;">Test your knowledge with 1000+ questions across multiple domains</p>
         </div>
     </div>
-</body>
-</html>
+</div>
+{% endblock %}
