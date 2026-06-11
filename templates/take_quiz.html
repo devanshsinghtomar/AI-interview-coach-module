@@ -16,7 +16,7 @@
         
         <div id="options">
             {% for option in question.options %}
-            <div class="option" data-value="{{ option }}" style="padding: 1rem; margin-bottom: 0.75rem; border: 2px solid #e2e8f0; border-radius: 10px; cursor: pointer; transition: all 0.3s;">
+            <div class="option" data-value="{{ option }}" data-correct="{{ question.correct }}" style="padding: 1rem; margin-bottom: 0.75rem; border: 2px solid #e2e8f0; border-radius: 10px; cursor: pointer; transition: all 0.3s;">
                 {{ option }}
             </div>
             {% endfor %}
@@ -24,12 +24,13 @@
         
         <button id="submitBtn" class="btn btn-primary" style="width: 100%; margin-top: 1rem;" disabled>Submit Answer</button>
         
-        <div id="feedback" style="margin-top: 1.5rem; display: none;"></div>
+        <div id="feedbackDiv" style="margin-top: 1.5rem; display: none;"></div>
     </div>
 </div>
 
 <script>
     let selectedAnswer = null;
+    let selectedElement = null;
     
     document.querySelectorAll('.option').forEach(opt => {
         opt.addEventListener('click', () => {
@@ -40,6 +41,7 @@
             opt.style.background = '#667eea20';
             opt.style.borderColor = '#667eea';
             selectedAnswer = opt.dataset.value;
+            selectedElement = opt;
             document.getElementById('submitBtn').disabled = false;
         });
     });
@@ -49,7 +51,7 @@
         
         const submitBtn = document.getElementById('submitBtn');
         submitBtn.disabled = true;
-        submitBtn.textContent = 'Submitting...';
+        submitBtn.textContent = 'Checking answer...';
         
         try {
             const response = await fetch('/submit-quiz-answer', {
@@ -58,7 +60,8 @@
                 body: JSON.stringify({
                     answer: selectedAnswer,
                     correct: '{{ question.correct }}',
-                    question: '{{ question.question }}'
+                    question: '{{ question.question }}',
+                    explanation: '{{ question.explanation }}'
                 })
             });
             const data = await response.json();
@@ -66,7 +69,32 @@
             if (data.completed) {
                 window.location.href = '/quiz-results';
             } else {
-                window.location.reload();
+                // Show feedback with correct answer
+                const isCorrect = selectedAnswer === '{{ question.correct }}';
+                const feedbackDiv = document.getElementById('feedbackDiv');
+                feedbackDiv.style.display = 'block';
+                
+                if (isCorrect) {
+                    feedbackDiv.innerHTML = `
+                        <div style="background: #48bb78; color: white; padding: 1rem; border-radius: 10px;">
+                            ✅ <strong>Correct!</strong><br>
+                            {{ question.explanation }}
+                        </div>
+                    `;
+                } else {
+                    feedbackDiv.innerHTML = `
+                        <div style="background: #ef4444; color: white; padding: 1rem; border-radius: 10px;">
+                            ❌ <strong>Incorrect!</strong><br>
+                            Correct answer: <strong>{{ question.correct }}</strong><br>
+                            {{ question.explanation }}
+                        </div>
+                    `;
+                }
+                
+                // Load next question after delay
+                setTimeout(() => {
+                    window.location.reload();
+                }, 3000);
             }
         } catch (error) {
             alert('Error submitting answer. Please try again.');
