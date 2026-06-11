@@ -3,9 +3,9 @@
 {% block content %}
 <div style="max-width: 800px; margin: 0 auto;">
     <div class="card" style="padding: 2rem;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
             <span style="background: #667eea; color: white; padding: 0.25rem 0.75rem; border-radius: 20px;">{{ role }}</span>
-            <span>Question {{ question_num }} of {{ total }}</span>
+            <span>Question {{ num }} of {{ total }}</span>
         </div>
         
         <div style="background: #f7fafc; padding: 1.5rem; border-radius: 15px; margin-bottom: 1.5rem;">
@@ -27,11 +27,11 @@
 document.getElementById('answerForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
-    const response = await fetch('/submit-mock-answer', { method: 'POST', body: formData });
+    const response = await fetch('/submit-answer', { method: 'POST', body: formData });
     const data = await response.json();
     
     if (data.completed) {
-        window.location.href = '/interview-results?score=' + data.total_score;
+        window.location.href = '/interview-complete';
     } else {
         document.getElementById('feedbackDiv').innerHTML = `
             <div style="background: ${data.score >= 70 ? '#48bb78' : data.score >= 50 ? '#f59e0b' : '#ef4444'}; color: white; padding: 1rem; border-radius: 10px;">
@@ -40,9 +40,9 @@ document.getElementById('answerForm').addEventListener('submit', async (e) => {
             </div>
         `;
         document.querySelector('textarea').value = '';
-        document.querySelector('input[name="question"]').value = data.next_question;
-        document.querySelector('h3 + p').textContent = data.next_question;
-        document.querySelector('span:last-child').textContent = `Question ${data.question_num} of ${data.total}`;
+        document.querySelector('input[name="question"]').value = data.next;
+        document.querySelector('h3 + p').textContent = data.next;
+        document.querySelector('span:last-child').textContent = `Question ${data.num} of ${data.total}`;
         setTimeout(() => {
             document.getElementById('feedbackDiv').innerHTML = '';
         }, 3000);
