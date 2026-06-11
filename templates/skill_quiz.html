@@ -1,49 +1,17 @@
 {% extends "base.html" %}
 
-{% block title %}Skill Quiz - AI Interview Coach{% endblock %}
-
 {% block content %}
 <div style="max-width: 600px; margin: 0 auto;">
     <div class="card" style="padding: 2rem;">
-        <h2 style="text-align: center; margin-bottom: 1rem;">🧠 Skill Assessment Quiz</h2>
-        <p style="text-align: center; color: #666; margin-bottom: 2rem;">Test your knowledge with <strong>1000+ questions</strong> across multiple domains</p>
+        <h2 style="text-align: center;">🧠 Skill Quiz</h2>
+        <p style="text-align: center; color: #666; margin-bottom: 2rem;">Test your knowledge</p>
         
         <form method="POST" action="/start-quiz">
-            <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Select Category</label>
-                <select name="category" required style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 10px;">
-                    {% for category in categories %}
-                    <option value="{{ category }}">{{ category }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            
-            <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Difficulty Level</label>
-                <select name="difficulty" required style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 10px;">
-                    <option value="beginner">Beginner 🌱</option>
-                    <option value="intermediate" selected>Intermediate 📚</option>
-                    <option value="advanced">Advanced 🚀</option>
-                </select>
-            </div>
-            
-            <div style="background: #f7fafc; padding: 1rem; border-radius: 10px; margin-bottom: 1.5rem;">
-                <div style="display: flex; justify-content: space-between; text-align: center;">
-                    <div>
-                        <div style="font-size: 1.5rem; font-weight: bold; color: #667eea;">10</div>
-                        <div style="font-size: 0.875rem;">Questions per Quiz</div>
-                    </div>
-                    <div>
-                        <div style="font-size: 1.5rem; font-weight: bold; color: #667eea;">1000+</div>
-                        <div style="font-size: 0.875rem;">Total Questions</div>
-                    </div>
-                    <div>
-                        <div style="font-size: 1.5rem; font-weight: bold; color: #667eea;">{{ categories|length }}</div>
-                        <div style="font-size: 0.875rem;">Categories</div>
-                    </div>
-                </div>
-            </div>
-            
+            <select name="category" required style="width: 100%; padding: 0.75rem; margin-bottom: 1rem; border: 2px solid #e2e8f0; border-radius: 10px;">
+                {% for category in categories %}
+                <option value="{{ category }}">{{ category }}</option>
+                {% endfor %}
+            </select>
             <button type="submit" class="btn btn-primary" style="width: 100%;">Start Quiz →</button>
         </form>
     </div>
