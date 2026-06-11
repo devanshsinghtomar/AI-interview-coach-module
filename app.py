@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_file
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_bcrypt import Bcrypt
@@ -9,6 +9,7 @@ import random
 import re
 import PyPDF2
 from werkzeug.utils import secure_filename
+import io
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-change-this-12345'
@@ -80,118 +81,62 @@ INTERVIEW_QUESTIONS_WITH_ANSWERS = {
         {"question": "Explain the Global Interpreter Lock (GIL).", "keywords": ["mutex", "thread", "execution", "bytecode", "simultaneously"], "sample_answer": "The GIL prevents multiple threads from executing Python bytecode at once."},
         {"question": "What is list comprehension?", "keywords": ["concise", "create", "list", "loop", "condition"], "sample_answer": "List comprehension provides a concise way to create lists."},
         {"question": "How does exception handling work?", "keywords": ["try", "except", "finally", "raise", "error"], "sample_answer": "Exception handling uses try-except blocks to handle errors gracefully."},
-        {"question": "What are generators in Python?", "keywords": ["yield", "iterator", "memory", "efficient", "lazy"], "sample_answer": "Generators yield values one at a time using yield keyword."},
-        {"question": "What is the difference between deep and shallow copy?", "keywords": ["recursive", "reference", "nested", "objects", "copy"], "sample_answer": "Deep copy creates independent copies while shallow copy shares references."}
+        {"question": "What are generators in Python?", "keywords": ["yield", "iterator", "memory", "efficient", "lazy"], "sample_answer": "Generators yield values one at a time using yield keyword."}
     ],
     'JavaScript Developer': [
         {"question": "What is closure in JavaScript?", "keywords": ["inner function", "outer scope", "variables", "return", "access"], "sample_answer": "A closure has access to its outer function's scope even after the outer function returns."},
         {"question": "Explain the difference between == and ===.", "keywords": ["value", "type", "strict", "equality", "comparison"], "sample_answer": "== compares value after coercion, === compares both value and type."},
         {"question": "What is hoisting?", "keywords": ["declaration", "move", "top", "scope", "var"], "sample_answer": "Hoisting moves declarations to the top of their scope during compilation."},
-        {"question": "What are promises in JavaScript?", "keywords": ["async", "await", "future", "value", "callback"], "sample_answer": "Promises represent the eventual completion of async operations."},
-        {"question": "What is the event loop?", "keywords": ["async", "queue", "call stack", "non-blocking", "execution"], "sample_answer": "The event loop handles async callbacks in JavaScript."}
+        {"question": "What are promises in JavaScript?", "keywords": ["async", "await", "future", "value", "callback"], "sample_answer": "Promises represent the eventual completion of async operations."}
     ],
     'Data Scientist': [
         {"question": "Difference between supervised and unsupervised learning?", "keywords": ["labeled", "unlabeled", "output", "target", "training"], "sample_answer": "Supervised uses labeled data, unsupervised finds patterns in unlabeled data."},
         {"question": "What is overfitting and how to prevent it?", "keywords": ["training", "noise", "generalization", "regularization", "validation"], "sample_answer": "Overfitting occurs when model learns noise; prevent with cross-validation."},
-        {"question": "Explain bias-variance tradeoff.", "keywords": ["underfitting", "overfitting", "error", "complexity", "balance"], "sample_answer": "Bias is error from wrong assumptions, variance is sensitivity to training data."},
-        {"question": "What is cross-validation?", "keywords": ["k-fold", "validation", "testing", "training", "split"], "sample_answer": "Cross-validation splits data multiple times for robust evaluation."},
-        {"question": "What evaluation metrics for classification?", "keywords": ["accuracy", "precision", "recall", "f1", "roc"], "sample_answer": "Metrics include accuracy, precision, recall, F1-score, and AUC-ROC."}
+        {"question": "Explain bias-variance tradeoff.", "keywords": ["underfitting", "overfitting", "error", "complexity", "balance"], "sample_answer": "Bias is error from wrong assumptions, variance is sensitivity to training data."}
     ],
     'Full Stack Developer': [
         {"question": "What is REST API?", "keywords": ["representational", "state", "transfer", "http", "endpoint"], "sample_answer": "REST is an architectural style for designing networked applications."},
         {"question": "Difference between SQL and NoSQL?", "keywords": ["structured", "unstructured", "schema", "scalability", "flexible"], "sample_answer": "SQL has fixed schema, NoSQL is flexible and horizontally scalable."},
-        {"question": "What is JWT authentication?", "keywords": ["json", "web", "token", "stateless", "signature"], "sample_answer": "JWT is a stateless authentication method using signed JSON tokens."},
-        {"question": "What is CORS?", "keywords": ["cross", "origin", "resource", "sharing", "browser"], "sample_answer": "CORS allows web pages to request resources from different domains."},
-        {"question": "Explain MVC architecture.", "keywords": ["model", "view", "controller", "separation", "concerns"], "sample_answer": "MVC separates application into Model, View, and Controller components."}
+        {"question": "What is JWT authentication?", "keywords": ["json", "web", "token", "stateless", "signature"], "sample_answer": "JWT is a stateless authentication method using signed JSON tokens."}
     ],
     'DevOps Engineer': [
         {"question": "What is Docker?", "keywords": ["container", "image", "isolate", "deploy", "environment"], "sample_answer": "Docker packages applications in containers for consistent deployment."},
         {"question": "Explain CI/CD pipeline.", "keywords": ["continuous", "integration", "delivery", "deployment", "automation"], "sample_answer": "CI/CD automates building, testing, and deploying code changes."},
-        {"question": "What is Kubernetes?", "keywords": ["orchestration", "container", "cluster", "pods", "scaling"], "sample_answer": "Kubernetes orchestrates and manages containerized applications."},
-        {"question": "What is infrastructure as code?", "keywords": ["terraform", "cloudformation", "automation", "version", "provision"], "sample_answer": "IaC manages infrastructure using code instead of manual processes."},
-        {"question": "Explain blue-green deployment.", "keywords": ["two", "environments", "switch", "zero", "downtime"], "sample_answer": "Blue-green deployment uses two identical environments for zero-downtime releases."}
+        {"question": "What is Kubernetes?", "keywords": ["orchestration", "container", "cluster", "pods", "scaling"], "sample_answer": "Kubernetes orchestrates and manages containerized applications."}
     ],
     'Java Developer': [
-        {"question": "Difference between abstract class and interface?", "keywords": ["implementation", "multiple", "inheritance", "abstract", "methods"], "sample_answer": "Abstract classes can have implemented methods, interfaces are fully abstract (Java 8+ has defaults)."},
+        {"question": "Difference between abstract class and interface?", "keywords": ["implementation", "multiple", "inheritance", "abstract", "methods"], "sample_answer": "Abstract classes can have implemented methods, interfaces are fully abstract."},
         {"question": "What is multithreading in Java?", "keywords": ["concurrent", "threads", "parallel", "execution", "runnable"], "sample_answer": "Multithreading allows multiple threads to execute concurrently."},
-        {"question": "Explain garbage collection in Java.", "keywords": ["memory", "reclaim", "unused", "objects", "jvm"], "sample_answer": "GC automatically removes unused objects from memory."},
-        {"question": "What is Spring Boot?", "keywords": ["framework", "microservices", "auto-configuration", "production", "ready"], "sample_answer": "Spring Boot simplifies Spring application setup and deployment."},
-        {"question": "Difference between HashMap and Hashtable?", "keywords": ["synchronized", "null", "thread-safe", "performance", "legacy"], "sample_answer": "HashMap is not thread-safe but allows null, Hashtable is synchronized."}
+        {"question": "Explain garbage collection in Java.", "keywords": ["memory", "reclaim", "unused", "objects", "jvm"], "sample_answer": "GC automatically removes unused objects from memory."}
     ],
     'Cloud Engineer': [
         {"question": "What are the cloud service models?", "keywords": ["iaas", "paas", "saas", "infrastructure", "platform"], "sample_answer": "IaaS, PaaS, and SaaS are the three main cloud service models."},
-        {"question": "Explain serverless computing.", "keywords": ["functions", "event-driven", "no server", "scale", "automatic"], "sample_answer": "Serverless runs code without managing servers, scaling automatically."},
-        {"question": "What is the difference between scaling up and scaling out?", "keywords": ["vertical", "horizontal", "more power", "more instances", "resources"], "sample_answer": "Scaling up adds more power to existing server, scaling out adds more servers."},
-        {"question": "What is Infrastructure as Code?", "keywords": ["terraform", "cloudformation", "automation", "version", "provision"], "sample_answer": "IaC manages and provisions infrastructure through code."},
-        {"question": "Explain load balancer types.", "keywords": ["application", "network", "classic", "distribution", "traffic"], "sample_answer": "Load balancers distribute traffic across multiple servers."}
-    ],
-    'Frontend Developer': [
-        {"question": "What is the difference between React and Angular?", "keywords": ["library", "framework", "virtual dom", "two-way", "binding"], "sample_answer": "React is a UI library, Angular is a full-featured framework."},
-        {"question": "Explain the virtual DOM.", "keywords": ["react", "performance", "real dom", "diffing", "update"], "sample_answer": "Virtual DOM is a lightweight copy of real DOM for efficient updates."},
-        {"question": "What are React hooks?", "keywords": ["usestate", "useeffect", "functional", "components", "state"], "sample_answer": "Hooks let you use state and lifecycle in functional components."},
-        {"question": "What is responsive design?", "keywords": ["mobile", "adaptive", "viewport", "media", "queries"], "sample_answer": "Responsive design makes websites work on all screen sizes."},
-        {"question": "Explain CSS Flexbox.", "keywords": ["layout", "flexible", "alignment", "distribution", "container"], "sample_answer": "Flexbox provides efficient layout, alignment, and space distribution."}
-    ],
-    'Backend Developer': [
-        {"question": "What is the difference between REST and GraphQL?", "keywords": ["overfetching", "underfetching", "query", "endpoint", "schema"], "sample_answer": "GraphQL allows clients to request exactly what they need, REST has fixed endpoints."},
-        {"question": "Explain database indexing.", "keywords": ["performance", "lookup", "b-tree", "speed", "query"], "sample_answer": "Indexes speed up data retrieval at the cost of storage."},
-        {"question": "What is caching and why use it?", "keywords": ["performance", "memory", "redis", "memcached", "reduce"], "sample_answer": "Caching stores frequently accessed data for faster retrieval."},
-        {"question": "Explain load balancing.", "keywords": ["distribution", "traffic", "servers", "availability", "performance"], "sample_answer": "Load balancing distributes incoming traffic across multiple servers."},
-        {"question": "What is the difference between SQL and NoSQL?", "keywords": ["structured", "unstructured", "schema", "scalability", "flexible"], "sample_answer": "SQL has rigid schema, NoSQL is schema-less and scalable."}
+        {"question": "Explain serverless computing.", "keywords": ["functions", "event-driven", "no server", "scale", "automatic"], "sample_answer": "Serverless runs code without managing servers, scaling automatically."}
     ],
     'Machine Learning Engineer': [
         {"question": "Explain the difference between AI, ML, and DL.", "keywords": ["artificial", "intelligence", "machine", "learning", "deep"], "sample_answer": "AI is the broad field, ML is subset of AI, DL is subset of ML using neural networks."},
-        {"question": "What is the difference between classification and regression?", "keywords": ["categorical", "continuous", "predict", "label", "value"], "sample_answer": "Classification predicts categories, regression predicts continuous values."},
-        {"question": "Explain neural networks.", "keywords": ["layers", "neurons", "activation", "weights", "backpropagation"], "sample_answer": "Neural networks are computing systems inspired by biological brains."},
-        {"question": "What is transfer learning?", "keywords": ["pretrained", "model", "fine-tune", "adapt", "knowledge"], "sample_answer": "Transfer learning reuses a pretrained model for a new task."},
-        {"question": "Explain the confusion matrix.", "keywords": ["tp", "tn", "fp", "fn", "accuracy"], "sample_answer": "Confusion matrix shows true/false positives/negatives for classification."}
+        {"question": "What is the difference between classification and regression?", "keywords": ["categorical", "continuous", "predict", "label", "value"], "sample_answer": "Classification predicts categories, regression predicts continuous values."}
     ]
 }
 
-# ============ 100+ QUIZ QUESTIONS WITH PROPER OPTIONS ============
+# ============ 100+ QUIZ QUESTIONS ============
 QUIZ_QUESTIONS = {
     'Python': [
         {"question": "What is the correct way to create a function in Python?", "options": ["def myFunction():", "function myFunction():", "create myFunction():", "func myFunction():"], "correct": "def myFunction():", "explanation": "In Python, functions are defined using the 'def' keyword followed by the function name and parentheses."},
         {"question": "What does the 'len()' function do in Python?", "options": ["Returns the length of an object", "Converts to lowercase", "Rounds a number", "Finds the maximum value"], "correct": "Returns the length of an object", "explanation": "len() returns the number of items in a container like list, string, tuple, or dictionary."},
         {"question": "Which operator is used for exponentiation in Python?", "options": ["**", "^", "exp()", "&&"], "correct": "**", "explanation": "** is the exponentiation operator. For example, 2**3 returns 8 (2 to the power of 3)."},
         {"question": "What is the output of print(type(10)) in Python?", "options": ["<class 'int'>", "<class 'float'>", "<class 'str'>", "<class 'list'>"], "correct": "<class 'int'>", "explanation": "10 is an integer literal, so type() returns the int class."},
-        {"question": "How do you create a list in Python?", "options": ["my_list = [1, 2, 3]", "my_list = (1, 2, 3)", "my_list = {1, 2, 3}", "my_list = <1, 2, 3>"], "correct": "my_list = [1, 2, 3]", "explanation": "Lists are created using square brackets [] containing comma-separated values."},
-        {"question": "What is the correct syntax for a while loop in Python?", "options": ["while x > y:", "while (x > y)", "x > y while {", "while x > y then:"], "correct": "while x > y:", "explanation": "while loops use 'while condition:' syntax with a colon at the end."},
-        {"question": "What does the 'append()' method do to a list?", "options": ["Adds an element to the end", "Removes an element", "Inserts at beginning", "Sorts the list"], "correct": "Adds an element to the end", "explanation": "append() adds a single element to the end of an existing list."},
-        {"question": "What is the result of 10 // 3 in Python?", "options": ["3", "3.33", "3.0", "1"], "correct": "3", "explanation": "// is floor division, which returns the integer quotient (3 with remainder 1)."},
-        {"question": "Which keyword is used to define a class in Python?", "options": ["class", "def", "object", "struct"], "correct": "class", "explanation": "Classes are defined using the 'class' keyword followed by the class name."},
-        {"question": "What does the 'break' statement do?", "options": ["Exits the loop", "Skips current iteration", "Pauses the loop", "Restarts the loop"], "correct": "Exits the loop", "explanation": "break terminates the loop completely and continues with the next statement after the loop."},
-        {"question": "What is the correct way to import a module in Python?", "options": ["import module", "include module", "using module", "require module"], "correct": "import module", "explanation": "The 'import' keyword is used to import modules into your Python code."},
-        {"question": "What is the output of print(2 ** 3)?", "options": ["6", "8", "9", "5"], "correct": "8", "explanation": "2 ** 3 means 2 raised to power 3, which equals 8."},
-        {"question": "Which of the following is a mutable data type in Python?", "options": ["Tuple", "String", "List", "Integer"], "correct": "List", "explanation": "Lists are mutable (can be changed), while tuples, strings, and integers are immutable."},
-        {"question": "What is a decorator in Python?", "options": ["A function that modifies another function", "A class decorator", "A variable decorator", "A module decorator"], "correct": "A function that modifies another function", "explanation": "Decorators are functions that take another function and extend its behavior without modifying it directly."},
-        {"question": "What is list comprehension?", "options": ["Creating list with loop", "Advanced list creation", "Both A and B", "List copying"], "correct": "Both A and B", "explanation": "List comprehension provides a concise way to create lists using a single line of code."},
-        {"question": "What is a lambda function?", "options": ["Anonymous function", "Built-in function", "Recursive function", "Generator function"], "correct": "Anonymous function", "explanation": "Lambda functions are small anonymous functions defined using the 'lambda' keyword."}
+        {"question": "How do you create a list in Python?", "options": ["my_list = [1, 2, 3]", "my_list = (1, 2, 3)", "my_list = {1, 2, 3}", "my_list = <1, 2, 3>"], "correct": "my_list = [1, 2, 3]", "explanation": "Lists are created using square brackets [] containing comma-separated values."}
     ],
     'JavaScript': [
         {"question": "How do you declare a variable in JavaScript?", "options": ["let x;", "variable x;", "v x;", "declare x;"], "correct": "let x;", "explanation": "let, const, and var are the three ways to declare variables in JavaScript."},
         {"question": "What does 'console.log()' do?", "options": ["Prints to console", "Shows an alert", "Returns a value", "Creates a log file"], "correct": "Prints to console", "explanation": "console.log() outputs messages to the browser's developer console."},
-        {"question": "What is the correct way to write a function in JavaScript?", "options": ["function myFunction() {}", "def myFunction() {}", "create myFunction() {}", "func myFunction() {}"], "correct": "function myFunction() {}", "explanation": "Functions are defined using the 'function' keyword followed by the function name and parentheses."},
-        {"question": "What does '===' operator do?", "options": ["Compares value and type", "Compares only value", "Compares only type", "Assigns value"], "correct": "Compares value and type", "explanation": "=== is the strict equality operator that checks both value and type without type coercion."},
-        {"question": "What is closure in JavaScript?", "options": ["Function with access to outer scope", "Closed function", "Private variable", "Global variable"], "correct": "Function with access to outer scope", "explanation": "A closure is a function that has access to its outer function's scope even after the outer function has returned."},
-        {"question": "What is hoisting?", "options": ["Moving declarations to top", "Moving values to top", "Moving functions to bottom", "Moving variables to bottom"], "correct": "Moving declarations to top", "explanation": "Hoisting is JavaScript's behavior of moving variable and function declarations to the top of their scope."},
-        {"question": "What is the event loop?", "options": ["Handles async operations", "Event handler", "Loop counter", "Timer function"], "correct": "Handles async operations", "explanation": "The event loop handles asynchronous callbacks and manages the execution queue in JavaScript."},
-        {"question": "What is a promise?", "options": ["Async operation result", "Function declaration", "Variable type", "Loop structure"], "correct": "Async operation result", "explanation": "A Promise represents the eventual completion (or failure) of an asynchronous operation."}
+        {"question": "What is the correct way to write a function in JavaScript?", "options": ["function myFunction() {}", "def myFunction() {}", "create myFunction() {}", "func myFunction() {}"], "correct": "function myFunction() {}", "explanation": "Functions are defined using the 'function' keyword followed by the function name and parentheses."}
     ],
     'SQL': [
         {"question": "What does SQL stand for?", "options": ["Structured Query Language", "Simple Query Language", "Standard Query Language", "System Query Language"], "correct": "Structured Query Language", "explanation": "SQL stands for Structured Query Language, used to communicate with databases."},
         {"question": "Which SQL statement is used to extract data from a database?", "options": ["SELECT", "EXTRACT", "GET", "OPEN"], "correct": "SELECT", "explanation": "The SELECT statement is used to retrieve data from one or more database tables."},
-        {"question": "What does the WHERE clause do?", "options": ["Filters records", "Sorts records", "Groups records", "Joins tables"], "correct": "Filters records", "explanation": "The WHERE clause filters records based on specified conditions."},
-        {"question": "Which SQL statement is used to update data?", "options": ["UPDATE", "MODIFY", "CHANGE", "ALTER"], "correct": "UPDATE", "explanation": "The UPDATE statement is used to modify existing records in a table."},
-        {"question": "Which SQL statement is used to delete data?", "options": ["DELETE", "REMOVE", "DROP", "TRUNCATE"], "correct": "DELETE", "explanation": "The DELETE statement is used to remove rows from a table."},
-        {"question": "What is a primary key?", "options": ["Unique identifier for a record", "Foreign key reference", "Index field", "Default value"], "correct": "Unique identifier for a record", "explanation": "A primary key uniquely identifies each record in a database table."}
-    ],
-    'Data Science': [
-        {"question": "What is the difference between supervised and unsupervised learning?", "options": ["Labeled vs Unlabeled data", "Fast vs Slow", "New vs Old", "Big vs Small"], "correct": "Labeled vs Unlabeled data", "explanation": "Supervised learning uses labeled data with known outputs, while unsupervised learning finds patterns in unlabeled data."},
-        {"question": "What is overfitting?", "options": ["Model too complex", "Model too simple", "Model just right", "No model"], "correct": "Model too complex", "explanation": "Overfitting occurs when a model learns the training data too well, including noise, and fails to generalize."},
-        {"question": "What is cross-validation?", "options": ["Validating on different data", "Validating on same data", "No validation", "Random validation"], "correct": "Validating on different data", "explanation": "Cross-validation is a technique for evaluating model performance by splitting data into multiple training and validation sets."},
-        {"question": "What is the bias-variance tradeoff?", "options": ["Balance between underfitting and overfitting", "Model speed vs accuracy", "Data size vs quality", "Training time vs performance"], "correct": "Balance between underfitting and overfitting", "explanation": "The bias-variance tradeoff balances model simplicity (bias) and complexity (variance) to avoid underfitting or overfitting."},
-        {"question": "What evaluation metrics for classification?", "options": ["Accuracy, Precision, Recall", "MSE, RMSE", "R-squared, Adjusted R-squared", "All of the above"], "correct": "Accuracy, Precision, Recall", "explanation": "Common classification metrics include accuracy, precision, recall, F1-score, and AUC-ROC."}
+        {"question": "What does the WHERE clause do?", "options": ["Filters records", "Sorts records", "Groups records", "Joins tables"], "correct": "Filters records", "explanation": "The WHERE clause filters records based on specified conditions."}
     ]
 }
 
@@ -204,7 +149,7 @@ def extract_text_from_pdf(filepath):
             for page in pdf_reader.pages:
                 page_text = page.extract_text()
                 if page_text:
-                    text += page_text
+                    text += page_text + "\n"
             return text
     except Exception as e:
         print(f"PDF extraction error: {e}")
@@ -213,18 +158,16 @@ def extract_text_from_pdf(filepath):
 def analyze_resume_content(text):
     text_lower = text.lower()
     
-    # Role matching with more comprehensive keywords
+    # Role matching
     role_keywords = {
-        'Python Developer': ['python', 'django', 'flask', 'pandas', 'numpy', 'scikit-learn', 'tensorflow', 'pytorch', 'fastapi', 'celery', 'sqlalchemy'],
-        'JavaScript Developer': ['javascript', 'react', 'angular', 'vue', 'node.js', 'express', 'typescript', 'jquery', 'redux', 'next.js', 'webpack'],
-        'Data Scientist': ['data science', 'machine learning', 'python', 'analytics', 'statistics', 'pandas', 'scikit-learn', 'tensorflow', 'deep learning', 'nlp'],
-        'Full Stack Developer': ['react', 'angular', 'node.js', 'express', 'mongodb', 'postgresql', 'html', 'css', 'javascript', 'rest api', 'graphql'],
-        'DevOps Engineer': ['docker', 'kubernetes', 'jenkins', 'aws', 'azure', 'gcp', 'terraform', 'ansible', 'ci/cd', 'linux', 'bash', 'prometheus'],
-        'Java Developer': ['java', 'spring', 'spring boot', 'hibernate', 'maven', 'gradle', 'junit', 'microservices', 'jpa', 'thymeleaf', 'j2ee'],
-        'Cloud Engineer': ['aws', 'azure', 'gcp', 'cloud', 'terraform', 'cloudformation', 'serverless', 'lambda', 'ec2', 's3', 'vpc', 'cloudfront'],
-        'Frontend Developer': ['react', 'angular', 'vue', 'html5', 'css3', 'javascript', 'typescript', 'webpack', 'bootstrap', 'tailwind', 'sass', 'less'],
-        'Backend Developer': ['python', 'java', 'node.js', 'go', 'ruby', 'php', 'rest api', 'microservices', 'sql', 'nosql', 'graphql', 'redis'],
-        'Machine Learning Engineer': ['machine learning', 'deep learning', 'tensorflow', 'pytorch', 'keras', 'scikit-learn', 'nlp', 'computer vision', 'llm']
+        'Python Developer': ['python', 'django', 'flask', 'pandas', 'numpy', 'scikit-learn', 'tensorflow'],
+        'JavaScript Developer': ['javascript', 'react', 'angular', 'vue', 'node.js', 'express', 'typescript'],
+        'Data Scientist': ['data science', 'machine learning', 'python', 'analytics', 'statistics', 'pandas'],
+        'Full Stack Developer': ['react', 'angular', 'node.js', 'express', 'mongodb', 'postgresql', 'html', 'css'],
+        'DevOps Engineer': ['docker', 'kubernetes', 'jenkins', 'aws', 'azure', 'terraform', 'ci/cd'],
+        'Java Developer': ['java', 'spring', 'spring boot', 'hibernate', 'maven', 'gradle'],
+        'Cloud Engineer': ['aws', 'azure', 'gcp', 'cloud', 'terraform', 'serverless', 'lambda'],
+        'Machine Learning Engineer': ['machine learning', 'deep learning', 'tensorflow', 'pytorch', 'keras']
     }
     
     # Score each role
@@ -244,10 +187,10 @@ def analyze_resume_content(text):
     best_role = max(role_scores, key=role_scores.get) if role_scores else "Python Developer"
     best_score = role_scores.get(best_role, 50)
     
-    # Get other suggestions (all roles with >30% match)
+    # Get all suitable roles (score > 30)
     suggested_roles = []
     for role, score in sorted(role_scores.items(), key=lambda x: x[1], reverse=True):
-        if score >= 30 and role != best_role:
+        if score >= 30:
             suggested_roles.append({
                 'role': role,
                 'match_percentage': score,
@@ -258,16 +201,12 @@ def analyze_resume_content(text):
     strengths = []
     if len(text) > 500:
         strengths.append("✅ Resume has good length and detailed information")
-    if len(text) > 1000:
-        strengths.append("✅ Comprehensive resume with extensive details")
     if '@' in text:
         strengths.append("✅ Contact information properly included")
     if 'github' in text_lower or 'linkedin' in text_lower:
         strengths.append("✅ Professional portfolio links included")
     if best_score >= 70:
         strengths.append(f"✅ Strong keyword match for {best_role} role")
-    if len(text.split()) > 300:
-        strengths.append("✅ Excellent word count with substantial content")
     
     # Generate improvements
     improvements = []
@@ -275,12 +214,8 @@ def analyze_resume_content(text):
         improvements.append("📈 Add more details about your experience and skills")
     if best_score < 50:
         improvements.append(f"📈 Add more {best_role}-specific keywords to your resume")
-    if 'github' not in text_lower and 'portfolio' not in text_lower:
-        improvements.append("📈 Include links to your GitHub or portfolio website")
-    if 'achievement' not in text_lower and 'accomplishment' not in text_lower:
+    if 'achievement' not in text_lower:
         improvements.append("📈 Quantify your achievements with numbers and metrics")
-    if 'certification' not in text_lower:
-        improvements.append("📈 Consider adding relevant certifications")
     
     if not strengths:
         strengths = ["✅ Resume uploaded successfully"]
@@ -290,18 +225,17 @@ def analyze_resume_content(text):
     return {
         'overall_score': best_score,
         'best_role': best_role,
-        'suggested_roles': suggested_roles[:5],  # Top 5 suggestions
+        'suggested_roles': suggested_roles[:5],
         'strengths': strengths,
         'improvements': improvements,
         'skills_found': list(set([kw for keywords in role_keywords.values() for kw in keywords if kw in text_lower]))[:12],
-        'word_count': len(text.split())
+        'word_count': len(text.split()),
+        'full_text': text[:5000]  # Store first 5000 chars for display
     }
 
-# ============ ANSWER EVALUATION FUNCTION ============
 def evaluate_answer(question_text, user_answer, job_role):
     user_answer_lower = user_answer.lower()
     
-    # Find the question in database
     question_data = None
     for q in INTERVIEW_QUESTIONS_WITH_ANSWERS.get(job_role, []):
         if q["question"] == question_text:
@@ -309,40 +243,29 @@ def evaluate_answer(question_text, user_answer, job_role):
             break
     
     if not question_data:
-        word_count = len(user_answer.split())
-        if word_count > 80:
-            return 75, "Good answer length! Try to include more technical keywords specific to the role."
-        elif word_count > 40:
-            return 55, "Fair answer. Add more specific technical details related to the question."
-        else:
-            return 35, "Answer is too brief. Please provide more detailed response with technical concepts."
+        return 50, "Good attempt! Keep practicing to improve your answers."
     
-    # Evaluate based on keywords
     keywords = question_data["keywords"]
     matched_keywords = [kw for kw in keywords if kw.lower() in user_answer_lower]
     matched_count = len(matched_keywords)
     score = int((matched_count / len(keywords)) * 100)
     
-    # Adjust score based on answer length
     word_count = len(user_answer.split())
     if word_count < 15:
         score = max(20, score - 25)
-    elif word_count > 120:
+    elif word_count > 80:
         score = min(95, score + 10)
-    elif word_count > 60:
-        score = min(95, score + 5)
     
-    # Generate detailed feedback
     if score >= 85:
-        feedback = f"🌟 Excellent answer! You covered all key points including: {', '.join(matched_keywords[:3])}. Perfect understanding!"
+        feedback = f"🌟 Excellent! You covered key points: {', '.join(matched_keywords[:3])}"
     elif score >= 70:
         missing = [kw for kw in keywords if kw.lower() not in user_answer_lower][:2]
-        feedback = f"👍 Good answer! You mentioned {', '.join(matched_keywords[:2])}. Consider also discussing: {', '.join(missing)}"
+        feedback = f"👍 Good! Consider discussing: {', '.join(missing)}"
     elif score >= 50:
         missing = [kw for kw in keywords if kw.lower() not in user_answer_lower][:3]
-        feedback = f"📝 Fair answer. You touched on {', '.join(matched_keywords[:2])}. The interview expects you to also cover: {', '.join(missing)}"
+        feedback = f"📝 Fair. Also cover: {', '.join(missing)}"
     else:
-        feedback = f"⚠️ Answer needs improvement. The question expects discussion of: {', '.join(keywords[:4])}. Please review these concepts."
+        feedback = f"⚠️ Needs improvement. Focus on: {', '.join(keywords[:4])}"
     
     return score, feedback
 
@@ -458,7 +381,7 @@ def start_mock_interview():
     random.shuffle(questions)
     
     session['interview_role'] = role
-    session['interview_questions'] = questions[:7]  # 7 questions per interview
+    session['interview_questions'] = questions[:7]
     session['interview_answers'] = []
     session['interview_scores'] = []
     session['interview_feedbacks'] = []
@@ -491,7 +414,6 @@ def submit_mock_answer():
     question = request.form.get('question')
     role = session.get('interview_role', '')
     
-    # Evaluate answer
     score, feedback = evaluate_answer(question, answer, role)
     
     session['interview_answers'].append({'question': question, 'answer': answer, 'score': score})
@@ -504,7 +426,6 @@ def submit_mock_answer():
     current_idx = session.get('interview_current', 0)
     
     if current_idx >= len(questions):
-        # Save to database
         for i, item in enumerate(session['interview_answers']):
             interview = Interview(
                 user_id=current_user.id,
@@ -519,7 +440,6 @@ def submit_mock_answer():
         
         total_score = sum(session['interview_scores']) / len(session['interview_scores'])
         
-        # Clear session
         session.pop('interview_questions', None)
         session.pop('interview_answers', None)
         session.pop('interview_scores', None)
@@ -566,7 +486,6 @@ def resume_analysis():
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
             
-            # Extract text from PDF
             extracted_text = extract_text_from_pdf(filepath)
             
             if not extracted_text or len(extracted_text.strip()) < 50:
@@ -574,14 +493,12 @@ def resume_analysis():
                 os.remove(filepath)
                 return redirect(url_for('resume_analysis'))
             
-            # Analyze resume
             analysis = analyze_resume_content(extracted_text)
             
-            # Save to database
             resume_record = ResumeAnalysis(
                 user_id=current_user.id,
                 filename=filename,
-                extracted_text=extracted_text[:2000],
+                extracted_text=extracted_text[:5000],
                 score=analysis['overall_score'],
                 suggested_role=analysis['best_role'],
                 suggested_roles=json.dumps(analysis['suggested_roles']),
@@ -602,6 +519,16 @@ def resume_analysis():
             return redirect(url_for('resume_analysis'))
     
     return render_template('resume_analysis.html')
+
+@app.route('/view-resume-text/<int:resume_id>')
+@login_required
+def view_resume_text(resume_id):
+    resume = ResumeAnalysis.query.get_or_404(resume_id)
+    if resume.user_id != current_user.id:
+        flash('Unauthorized access', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    return render_template('view_resume_text.html', resume=resume)
 
 # ============ HELPER ROUTES ============
 @app.route('/start-mock-interview-direct', methods=['POST'])
@@ -632,30 +559,29 @@ def start_quiz_direct():
         flash('No category specified', 'danger')
         return redirect(url_for('resume_analysis'))
     
-    # Check if it's a role from interview (has questions) or a quiz category
-    if category in QUIZ_QUESTIONS:
-        all_questions = QUIZ_QUESTIONS[category]
-    else:
-        # Try to map to a quiz category
-        mapped_category = None
-        for quiz_cat in QUIZ_QUESTIONS.keys():
-            if quiz_cat.lower() in category.lower() or category.lower() in quiz_cat.lower():
-                mapped_category = quiz_cat
-                break
-        if mapped_category:
-            all_questions = QUIZ_QUESTIONS[mapped_category]
-        else:
-            all_questions = QUIZ_QUESTIONS['Python']
+    # Map role to quiz category
+    category_map = {
+        'Python Developer': 'Python',
+        'JavaScript Developer': 'JavaScript',
+        'Data Scientist': 'Python',
+        'Full Stack Developer': 'JavaScript',
+        'DevOps Engineer': 'Python',
+        'Java Developer': 'Python',
+        'Cloud Engineer': 'Python',
+        'Machine Learning Engineer': 'Python'
+    }
+    
+    quiz_category = category_map.get(category, 'Python')
+    all_questions = QUIZ_QUESTIONS.get(quiz_category, QUIZ_QUESTIONS['Python'])
     
     if not all_questions:
         flash('No questions available', 'danger')
         return redirect(url_for('skill_quiz'))
     
-    # Get 15 random questions
-    num_questions = min(15, len(all_questions))
+    num_questions = min(10, len(all_questions))
     selected_questions = random.sample(all_questions, num_questions)
     
-    session['quiz_category'] = category
+    session['quiz_category'] = f"{category} Quiz"
     session['quiz_questions'] = selected_questions
     session['quiz_answers'] = []
     session['quiz_current'] = 0
@@ -679,8 +605,7 @@ def start_quiz():
         flash('No questions available', 'danger')
         return redirect(url_for('skill_quiz'))
     
-    # Get 15 random questions
-    num_questions = min(15, len(all_questions))
+    num_questions = min(10, len(all_questions))
     selected_questions = random.sample(all_questions, num_questions)
     
     session['quiz_category'] = category
@@ -715,14 +640,14 @@ def submit_quiz_answer():
     user_answer = data.get('answer')
     correct_answer = data.get('correct')
     question_text = data.get('question')
-    explanation = data.get('explanation', '')
     
     is_correct = (user_answer == correct_answer)
     
-    # Find the full question object to get explanation
+    # Find explanation
+    explanation = ""
     for q in session.get('quiz_questions', []):
         if q['question'] == question_text:
-            explanation = q.get('explanation', explanation)
+            explanation = q.get('explanation', '')
             break
     
     session['quiz_answers'].append({
@@ -742,7 +667,6 @@ def submit_quiz_answer():
         correct_count = sum(1 for a in session['quiz_answers'] if a['is_correct'])
         score = int((correct_count / len(questions)) * 100)
         
-        # Save to database
         quiz_result = QuizResult(
             user_id=current_user.id,
             category=session['quiz_category'],
@@ -754,7 +678,6 @@ def submit_quiz_answer():
         db.session.add(quiz_result)
         db.session.commit()
         
-        # Prepare results data
         results = {
             'completed': True,
             'score': score,
@@ -763,9 +686,7 @@ def submit_quiz_answer():
             'answers': session['quiz_answers']
         }
         
-        # Store results in session for results page
         session['quiz_results'] = results
-        
         session.pop('quiz_questions', None)
         session.pop('quiz_answers', None)
         session.pop('quiz_current', None)
@@ -787,9 +708,7 @@ def quiz_results():
     if not results:
         return redirect(url_for('skill_quiz'))
     
-    # Clear results from session after displaying
     session.pop('quiz_results', None)
-    
     return render_template('quiz_results.html', results=results)
 
 @app.route('/performance')
