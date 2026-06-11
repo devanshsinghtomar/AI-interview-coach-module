@@ -3,14 +3,43 @@
 {% block title %}Quiz Results - AI Interview Coach{% endblock %}
 
 {% block content %}
-<div style="max-width: 600px; margin: 0 auto; text-align: center;">
+<div style="max-width: 800px; margin: 0 auto;">
     <div class="card" style="padding: 2rem;">
-        <div style="font-size: 4rem; margin-bottom: 1rem;">📊</div>
-        <h2 style="margin-bottom: 1rem;">Quiz Completed!</h2>
-        <p style="color: #666; margin-bottom: 2rem;">Check your performance and try more quizzes to improve your knowledge!</p>
-        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-            <a href="/skill-quiz" class="btn btn-primary" style="text-decoration: none;">Take Another Quiz</a>
-            <a href="/dashboard" class="btn btn-secondary" style="text-decoration: none;">Go to Dashboard</a>
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <div style="font-size: 4rem;">📊</div>
+            <h2>Quiz Results</h2>
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1.5rem; border-radius: 15px; margin: 1rem 0; color: white;">
+                <div style="font-size: 0.875rem;">Your Score</div>
+                <div style="font-size: 3rem; font-weight: bold;">{{ results.score }}%</div>
+                <div>{{ results.correct }} / {{ results.total }} correct answers</div>
+            </div>
+        </div>
+        
+        <h3 style="margin-bottom: 1rem;">Detailed Review:</h3>
+        
+        {% for answer in results.answers %}
+        <div style="border: 2px solid {% if answer.is_correct %}#48bb78{% else %}#ef4444{% endif %}; border-radius: 15px; padding: 1rem; margin-bottom: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                {% if answer.is_correct %}
+                <span style="font-size: 1.5rem;">✅</span>
+                {% else %}
+                <span style="font-size: 1.5rem;">❌</span>
+                {% endif %}
+                <strong>Q{{ loop.index }}: {{ answer.question }}</strong>
+            </div>
+            <div style="margin-top: 0.5rem; padding-left: 2rem;">
+                <div><strong>Your answer:</strong> {{ answer.user_answer }}</div>
+                <div><strong>Correct answer:</strong> {{ answer.correct_answer }}</div>
+                <div style="background: #f7fafc; padding: 0.75rem; border-radius: 10px; margin-top: 0.5rem;">
+                    <strong>📖 Explanation:</strong> {{ answer.explanation }}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        
+        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+            <a href="/skill-quiz" class="btn btn-primary" style="flex: 1; text-align: center;">Take Another Quiz</a>
+            <a href="/dashboard" class="btn btn-secondary" style="flex: 1; text-align: center;">Go to Dashboard</a>
         </div>
     </div>
 </div>
