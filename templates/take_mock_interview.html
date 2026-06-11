@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Interview Session - AI Interview Coach{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto;">
+    <div class="card" style="padding: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <span style="background: #667eea; color: white; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.875rem;">{{ role }}</span>
+            <span style="color: #666;">Question {{ question_num }} of {{ total }}</span>
+        </div>
+        
+        <div style="background: #f7fafc; padding: 1.5rem; border-radius: 15px; margin-bottom: 1.5rem;">
+            <h3 style="margin-bottom: 1rem;">Question:</h3>
+            <p style="font-size: 1.1rem; line-height: 1.6;">{{ question }}</p>
+        </div>
+        
+        <form id="answerForm">
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Your Answer:</label>
+                <textarea name="answer" rows="6" required style="width: 100%; padding: 1rem; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1rem; font-family: inherit;" placeholder="Type your answer here..."></textarea>
+            </div>
+            <input type="hidden" name="question" value="{{ question }}">
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Submit Answer →</button>
+        </form>
+        
+        <div id="feedback" style="margin-top: 1.5rem; display: none;"></div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('answerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        
+        const response = await fetch('/submit-mock-answer', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+        
+        if (data.completed) {
+            window.location.href = '/interview-results';
+        } else {
+            // Update page with next question
+            document.querySelector('textarea[name="answer"]').value = '';
+            document.querySelector('input[name="question"]').value = data.next_question;
+            document.querySelector('h3 + p').textContent = data.next_question;
+            document.querySelector('span:last-child').textContent = `Question ${data.question_num} of ${data.total}`;
+            
+            // Show feedback
+            const feedbackDiv = document.getElementById('feedback');
+            feedbackDiv.style.display = 'block';
+            feedbackDiv.innerHTML = `
+                <div style="background: #48bb78; color: white; padding: 1rem; border-radius: 10px;">
+                    <strong>Score: ${data.score}%</strong> - Good answer! Continue to next question.
+                </div>
+            `;
+            setTimeout(() => {
+                feedbackDiv.style.display = 'none';
+            }, 3000);
+        }
+    });
+</script>
+{% endblock %}
