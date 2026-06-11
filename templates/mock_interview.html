@@ -5,8 +5,8 @@
 {% block content %}
 <div style="max-width: 600px; margin: 0 auto;">
     <div class="card" style="padding: 2rem;">
-        <h2 style="text-align: center; margin-bottom: 1rem;">🎤 Start Mock Interview</h2>
-        <p style="text-align: center; color: #666; margin-bottom: 2rem;">Choose your role to begin the interview practice</p>
+        <h2 style="text-align: center; margin-bottom: 1rem;">🎤 Mock Interview</h2>
+        <p style="text-align: center; color: #666; margin-bottom: 2rem;">Choose a role to practice with AI-generated questions</p>
         
         <form method="POST" action="/start-mock-interview">
             <div style="margin-bottom: 1.5rem;">
@@ -19,6 +19,10 @@
             </div>
             <button type="submit" class="btn btn-primary" style="width: 100%;">Start Interview →</button>
         </form>
+        
+        <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
+            <p style="font-size: 0.875rem; color: #666; text-align: center;">Each interview has 10 questions. Answer naturally to get scored!</p>
+        </div>
     </div>
 </div>
 {% endblock %}
