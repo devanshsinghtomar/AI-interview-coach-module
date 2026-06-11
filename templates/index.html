@@ -1,302 +1,140 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>InterviewAI</title>
-
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Interview Coach</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 60px 20px;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        
+        .header p {
+            font-size: 20px;
+            margin-bottom: 30px;
+            opacity: 0.95;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+            border-radius: 8px;
+            margin: 0 10px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+        
+        .btn-outline {
+            border: 2px solid white;
+            color: white;
+            background: transparent;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            padding: 40px 0;
+        }
+        
+        .feature-card {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        
+        .feature-card h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .feature-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 { font-size: 32px; }
+            .header p { font-size: 16px; }
+            .btn { display: block; margin: 10px auto; width: 200px; }
+        }
+    </style>
 </head>
-
 <body>
-
-<div class="cursor-glow"></div>
-
-<!-- NAVBAR -->
-
-<nav class="navbar">
-
-<div class="logo">
-INTERVIEW<span>AI</span>
-</div>
-
-<ul class="nav-links">
-<li><a href="#features">Features</a></li>
-<li><a href="#how-it-works">How It Works</a></li>
-<li><a href="#pricing">Pricing</a></li>
-</ul>
-
-<div class="nav-buttons">
-<a href="/login" class="login-btn">Log In</a>
-<a href="/signup" class="primary-btn">Start Free</a>
-</div>
-
-</nav>
-
-<!-- HERO -->
-
-<section class="hero">
-
-<div class="hero-left">
-
-<div class="hero-badge">
-AI-POWERED INTERVIEW COACHING
-</div>
-
-<h1>
-ACE <span>EVERY</span><br>
-INTERVIEW
-</h1>
-
-<p>
-Practice with AI that thinks like your interviewer.
-Get real-time feedback, analyze your resume,
-and land offers at top companies.
-</p>
-
-<div class="hero-buttons">
-
-<a href="/signup" class="hero-primary">
-START FREE TRIAL →
-</a>
-
-<a href="#demo" class="hero-secondary">
-▶ WATCH DEMO
-</a>
-
-</div>
-
-<div class="hero-stats">
-
-<div class="stat">
-94% Success Rate
-</div>
-
-<div class="stat">
-50K+ Users
-</div>
-
-<div class="stat">
-10M+ Questions
-</div>
-
-</div>
-
-</div>
-
-<div class="hero-right">
-
-<div class="interview-card">
-
-<div class="card-header">
-
-<div class="ai-info">
-<div class="avatar">AI</div>
-
-<div>
-<h3>AI Interviewer</h3>
-<p>Senior Engineer @ Google</p>
-</div>
-</div>
-
-<div class="live-dot">
-● Live
-</div>
-
-</div>
-
-<div class="question-box">
-
-<h4>CURRENT QUESTION</h4>
-
-<p>
-Design a distributed rate limiter that can handle
-1 million requests per second across multiple data centers.
-</p>
-
-</div>
-
-<div class="answer-box">
-
-<div class="user-header">
-You
-</div>
-
-<p>
-I'd start with a token bucket algorithm
-using Redis as the shared state store...
-</p>
-
-</div>
-
-<div class="metrics">
-
-<div class="metric">
-<h2>87</h2>
-<p>Clarity</p>
-</div>
-
-<div class="metric">
-<h2>72</h2>
-<p>Depth</p>
-</div>
-
-<div class="metric">
-<h2>94</h2>
-<p>Speed</p>
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-</section>
-
-<!-- FEATURES -->
-
-<section class="features" id="features">
-
-<div class="section-title">
-<h5>EVERYTHING YOU NEED</h5>
-<h2>
-TRAIN LIKE THE <br>
-<span>TOP 1%</span>
-</h2>
-</div>
-
-<div class="feature-grid">
-
-<div class="feature-card">
-<h3>AI Mock Interviews</h3>
-<p>
-Practice with adaptive AI interviewers
-that simulate real-world interviews.
-</p>
-</div>
-
-<div class="feature-card">
-<h3>Resume Analyzer</h3>
-<p>
-ATS score, keyword matching,
-skill extraction and improvement suggestions.
-</p>
-</div>
-
-<div class="feature-card">
-<h3>Skill Quizzes</h3>
-<p>
-Adaptive quizzes targeting technical,
-behavioral and aptitude skills.
-</p>
-</div>
-
-<div class="feature-card">
-<h3>Performance Analytics</h3>
-<p>
-Track growth with detailed charts,
-scores and AI insights.
-</p>
-</div>
-
-<div class="feature-card">
-<h3>Career Recommendations</h3>
-<p>
-Discover ideal career paths
-based on your interview performance.
-</p>
-</div>
-
-<div class="feature-card">
-<h3>Real-Time Feedback</h3>
-<p>
-Get instant coaching on confidence,
-clarity and technical accuracy.
-</p>
-</div>
-
-</div>
-
-</section>
-
-<!-- HOW IT WORKS -->
-
-<section class="how-it-works" id="how-it-works">
-
-<div class="section-title">
-
-<h5>SIMPLE PROCESS</h5>
-
-<h2>
-HOW IT<br>
-<span>WORKS</span>
-</h2>
-
-</div>
-
-<div class="steps">
-
-<div class="step">
-
-<div class="step-number">01</div>
-
-<h3>Set Your Target</h3>
-
-<p>
-Choose role, company and experience level.
-</p>
-
-</div>
-
-<div class="step">
-
-<div class="step-number">02</div>
-
-<h3>Practice & Get Coached</h3>
-
-<p>
-Answer questions and receive instant feedback.
-</p>
-
-</div>
-
-<div class="step">
-
-<div class="step-number">03</div>
-
-<h3>Track & Improve</h3>
-
-<p>
-Analyze progress and eliminate weaknesses.
-</p>
-
-</div>
-
-</div>
-
-</section>
-
-<footer>
-
-<div class="footer-logo">
-INTERVIEW<span>AI</span>
-</div>
-
-<p>
-© 2026 InterviewAI. All rights reserved.
-</p>
-
-</footer>
-
-<script src="{{ url_for('static', filename='js/main.js') }}"></script>
-
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI Interview Coach</h1>
+            <p>Practice interviews, analyze your resume, and land your dream job</p>
+            <a href="/login" class="btn btn-primary">Login</a>
+            <a href="/register" class="btn btn-outline">Register</a>
+        </div>
+        
+        <div class="features">
+            <div class="feature-card">
+                <div class="feature-icon">🎤</div>
+                <h3>Mock Interviews</h3>
+                <p>Practice with AI-generated questions tailored to your role and experience level</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📄</div>
+                <h3>Resume Analysis</h3>
+                <p>Get instant feedback on your resume with actionable improvement suggestions</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Performance Tracking</h3>
+                <p>Track your progress over time and identify areas for improvement</p>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
