@@ -38,41 +38,58 @@
     const uploadIcon = document.getElementById('uploadIcon');
     const submitBtn = document.getElementById('submitBtn');
     
-    dropZone.addEventListener('click', () => fileInput.click());
+    if (dropZone) {
+        dropZone.addEventListener('click', () => fileInput.click());
+    }
     
-    fileInput.addEventListener('change', (e) => {
-        if (e.target.files[0]) {
-            const file = e.target.files[0];
-            if (file.name.endsWith('.pdf')) {
-                uploadText.innerHTML = `✅ Selected: ${file.name}`;
+    if (fileInput) {
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files[0]) {
+                const file = e.target.files[0];
+                if (file.name.endsWith('.pdf')) {
+                    uploadText.innerHTML = '✅ Selected: ' + file.name;
+                    uploadIcon.innerHTML = '✅';
+                    dropZone.style.borderColor = '#48bb78';
+                    submitBtn.disabled = false;
+                } else {
+                    alert('Please select a PDF file');
+                    fileInput.value = '';
+                    uploadText.innerHTML = 'Click or drag and drop your PDF resume here';
+                    uploadIcon.innerHTML = '📁';
+                    dropZone.style.borderColor = '#cbd5e0';
+                    submitBtn.disabled = true;
+                }
+            }
+        });
+    }
+    
+    if (dropZone) {
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#667eea';
+            dropZone.style.background = '#f7fafc';
+        });
+        
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.style.borderColor = '#cbd5e0';
+            dropZone.style.background = 'white';
+        });
+        
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#cbd5e0';
+            dropZone.style.background = 'white';
+            const file = e.dataTransfer.files[0];
+            if (file && file.name.endsWith('.pdf')) {
+                fileInput.files = e.dataTransfer.files;
+                uploadText.innerHTML = '✅ Selected: ' + file.name;
                 uploadIcon.innerHTML = '✅';
                 dropZone.style.borderColor = '#48bb78';
                 submitBtn.disabled = false;
             } else {
-                alert('Please select a PDF file');
-                fileInput.value = '';
-                uploadText.innerHTML = 'Click or drag and drop your PDF resume here';
-                uploadIcon.innerHTML = '📁';
-                dropZone.style.borderColor = '#cbd5e0';
-                submitBtn.disabled = true;
+                alert('Please drop a PDF file');
             }
-        }
-    });
-    
-    dropZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropZone.style.borderColor = '#667eea';
-        dropZone.style.background = '#f7fafc';
-    });
-    
-    dropZone.addEventListener('dragleave', () => {
-        dropZone.style.borderColor = '#cbd5e0';
-        dropZone.style.background = 'white';
-    });
-    
-    dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropZone.style.borderColor = '#cbd5e0';
-        dropZone.style.background = 'white';
-        const file = e.dataTransfer.files[0];
-        if (file && file.name.endsWith('.pdf'))
+        });
+    }
+</script>
+{% endblock %}
