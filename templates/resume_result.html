@@ -5,32 +5,33 @@
 {% block content %}
 <div style="max-width: 1000px; margin: 0 auto;">
     <div class="card" style="padding: 2rem;">
+        <!-- Header with Score -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
             <h2>📊 Resume Analysis Results</h2>
             <span style="background: #48bb78; color: white; padding: 0.5rem 1rem; border-radius: 20px; font-weight: bold;">{{ analysis.overall_score }}% Match</span>
         </div>
         
-        <!-- Best Match Role -->
+        <!-- Best Match Role - Big Card -->
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1.5rem; border-radius: 15px; margin-bottom: 1.5rem; color: white;">
-            <div style="font-size: 0.875rem; opacity: 0.9;">🎯 Best Match</div>
-            <div style="font-size: 1.8rem; font-weight: bold; margin: 0.5rem 0;">{{ analysis.best_role }}</div>
+            <div style="font-size: 0.875rem; opacity: 0.9;">🎯 Your Best Match</div>
+            <div style="font-size: 2rem; font-weight: bold; margin: 0.5rem 0;">{{ analysis.best_role }}</div>
             <div style="display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap;">
                 <form action="/start-mock-interview-direct" method="POST" style="display: inline;">
                     <input type="hidden" name="role" value="{{ analysis.best_role }}">
                     <button type="submit" style="background: white; color: #667eea; padding: 0.75rem 1.5rem; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 1rem;">
-                        🎤 Take Mock Interview
+                        🎤 Start Mock Interview
                     </button>
                 </form>
                 <form action="/start-quiz-direct" method="POST" style="display: inline;">
                     <input type="hidden" name="category" value="{{ analysis.best_role }}">
                     <button type="submit" style="background: rgba(255,255,255,0.2); color: white; padding: 0.75rem 1.5rem; border: 2px solid white; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 1rem;">
-                        📝 Take Skill Quiz
+                        📝 Start Skill Quiz
                     </button>
                 </form>
             </div>
         </div>
         
-        <!-- Overall Score Bar -->
+        <!-- Score Bar -->
         <div style="margin-bottom: 1.5rem;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
                 <span>Overall Resume Score</span>
@@ -42,52 +43,74 @@
             <div style="font-size: 0.875rem; color: #666; margin-top: 0.5rem;">{{ analysis.word_count }} words analyzed</div>
         </div>
         
-        <!-- All Suitable Roles Dialog Box -->
+        <!-- All Suitable Roles - DIALOG BOX -->
         <div style="margin-bottom: 1.5rem;">
-            <div style="background: #f7fafc; border-radius: 15px; overflow: hidden;">
-                <div style="background: #667eea; color: white; padding: 1rem; font-weight: bold;">
+            <div style="background: #f7fafc; border-radius: 15px; overflow: hidden; border: 1px solid #e2e8f0;">
+                <div style="background: #2d3748; color: white; padding: 1rem; font-weight: bold; font-size: 1.1rem;">
                     💼 Suitable Job Roles Based on Your Resume
                 </div>
-                <div style="padding: 1rem;">
-                    {% for role in analysis.suggested_roles %}
-                    <div style="border-bottom: 1px solid #e2e8f0; padding: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                        <div>
-                            <div style="font-weight: bold; font-size: 1.1rem;">{{ role.role }}</div>
-                            <div style="font-size: 0.875rem; color: #666; margin-top: 0.25rem;">
-                                Match: <strong>{{ role.match_percentage }}%</strong> | Skills: {{ role.matched_skills|join(', ') }}
+                <div style="padding: 0;">
+                    {% if analysis.suggested_roles and analysis.suggested_roles|length > 0 %}
+                        {% for role in analysis.suggested_roles %}
+                        <div style="border-bottom: 1px solid #e2e8f0; padding: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                            <div>
+                                <div style="font-weight: bold; font-size: 1.1rem;">{{ role.role }}</div>
+                                <div style="font-size: 0.875rem; color: #666; margin-top: 0.25rem;">
+                                    Match Score: <strong style="color: #667eea;">{{ role.match_percentage }}%</strong>
+                                </div>
+                                {% if role.matched_skills %}
+                                <div style="font-size: 0.75rem; color: #888; margin-top: 0.25rem;">
+                                    Matched Skills: {{ role.matched_skills|join(', ') }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <form action="/start-mock-interview-direct" method="POST" style="display: inline;">
+                                    <input type="hidden" name="role" value="{{ role.role }}">
+                                    <button type="submit" style="background: #667eea; color: white; padding: 0.5rem 1rem; border: none; border-radius: 8px; cursor: pointer; font-weight: 500;">
+                                        🎤 Interview
+                                    </button>
+                                </form>
+                                <form action="/start-quiz-direct" method="POST" style="display: inline;">
+                                    <input type="hidden" name="category" value="{{ role.role }}">
+                                    <button type="submit" style="background: #48bb78; color: white; padding: 0.5rem 1rem; border: none; border-radius: 8px; cursor: pointer; font-weight: 500;">
+                                        📝 Quiz
+                                    </button>
+                                </form>
                             </div>
                         </div>
-                        <div style="display: flex; gap: 0.5rem;">
-                            <form action="/start-mock-interview-direct" method="POST" style="display: inline;">
-                                <input type="hidden" name="role" value="{{ role.role }}">
-                                <button type="submit" style="background: #667eea; color: white; padding: 0.5rem 1rem; border: none; border-radius: 8px; cursor: pointer;">🎤 Interview</button>
-                            </form>
-                            <form action="/start-quiz-direct" method="POST" style="display: inline;">
-                                <input type="hidden" name="category" value="{{ role.role }}">
-                                <button type="submit" style="background: #48bb78; color: white; padding: 0.5rem 1rem; border: none; border-radius: 8px; cursor: pointer;">📝 Quiz</button>
-                            </form>
+                        {% endfor %}
+                    {% else %}
+                        <div style="padding: 2rem; text-align: center; color: #666;">
+                            No additional roles found. Your best match is {{ analysis.best_role }}.
                         </div>
-                    </div>
-                    {% endfor %}
+                    {% endif %}
                 </div>
             </div>
         </div>
         
         <!-- Extracted Resume Text Section -->
         <div style="margin-bottom: 1.5rem;">
-            <div style="background: #f7fafc; border-radius: 15px; overflow: hidden;">
+            <div style="background: #f7fafc; border-radius: 15px; overflow: hidden; border: 1px solid #e2e8f0;">
                 <div style="background: #4a5568; color: white; padding: 1rem; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
                     <span>📄 Extracted Resume Content</span>
-                    <button onclick="toggleText()" style="background: rgba(255,255,255,0.2); color: white; padding: 0.25rem 0.75rem; border: none; border-radius: 5px; cursor: pointer;">Show/Hide</button>
+                    <button onclick="toggleText()" style="background: rgba(255,255,255,0.2); color: white; padding: 0.25rem 0.75rem; border: none; border-radius: 5px; cursor: pointer;">
+                        Show/Hide
+                    </button>
                 </div>
-                <div id="extractedText" style="padding: 1rem; display: none; max-height: 400px; overflow-y: auto; background: white; font-family: monospace; font-size: 0.875rem; white-space: pre-wrap;">
-                    {{ analysis.full_text if analysis.full_text else analysis.skills_found|join(', ') }}
+                <div id="extractedText" style="padding: 1rem; display: none; max-height: 400px; overflow-y: auto; background: white; font-family: monospace; font-size: 0.875rem; white-space: pre-wrap; line-height: 1.5;">
+                    {% if analysis.full_text %}
+                        {{ analysis.full_text }}
+                    {% else %}
+                        No text could be extracted. Please ensure your PDF contains selectable text.
+                    {% endif %}
                 </div>
             </div>
         </div>
         
+        <!-- Strengths and Improvements -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
-            <div style="background: #f0fff4; padding: 1rem; border-radius: 15px;">
+            <div style="background: #f0fff4; padding: 1rem; border-radius: 15px; border: 1px solid #c6f6d5;">
                 <h3 style="margin-bottom: 0.75rem; color: #22543d;">✅ Strengths</h3>
                 <ul style="list-style: none; padding: 0;">
                     {% for strength in analysis.strengths %}
@@ -95,7 +118,7 @@
                     {% endfor %}
                 </ul>
             </div>
-            <div style="background: #fff5f5; padding: 1rem; border-radius: 15px;">
+            <div style="background: #fff5f5; padding: 1rem; border-radius: 15px; border: 1px solid #fed7d7;">
                 <h3 style="margin-bottom: 0.75rem; color: #742a2a;">📈 Areas for Improvement</h3>
                 <ul style="list-style: none; padding: 0;">
                     {% for improvement in analysis.improvements %}
@@ -105,6 +128,7 @@
             </div>
         </div>
         
+        <!-- Detected Skills -->
         {% if analysis.skills_found %}
         <div style="margin-bottom: 1.5rem;">
             <h3 style="margin-bottom: 0.75rem;">💡 Detected Skills</h3>
@@ -116,9 +140,10 @@
         </div>
         {% endif %}
         
+        <!-- Action Buttons -->
         <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;">
-            <a href="/resume-analysis" class="btn btn-secondary" style="flex: 1; text-align: center; text-decoration: none;">Upload Another Resume</a>
-            <a href="/dashboard" class="btn btn-primary" style="flex: 1; text-align: center; text-decoration: none;">Go to Dashboard</a>
+            <a href="/resume-analysis" class="btn btn-secondary" style="flex: 1; text-align: center; text-decoration: none;">📤 Upload Another Resume</a>
+            <a href="/dashboard" class="btn btn-primary" style="flex: 1; text-align: center; text-decoration: none;">🏠 Go to Dashboard</a>
         </div>
     </div>
 </div>
