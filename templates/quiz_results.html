@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Quiz Results - AI Interview Coach{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto; text-align: center;">
+    <div class="card" style="padding: 2rem;">
+        <div style="font-size: 4rem; margin-bottom: 1rem;">📊</div>
+        <h2 style="margin-bottom: 1rem;">Quiz Completed!</h2>
+        <p style="color: #666; margin-bottom: 2rem;">Check your performance and try more quizzes to improve your knowledge!</p>
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <a href="/skill-quiz" class="btn btn-primary" style="text-decoration: none;">Take Another Quiz</a>
+            <a href="/dashboard" class="btn btn-secondary" style="text-decoration: none;">Go to Dashboard</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
