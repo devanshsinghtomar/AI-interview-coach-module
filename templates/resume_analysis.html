@@ -1,34 +1,27 @@
 {% extends "base.html" %}
 
-{% block title %}Resume Analysis - AI Interview Coach{% endblock %}
-
 {% block content %}
-<div style="max-width: 800px; margin: 0 auto;">
-    <div class="card" style="padding: 2rem;">
-        <div style="text-align: center; margin-bottom: 1.5rem;">
-            <div style="font-size: 4rem;">📄</div>
-            <h2>Resume Analysis</h2>
-            <p style="color: #666;">Paste your resume content below for AI-powered analysis</p>
-        </div>
+<div style="max-width: 600px; margin: 0 auto;">
+    <div class="card" style="padding: 2rem; text-align: center;">
+        <div style="font-size: 4rem;">📄</div>
+        <h2>Resume Analysis</h2>
+        <p>Upload your PDF resume</p>
         
-        <form method="POST">
-            <div class="form-group" style="margin-bottom: 1rem;">
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Paste your resume text:</label>
-                <textarea name="resume_text" rows="12" required placeholder="Copy and paste your resume content here...
-Example:
-I am a Python Developer with 3 years of experience in Django and Flask.
-Skilled in JavaScript, React, and SQL.
-Experienced in building REST APIs and working with databases."
-style="width: 100%; padding: 1rem; border: 2px solid #e2e8f0; border-radius: 10px; font-family: monospace;"></textarea>
+        <form method="POST" enctype="multipart/form-data">
+            <div style="border: 2px dashed #cbd5e0; border-radius: 10px; padding: 2rem; margin: 1rem 0; cursor: pointer;" onclick="document.getElementById('file').click()">
+                <div id="fileName">Click or drag PDF here</div>
+                <input type="file" name="resume" id="file" accept=".pdf" style="display: none;" required>
             </div>
-            <button type="submit" class="btn btn-primary" style="width: 100%;">Analyze Resume →</button>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Analyze</button>
         </form>
-        
-        <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
-            <p style="font-size: 0.875rem; color: #666; text-align: center;">
-                💡 Tip: Include your skills, experience, education, and technologies you work with for better matching!
-            </p>
-        </div>
     </div>
 </div>
+
+<script>
+document.getElementById('file').onchange = (e) => {
+    if (e.target.files[0]) {
+        document.getElementById('fileName').innerHTML = `✅ ${e.target.files[0].name}`;
+    }
+};
+</script>
 {% endblock %}
