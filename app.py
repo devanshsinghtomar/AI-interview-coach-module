@@ -9,7 +9,7 @@ import random
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key-change-this'
+app.config['SECRET_KEY'] = 'your-secret-key-change-this-to-something-secure'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///interview.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
@@ -20,6 +20,7 @@ db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
+login_manager.login_message = 'Please login to access this page.'
 
 # Database Models
 class User(UserMixin, db.Model):
@@ -72,85 +73,63 @@ QUESTIONS_DB = {
         'medium': [
             "Explain the Global Interpreter Lock (GIL) in Python.",
             "What are generators and how are they memory efficient?",
-            "How does garbage collection work in Python?",
-            "Explain method resolution order (MRO) in Python.",
-            "What are context managers and how do you create one?"
+            "How does garbage collection work in Python?"
         ],
         'hard': [
             "Design a thread-safe singleton pattern in Python.",
             "Explain async/await and event loops in Python.",
-            "How would you optimize a slow Python application?",
-            "What are metaclasses and when would you use them?",
-            "Explain Python's descriptor protocol."
+            "How would you optimize a slow Python application?"
         ]
     },
     'JavaScript Developer': {
         'easy': [
             "What is hoisting in JavaScript?",
             "Explain the difference between var, let, and const.",
-            "What is closure in JavaScript? Give an example.",
-            "How does prototypal inheritance work?",
-            "What is the event loop in JavaScript?"
+            "What is closure in JavaScript? Give an example."
         ],
         'medium': [
             "Explain promises and async/await in JavaScript.",
             "What is the difference between == and ===?",
-            "Explain event delegation in JavaScript.",
-            "What are higher-order functions?",
-            "How does 'this' binding work in JavaScript?"
+            "Explain event delegation in JavaScript."
         ],
         'hard': [
             "Explain the event loop and callback queue in detail.",
             "How would you implement debouncing and throttling?",
-            "Explain the prototype chain and inheritance.",
-            "What are Web Workers and when to use them?",
-            "How does garbage collection work in V8?"
+            "What are Web Workers and when to use them?"
         ]
     },
     'Data Scientist': {
         'easy': [
             "What is the difference between supervised and unsupervised learning?",
             "Explain bias-variance tradeoff.",
-            "What is overfitting and how do you prevent it?",
-            "What evaluation metrics would you use for classification?",
-            "Explain cross-validation and why it's useful."
+            "What is overfitting and how do you prevent it?"
         ],
         'medium': [
             "Explain the difference between bagging and boosting.",
             "What is feature engineering and why is it important?",
-            "How do you handle imbalanced datasets?",
-            "Explain PCA and when to use it.",
-            "What is regularization (L1 vs L2)?"
+            "How do you handle imbalanced datasets?"
         ],
         'hard': [
             "Explain gradient descent and its variants.",
             "How would you build a recommendation system from scratch?",
-            "Explain the math behind backpropagation.",
-            "What is attention mechanism in transformers?",
-            "How would you detect data drift in production?"
+            "What is attention mechanism in transformers?"
         ]
     },
     'Full Stack Developer': {
         'easy': [
             "What is REST and what are its principles?",
             "Explain the difference between SQL and NoSQL databases.",
-            "What is CORS and how do you handle it?",
-            "Explain HTTP methods (GET, POST, PUT, DELETE).",
-            "What is authentication vs authorization?"
+            "What is CORS and how do you handle it?"
         ],
         'medium': [
             "Explain JWT tokens and how they work.",
             "What is the difference between horizontal and vertical scaling?",
-            "Explain ACID properties in databases.",
-            "What is GraphQL and how is it different from REST?",
-            "How does web socket communication work?"
+            "Explain ACID properties in databases."
         ],
         'hard': [
             "Design a URL shortening service like bit.ly.",
             "How would you implement rate limiting in an API?",
-            "Explain database indexing and query optimization.",
-            "Design a real-time chat application architecture.",
-            "How would you handle millions of concurrent users?"
+            "Explain database indexing and query optimization."
         ]
     }
 }
@@ -158,23 +137,44 @@ QUESTIONS_DB = {
 # Routes
 @app.route('/')
 def index():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
     return render_template('index.html')
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    
     if request.method == 'POST':
         username = request.form.get('username')
         email = request.form.get('email')
         password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
         
+        # Validation
+        if not username or not email or not password:
+            flash('All fields are required', 'error')
+            return redirect(url_for('register'))
+        
+        if password != confirm_password:
+            flash('Passwords do not match', 'error')
+            return redirect(url_for('register'))
+        
+        if len(password) < 6:
+            flash('Password must be at least 6 characters', 'error')
+            return redirect(url_for('register'))
+        
+        # Check if user exists
         if User.query.filter_by(username=username).first():
-            flash('Username already exists', 'error')
+            flash('Username already exists. Please choose another.', 'error')
             return redirect(url_for('register'))
         
         if User.query.filter_by(email=email).first():
-            flash('Email already registered', 'error')
+            flash('Email already registered. Please login.', 'error')
             return redirect(url_for('register'))
         
+        # Create user
         hashed = bcrypt.generate_password_hash(password).decode('utf-8')
         user = User(username=username, email=email, password_hash=hashed)
         db.session.add(user)
@@ -187,17 +187,31 @@ def register():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
+        remember = request.form.get('remember') == 'on'
+        
+        if not username or not password:
+            flash('Please enter both username and password', 'error')
+            return redirect(url_for('login'))
         
         user = User.query.filter_by(username=username).first()
-        if user and bcrypt.check_password_hash(user.password_hash, password):
-            login_user(user)
-            flash(f'Welcome back, {user.username}!', 'success')
-            return redirect(url_for('dashboard'))
         
-        flash('Invalid username or password', 'error')
+        if user and bcrypt.check_password_hash(user.password_hash, password):
+            login_user(user, remember=remember)
+            flash(f'Welcome back, {user.username}!', 'success')
+            
+            # Redirect to next page or dashboard
+            next_page = request.args.get('next')
+            if next_page:
+                return redirect(next_page)
+            return redirect(url_for('dashboard'))
+        else:
+            flash('Invalid username or password. Please try again.', 'error')
     
     return render_template('login.html')
 
@@ -205,7 +219,7 @@ def login():
 @login_required
 def logout():
     logout_user()
-    flash('Logged out successfully.', 'info')
+    flash('You have been logged out successfully.', 'info')
     return redirect(url_for('index'))
 
 @app.route('/dashboard')
@@ -216,20 +230,11 @@ def dashboard():
     avg_score = db.session.query(db.func.avg(Interview.overall_score)).filter_by(user_id=current_user.id).scalar() or 0
     resume_count = ResumeAnalysis.query.filter_by(user_id=current_user.id).count()
     
-    # Calculate improvement trend
-    if len(interviews) >= 2:
-        first_score = interviews[-1].overall_score if interviews else 0
-        last_score = interviews[0].overall_score if interviews else 0
-        improvement = last_score - first_score
-    else:
-        improvement = 0
-    
     return render_template('dashboard.html', 
                          total_interviews=total_interviews,
                          avg_score=round(avg_score, 1),
                          resume_count=resume_count,
-                         recent_interviews=interviews,
-                         improvement=improvement)
+                         recent_interviews=interviews)
 
 @app.route('/start-interview', methods=['GET', 'POST'])
 @login_required
@@ -238,7 +243,6 @@ def start_interview():
         job_role = request.form.get('job_role')
         difficulty = request.form.get('difficulty', 'medium')
         
-        # Get questions for selected role
         role_questions = QUESTIONS_DB.get(job_role, QUESTIONS_DB['Python Developer'])
         questions = role_questions.get(difficulty, role_questions['medium'])
         
@@ -277,10 +281,10 @@ def submit_answer():
     answer = request.form.get('answer')
     question = request.form.get('question')
     
-    # Simple AI-like scoring based on answer length and content
-    clarity_score = min(100, max(50, len(answer) // 10))
-    relevance_score = min(100, max(40, 60 + (len(answer.split()) // 20)))
-    confidence_score = min(100, max(50, 70 + (len(answer) // 50)))
+    # Score based on answer length and quality
+    clarity_score = min(100, max(40, len(answer) // 10 + 40))
+    relevance_score = min(100, max(40, len(answer.split()) // 15 + 40))
+    confidence_score = min(100, max(40, len(answer) // 50 + 50))
     overall_score = (clarity_score + relevance_score + confidence_score) // 3
     
     session['interview_answers'].append(answer)
@@ -293,7 +297,6 @@ def submit_answer():
     session['interview_current'] = session.get('interview_current', 0) + 1
     session.modified = True
     
-    # Get next question info
     questions = session['interview_questions']
     current_idx = session['interview_current']
     
@@ -322,19 +325,14 @@ def interview_complete():
     if 'interview_answers' not in session:
         return redirect(url_for('start_interview'))
     
-    # Calculate total scores
     total_overall = sum(s['overall'] for s in session['interview_scores']) / len(session['interview_scores'])
-    total_clarity = sum(s['clarity'] for s in session['interview_scores']) / len(session['interview_scores'])
-    total_relevance = sum(s['relevance'] for s in session['interview_scores']) / len(session['interview_scores'])
-    total_confidence = sum(s['confidence'] for s in session['interview_scores']) / len(session['interview_scores'])
     
-    # Save to database
     for q, a, s in zip(session['interview_questions'], session['interview_answers'], session['interview_scores']):
         interview = Interview(
             user_id=current_user.id,
             job_role=session['interview_role'],
             question=q,
-            answer=a,
+            answer=a[:500],
             clarity_score=s['clarity'],
             relevance_score=s['relevance'],
             confidence_score=s['confidence'],
@@ -346,13 +344,9 @@ def interview_complete():
     result = {
         'total_questions': len(session['interview_answers']),
         'avg_overall': round(total_overall, 1),
-        'avg_clarity': round(total_clarity, 1),
-        'avg_relevance': round(total_relevance, 1),
-        'avg_confidence': round(total_confidence, 1),
         'job_role': session['interview_role']
     }
     
-    # Clear session
     session.pop('interview_questions', None)
     session.pop('interview_answers', None)
     session.pop('interview_scores', None)
@@ -390,10 +384,9 @@ def resume():
             except:
                 text = file.filename
             
-            # Analyze resume
             word_count = len(text.split())
             
-            # Calculate score based on content
+            # Score calculation
             score = 50
             if word_count > 100:
                 score += 15
@@ -424,9 +417,8 @@ def resume():
                 strengths.append("Technical skills mentioned")
             else:
                 weaknesses.append("Missing technical skills section")
-                recommendations.append("Add a technical skills section with specific technologies")
+                recommendations.append("Add a technical skills section")
             
-            # Save to database
             analysis = ResumeAnalysis(
                 user_id=current_user.id,
                 filename=filename,
@@ -453,11 +445,9 @@ def performance():
     interviews = Interview.query.filter_by(user_id=current_user.id).order_by(Interview.date).all()
     resumes = ResumeAnalysis.query.filter_by(user_id=current_user.id).order_by(ResumeAnalysis.date.desc()).all()
     
-    # Prepare chart data
     interview_dates = [i.date.strftime('%Y-%m-%d') for i in interviews]
     interview_scores = [i.overall_score for i in interviews]
     
-    # Group by job role
     roles_scores = {}
     for i in interviews:
         if i.job_role not in roles_scores:
