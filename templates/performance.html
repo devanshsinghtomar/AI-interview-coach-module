@@ -12,14 +12,12 @@
             <div style="color: #666;">Interviews Completed</div>
         </div>
         <div class="card" style="text-align: center;">
-            <div style="font-size: 2rem; font-weight: bold; color: #667eea;">{{ quizzes|length }}</div>
+            <div style="font-size: 2rem; font-weight: bold; color: #667eea;">{{ total_quizzes }}</div>
             <div style="color: #666;">Quiz Attempts</div>
         </div>
         <div class="card" style="text-align: center;">
-            <div style="font-size: 2rem; font-weight: bold; color: #667eea;">
-                {% if resumes %}{{ resumes[0].score }}%{% else %}0%{% endif %}
-            </div>
-            <div style="color: #666;">Latest Resume Score</div>
+            <div style="font-size: 2rem; font-weight: bold; color: #667eea;">{{ avg_quiz_score }}%</div>
+            <div style="color: #666;">Average Quiz Score</div>
         </div>
     </div>
     
