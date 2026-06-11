@@ -7,10 +7,26 @@
     <div class="card" style="padding: 2rem;">
         <div style="font-size: 4rem; margin-bottom: 1rem;">🎉</div>
         <h2 style="margin-bottom: 1rem;">Interview Completed!</h2>
-        <p style="color: #666; margin-bottom: 2rem;">Great job completing your mock interview. Keep practicing to improve your skills!</p>
+        
+        {% if request.args.get('score') %}
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1.5rem; border-radius: 15px; margin: 1.5rem 0; color: white;">
+            <div style="font-size: 0.875rem; opacity: 0.9;">Your Overall Score</div>
+            <div style="font-size: 3rem; font-weight: bold;">{{ request.args.get('score') }}%</div>
+        </div>
+        {% endif %}
+        
+        <p style="color: #666; margin-bottom: 2rem;">
+            Great job completing your mock interview! 
+            Keep practicing to improve your skills and confidence.
+        </p>
+        
         <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
             <a href="/mock-interview" class="btn btn-primary" style="text-decoration: none;">Practice Again</a>
             <a href="/dashboard" class="btn btn-secondary" style="text-decoration: none;">Go to Dashboard</a>
+        </div>
+        
+        <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
+            <p style="font-size: 0.875rem; color: #666;">💡 Tip: Review your answers and try to be more detailed in your next practice session!</p>
         </div>
     </div>
 </div>
