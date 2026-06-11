@@ -1,21 +1,33 @@
 {% extends "base.html" %}
 
+{% block title %}Resume Analysis - AI Interview Coach{% endblock %}
+
 {% block content %}
 <div style="max-width: 600px; margin: 0 auto;">
     <div class="card" style="padding: 2rem; text-align: center;">
-        <div style="font-size: 4rem;">📄</div>
-        <h2>Resume Analysis</h2>
-        <p>Upload your resume (PDF format) for AI-powered analysis</p>
+        <div style="font-size: 4rem; margin-bottom: 1rem;">📄</div>
+        <h2 style="margin-bottom: 0.5rem;">Resume Analysis</h2>
+        <p style="color: #666; margin-bottom: 1.5rem;">Upload your resume (PDF format) for AI-powered analysis</p>
         
         <form id="uploadForm" method="POST" enctype="multipart/form-data">
-            <div id="dropZone" style="border: 2px dashed #cbd5e0; border-radius: 10px; padding: 2rem; margin: 1rem 0; cursor: pointer;">
-                <div id="uploadIcon" style="font-size: 3rem;">📁</div>
-                <p id="uploadText">Click or drag to upload PDF</p>
-                <p style="font-size: 0.875rem; color: #666;">PDF files only (Max 5MB)</p>
+            <div id="dropZone" style="border: 2px dashed #cbd5e0; border-radius: 10px; padding: 2rem; margin-bottom: 1.5rem; cursor: pointer; transition: all 0.3s;">
+                <div id="uploadIcon" style="font-size: 3rem; margin-bottom: 0.5rem;">📁</div>
+                <p id="uploadText">Click or drag and drop your PDF resume here</p>
+                <p style="font-size: 0.875rem; color: #666; margin-top: 0.5rem;">PDF files only (Max 5MB)</p>
                 <input type="file" name="resume" id="fileInput" accept=".pdf" style="display: none;" required>
             </div>
-            <button type="submit" id="submitBtn" class="btn btn-primary" style="width: 100%;">Analyze Resume</button>
+            <button type="submit" id="submitBtn" class="btn btn-primary" style="width: 100%;" disabled>Analyze Resume</button>
         </form>
+        
+        <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
+            <p style="font-size: 0.75rem; color: #888;">Your resume will be analyzed for:</p>
+            <div style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap;">
+                <span style="background: #f0f0f0; padding: 0.25rem 0.5rem; border-radius: 15px; font-size: 0.75rem;">Role Matching</span>
+                <span style="background: #f0f0f0; padding: 0.25rem 0.5rem; border-radius: 15px; font-size: 0.75rem;">Skills Detection</span>
+                <span style="background: #f0f0f0; padding: 0.25rem 0.5rem; border-radius: 15px; font-size: 0.75rem;">Quality Score</span>
+                <span style="background: #f0f0f0; padding: 0.25rem 0.5rem; border-radius: 15px; font-size: 0.75rem;">Improvement Tips</span>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -30,25 +42,38 @@
     
     fileInput.addEventListener('change', (e) => {
         if (e.target.files[0]) {
-            const fileName = e.target.files[0].name;
-            uploadText.innerHTML = `✅ Selected: ${fileName}`;
-            uploadIcon.innerHTML = '✅';
-            dropZone.style.borderColor = '#48bb78';
-            submitBtn.disabled = false;
+            const file = e.target.files[0];
+            if (file.name.endsWith('.pdf')) {
+                uploadText.innerHTML = `✅ Selected: ${file.name}`;
+                uploadIcon.innerHTML = '✅';
+                dropZone.style.borderColor = '#48bb78';
+                submitBtn.disabled = false;
+            } else {
+                alert('Please select a PDF file');
+                fileInput.value = '';
+                uploadText.innerHTML = 'Click or drag and drop your PDF resume here';
+                uploadIcon.innerHTML = '📁';
+                dropZone.style.borderColor = '#cbd5e0';
+                submitBtn.disabled = true;
+            }
         }
     });
     
     dropZone.addEventListener('dragover', (e) => {
         e.preventDefault();
         dropZone.style.borderColor = '#667eea';
+        dropZone.style.background = '#f7fafc';
     });
     
     dropZone.addEventListener('dragleave', () => {
         dropZone.style.borderColor = '#cbd5e0';
+        dropZone.style.background = 'white';
     });
     
     dropZone.addEventListener('drop', (e) => {
         e.preventDefault();
+        dropZone.style.borderColor = '#cbd5e0';
+        dropZone.style.background = 'white';
         const file = e.dataTransfer.files[0];
         if (file && file.name.endsWith('.pdf')) {
             fileInput.files = e.dataTransfer.files;
@@ -57,8 +82,13 @@
             dropZone.style.borderColor = '#48bb78';
             submitBtn.disabled = false;
         } else {
-            alert('Please upload a PDF file');
+            alert('Please drop a PDF file');
         }
+    });
+    
+    document.getElementById('uploadForm').addEventListener('submit', () => {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Analyzing...';
     });
 </script>
 {% endblock %}
