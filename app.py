@@ -24,7 +24,7 @@ bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
-# ============ DATABASE MODELS ============
+# Database Models
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
@@ -72,48 +72,40 @@ with app.app_context():
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# ============ INTERVIEW QUESTIONS (10+ ROLES) ============
+# ============ INTERVIEW QUESTIONS ============
 INTERVIEW_QUESTIONS_WITH_ANSWERS = {
     'Python Developer': [
-        {"question": "What is the difference between a list and a tuple in Python?", "keywords": ["mutable", "immutable", "change", "modify", "fixed"]},
-        {"question": "What is a decorator in Python?", "keywords": ["function", "modify", "wrapper", "@", "syntax"]},
-        {"question": "Explain the Global Interpreter Lock (GIL).", "keywords": ["mutex", "thread", "execution", "bytecode", "simultaneously"]},
-        {"question": "What is list comprehension? Give an example.", "keywords": ["concise", "create", "list", "loop", "condition"]},
-        {"question": "How does exception handling work in Python?", "keywords": ["try", "except", "finally", "raise", "error"]},
+        {"question": "What is the difference between a list and a tuple in Python?", "keywords": ["mutable", "immutable", "change", "modify"]},
+        {"question": "What is a decorator in Python?", "keywords": ["function", "modify", "wrapper", "@"]},
+        {"question": "Explain the Global Interpreter Lock (GIL).", "keywords": ["mutex", "thread", "execution", "bytecode"]},
     ],
     'JavaScript Developer': [
-        {"question": "What is closure in JavaScript?", "keywords": ["inner function", "outer scope", "variables", "return", "access"]},
-        {"question": "Explain the difference between == and ===.", "keywords": ["value", "type", "strict", "equality", "comparison"]},
-        {"question": "What is hoisting in JavaScript?", "keywords": ["declaration", "move", "top", "scope", "var"]},
-        {"question": "What are promises in JavaScript?", "keywords": ["async", "await", "future", "value", "callback"]},
+        {"question": "What is closure in JavaScript?", "keywords": ["inner function", "outer scope", "variables", "return"]},
+        {"question": "Explain the difference between == and ===.", "keywords": ["value", "type", "strict", "equality"]},
     ],
     'Data Scientist': [
-        {"question": "Difference between supervised and unsupervised learning?", "keywords": ["labeled", "unlabeled", "output", "target", "training"]},
-        {"question": "What is overfitting and how to prevent it?", "keywords": ["training", "noise", "generalization", "regularization", "validation"]},
-        {"question": "Explain bias-variance tradeoff.", "keywords": ["underfitting", "overfitting", "error", "complexity", "balance"]},
+        {"question": "Difference between supervised and unsupervised learning?", "keywords": ["labeled", "unlabeled", "output", "target"]},
+        {"question": "What is overfitting and how to prevent it?", "keywords": ["training", "noise", "generalization", "regularization"]},
     ],
     'Full Stack Developer': [
-        {"question": "What is REST API?", "keywords": ["representational", "state", "transfer", "http", "endpoint"]},
-        {"question": "Difference between SQL and NoSQL?", "keywords": ["structured", "unstructured", "schema", "scalability", "flexible"]},
-        {"question": "What is JWT authentication?", "keywords": ["json", "web", "token", "stateless", "signature"]},
+        {"question": "What is REST API?", "keywords": ["representational", "state", "transfer", "http"]},
+        {"question": "Difference between SQL and NoSQL?", "keywords": ["structured", "unstructured", "schema", "scalability"]},
     ],
     'DevOps Engineer': [
-        {"question": "What is Docker?", "keywords": ["container", "image", "isolate", "deploy", "environment"]},
-        {"question": "Explain CI/CD pipeline.", "keywords": ["continuous", "integration", "delivery", "deployment", "automation"]},
-        {"question": "What is Kubernetes?", "keywords": ["orchestration", "container", "cluster", "pods", "scaling"]},
+        {"question": "What is Docker?", "keywords": ["container", "image", "isolate", "deploy"]},
+        {"question": "Explain CI/CD pipeline.", "keywords": ["continuous", "integration", "delivery", "deployment"]},
     ],
     'Java Developer': [
-        {"question": "Difference between abstract class and interface?", "keywords": ["implementation", "multiple", "inheritance", "abstract", "methods"]},
-        {"question": "What is multithreading in Java?", "keywords": ["concurrent", "threads", "parallel", "execution", "runnable"]},
-        {"question": "Explain garbage collection in Java.", "keywords": ["memory", "reclaim", "unused", "objects", "jvm"]},
+        {"question": "Difference between abstract class and interface?", "keywords": ["implementation", "multiple", "inheritance", "abstract"]},
+        {"question": "What is multithreading in Java?", "keywords": ["concurrent", "threads", "parallel", "execution"]},
     ],
     'Cloud Engineer': [
-        {"question": "What are the cloud service models?", "keywords": ["iaas", "paas", "saas", "infrastructure", "platform"]},
-        {"question": "Explain serverless computing.", "keywords": ["functions", "event-driven", "no server", "scale", "automatic"]},
+        {"question": "What are the cloud service models?", "keywords": ["iaas", "paas", "saas", "infrastructure"]},
+        {"question": "Explain serverless computing.", "keywords": ["functions", "event-driven", "no server", "scale"]},
     ],
     'Machine Learning Engineer': [
-        {"question": "Explain the difference between AI, ML, and DL.", "keywords": ["artificial", "intelligence", "machine", "learning", "deep"]},
-        {"question": "What is the difference between classification and regression?", "keywords": ["categorical", "continuous", "predict", "label", "value"]},
+        {"question": "Explain the difference between AI, ML, and DL.", "keywords": ["artificial", "intelligence", "machine", "learning"]},
+        {"question": "What is the difference between classification and regression?", "keywords": ["categorical", "continuous", "predict", "label"]},
     ]
 }
 
@@ -123,22 +115,18 @@ QUIZ_QUESTIONS = {
         {"question": "What is the correct way to create a function in Python?", "options": ["def myFunction():", "function myFunction():", "create myFunction():", "func myFunction():"], "correct": "def myFunction():", "explanation": "Functions are defined using the 'def' keyword."},
         {"question": "What does the 'len()' function do?", "options": ["Returns length", "Converts to lowercase", "Rounds a number", "Finds maximum"], "correct": "Returns length", "explanation": "len() returns the number of items."},
         {"question": "Which operator is used for exponentiation?", "options": ["**", "^", "exp()", "&&"], "correct": "**", "explanation": "** is exponentiation operator."},
-        {"question": "What is the output of print(type(10))?", "options": ["<class 'int'>", "<class 'float'>", "<class 'str'>", "<class 'list'>"], "correct": "<class 'int'>", "explanation": "10 is an integer."},
-        {"question": "How do you create a list?", "options": ["[1, 2, 3]", "(1, 2, 3)", "{1, 2, 3}", "<1, 2, 3>"], "correct": "[1, 2, 3]", "explanation": "Lists use square brackets."},
     ],
     'JavaScript': [
         {"question": "How do you declare a variable in JavaScript?", "options": ["let x;", "variable x;", "v x;", "declare x;"], "correct": "let x;", "explanation": "let, const, and var declare variables."},
         {"question": "What does 'console.log()' do?", "options": ["Prints to console", "Shows alert", "Returns value", "Creates log"], "correct": "Prints to console", "explanation": "console.log() outputs to browser console."},
-        {"question": "What is the correct way to write a function?", "options": ["function myFunction() {}", "def myFunction() {}", "create myFunction() {}", "func myFunction() {}"], "correct": "function myFunction() {}", "explanation": "Functions use the 'function' keyword."},
     ],
     'SQL': [
         {"question": "What does SQL stand for?", "options": ["Structured Query Language", "Simple Query Language", "Standard Query Language", "System Query Language"], "correct": "Structured Query Language", "explanation": "SQL stands for Structured Query Language."},
         {"question": "Which SQL statement extracts data?", "options": ["SELECT", "EXTRACT", "GET", "OPEN"], "correct": "SELECT", "explanation": "SELECT retrieves data from database."},
-        {"question": "What does the WHERE clause do?", "options": ["Filters records", "Sorts records", "Groups records", "Joins tables"], "correct": "Filters records", "explanation": "WHERE filters records based on conditions."},
     ]
 }
 
-# ============ RESUME ANALYSIS FUNCTIONS ============
+# ============ SIMPLIFIED RESUME ANALYSIS FUNCTIONS ============
 def extract_text_from_pdf(filepath):
     """Extract text from PDF file"""
     try:
@@ -148,48 +136,31 @@ def extract_text_from_pdf(filepath):
             for page in pdf_reader.pages:
                 page_text = page.extract_text()
                 if page_text:
-                    text += page_text + "\n"
+                    text += page_text + " "
             return text.strip()
     except Exception as e:
         print(f"PDF extraction error: {e}")
         return ""
 
-def is_valid_resume(text):
-    """Check if the uploaded document appears to be a resume"""
-    text_lower = text.lower()
-    
-    resume_keywords = [
-        'experience', 'education', 'skills', 'work', 'employment',
-        'project', 'certification', 'summary', 'objective', 'profile',
-        'accomplishment', 'achievement', 'technical', 'professional'
-    ]
-    
-    email_pattern = r'\b[\w\.-]+@[\w\.-]+\.\w+\b'
-    phone_pattern = r'\b\d{10}\b|\b\d{3}[-.]?\d{3}[-.]?\d{4}\b'
-    
-    has_resume_words = sum(1 for word in resume_keywords if word in text_lower) >= 2
-    has_email = bool(re.search(email_pattern, text))
-    has_phone = bool(re.search(phone_pattern, text))
-    
-    return (has_resume_words or has_email or has_phone) and len(text) > 100
-
 def analyze_resume_content(text):
     """Analyze resume and return detailed results"""
     text_lower = text.lower()
     
+    # Role keywords for matching
     role_keywords = {
-        'Python Developer': ['python', 'django', 'flask', 'pandas', 'numpy', 'scikit-learn', 'tensorflow'],
-        'JavaScript Developer': ['javascript', 'react', 'angular', 'vue', 'node.js', 'express', 'typescript'],
-        'Data Scientist': ['data science', 'machine learning', 'python', 'analytics', 'statistics', 'pandas'],
-        'Full Stack Developer': ['react', 'angular', 'node.js', 'express', 'mongodb', 'postgresql', 'html', 'css'],
-        'DevOps Engineer': ['docker', 'kubernetes', 'jenkins', 'aws', 'azure', 'terraform', 'ci/cd'],
-        'Java Developer': ['java', 'spring', 'spring boot', 'hibernate', 'maven', 'gradle'],
-        'Cloud Engineer': ['aws', 'azure', 'gcp', 'cloud', 'terraform', 'serverless', 'lambda'],
+        'Python Developer': ['python', 'django', 'flask', 'pandas', 'numpy', 'scikit-learn'],
+        'JavaScript Developer': ['javascript', 'react', 'angular', 'vue', 'node.js', 'express'],
+        'Data Scientist': ['data science', 'machine learning', 'python', 'analytics', 'statistics'],
+        'Full Stack Developer': ['react', 'angular', 'node.js', 'express', 'mongodb', 'html', 'css'],
+        'DevOps Engineer': ['docker', 'kubernetes', 'jenkins', 'aws', 'terraform', 'ci/cd'],
+        'Java Developer': ['java', 'spring', 'hibernate', 'maven', 'gradle'],
+        'Cloud Engineer': ['aws', 'azure', 'gcp', 'cloud', 'terraform', 'serverless'],
         'Machine Learning Engineer': ['machine learning', 'deep learning', 'tensorflow', 'pytorch', 'keras']
     }
     
+    # Calculate match scores
     role_scores = {}
-    role_matched_skills = {}
+    role_matched = {}
     
     for role, keywords in role_keywords.items():
         score = 0
@@ -199,27 +170,31 @@ def analyze_resume_content(text):
                 score += 15
                 matched.append(keyword)
         role_scores[role] = min(score, 100)
-        role_matched_skills[role] = matched
+        role_matched[role] = matched
     
+    # Get best match
     best_role = max(role_scores, key=role_scores.get) if role_scores else "Python Developer"
     best_score = role_scores.get(best_role, 50)
     
+    # Get all suitable roles
     suggested_roles = []
     for role, score in sorted(role_scores.items(), key=lambda x: x[1], reverse=True):
         if score >= 25 and role != best_role:
             suggested_roles.append({
                 'role': role,
                 'match_percentage': score,
-                'matched_skills': role_matched_skills.get(role, [])[:4]
+                'matched_skills': role_matched.get(role, [])[:3]
             })
     
+    # Resume statistics
     word_count = len(text.split())
     has_email = '@' in text
     has_phone = bool(re.search(r'\d{10}', text))
     has_github = 'github' in text_lower
     has_linkedin = 'linkedin' in text_lower
     
-    if word_count > 500 and best_score >= 70 and has_email:
+    # Quality rating
+    if word_count > 500 and best_score >= 70:
         quality_rating = "Excellent"
         quality_color = "#48bb78"
     elif word_count > 300 and best_score >= 50:
@@ -232,57 +207,60 @@ def analyze_resume_content(text):
         quality_rating = "Needs Improvement"
         quality_color = "#ef4444"
     
+    # Strengths
     strengths = []
-    if word_count > 400:
-        strengths.append("✅ Comprehensive resume with substantial content")
-    elif word_count > 200:
-        strengths.append("✅ Good resume length")
+    if word_count > 300:
+        strengths.append(f"✅ Resume has {word_count} words - good detail level")
     if has_email and has_phone:
         strengths.append("✅ Complete contact information provided")
     if has_github or has_linkedin:
         strengths.append("✅ Professional online presence detected")
-    if best_score >= 70:
+    if best_score >= 60:
         strengths.append(f"✅ Strong alignment with {best_role} role")
+    if len(role_matched.get(best_role, [])) >= 2:
+        strengths.append("✅ Good keyword optimization")
     
+    # Improvements
     improvements = []
     if word_count < 200:
-        improvements.append("📈 Add more details about your experience and projects")
+        improvements.append("📈 Add more details about your experience (aim for 300+ words)")
     if not has_email:
-        improvements.append("📈 Add your email address for recruiters to contact you")
+        improvements.append("📈 Add your email address")
     if best_score < 50:
-        improvements.append(f"📈 Include more {best_role}-specific keywords and technologies")
+        improvements.append(f"📈 Include more {best_role}-specific keywords")
     if 'achievement' not in text_lower:
-        improvements.append("📈 Quantify your achievements with numbers and metrics")
+        improvements.append("📈 Quantify your achievements with numbers")
     
     if not strengths:
         strengths = ["✅ Resume uploaded successfully"]
     if not improvements:
-        improvements = ["📈 Consider adding more quantifiable achievements"]
+        improvements = ["📈 Consider adding more specific technical skills"]
     
+    # Unique skills found
     all_skills = []
-    for skills in role_matched_skills.values():
+    for skills in role_matched.values():
         all_skills.extend(skills)
-    unique_skills = list(set(all_skills))[:12]
+    unique_skills = list(set(all_skills))[:10]
     
     return {
         'overall_score': best_score,
         'best_role': best_role,
-        'suggested_roles': suggested_roles[:6],
+        'suggested_roles': suggested_roles[:5],
         'quality_rating': quality_rating,
         'quality_color': quality_color,
-        'strengths': strengths[:5],
-        'improvements': improvements[:5],
+        'strengths': strengths[:4],
+        'improvements': improvements[:4],
         'skills_found': unique_skills,
         'word_count': word_count,
         'has_email': has_email,
         'has_phone': has_phone,
         'has_github': has_github,
         'has_linkedin': has_linkedin,
-        'full_text': text[:4000]
+        'full_text': text[:3000]
     }
 
 def evaluate_answer(question_text, user_answer, job_role):
-    """Evaluate interview answer based on keywords"""
+    """Evaluate interview answer"""
     user_answer_lower = user_answer.lower()
     
     question_data = None
@@ -305,15 +283,15 @@ def evaluate_answer(question_text, user_answer, job_role):
         score = min(95, score + 10)
     
     if score >= 85:
-        feedback = f"🌟 Excellent! You covered key points: {', '.join(matched_keywords[:3])}"
+        feedback = f"🌟 Excellent! Great understanding of: {', '.join(matched_keywords[:2])}"
     elif score >= 70:
         missing = [kw for kw in keywords if kw.lower() not in user_answer_lower][:2]
-        feedback = f"👍 Good! Consider discussing: {', '.join(missing)}"
+        feedback = f"👍 Good! Consider also discussing: {', '.join(missing)}"
     elif score >= 50:
-        missing = [kw for kw in keywords if kw.lower() not in user_answer_lower][:3]
-        feedback = f"📝 Fair. Also cover: {', '.join(missing)}"
+        missing = [kw for kw in keywords if kw.lower() not in user_answer_lower][:2]
+        feedback = f"📝 Fair. Focus on: {', '.join(missing)}"
     else:
-        feedback = f"⚠️ Needs improvement. Focus on: {', '.join(keywords[:4])}"
+        feedback = f"⚠️ Needs improvement. Key points: {', '.join(keywords[:3])}"
     
     return score, feedback
 
@@ -510,42 +488,46 @@ def submit_mock_answer():
 def interview_results():
     return render_template('interview_results.html')
 
-# ============ RESUME ANALYSIS ROUTES ============
+# ============ RESUME ANALYSIS ROUTE - FIXED ============
 @app.route('/resume-analysis', methods=['GET', 'POST'])
 @login_required
 def resume_analysis():
     if request.method == 'POST':
-        if 'resume' not in request.files:
-            flash('No file uploaded', 'danger')
-            return redirect(url_for('resume_analysis'))
-        
-        file = request.files['resume']
-        if file.filename == '':
-            flash('No file selected', 'danger')
-            return redirect(url_for('resume_analysis'))
-        
-        if not file.filename.lower().endswith('.pdf'):
-            flash('❌ Please upload a PDF file', 'danger')
-            return redirect(url_for('resume_analysis'))
-        
         try:
+            if 'resume' not in request.files:
+                flash('No file uploaded', 'danger')
+                return redirect(url_for('resume_analysis'))
+            
+            file = request.files['resume']
+            if file.filename == '':
+                flash('No file selected', 'danger')
+                return redirect(url_for('resume_analysis'))
+            
+            if not file.filename.lower().endswith('.pdf'):
+                flash('❌ Please upload a PDF file', 'danger')
+                return redirect(url_for('resume_analysis'))
+            
+            # Save file temporarily
             filename = secure_filename(file.filename)
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
             
+            # Extract text
             extracted_text = extract_text_from_pdf(filepath)
-            os.remove(filepath)
             
-            if not extracted_text or len(extracted_text.strip()) < 100:
-                flash('❌ The uploaded document does not appear to be a resume. Could not extract sufficient text.', 'danger')
+            # Clean up temp file
+            if os.path.exists(filepath):
+                os.remove(filepath)
+            
+            # Check if text was extracted
+            if not extracted_text or len(extracted_text.strip()) < 50:
+                flash('❌ Could not extract text from PDF. Please ensure it\'s a text-based PDF (not a scanned image).', 'danger')
                 return redirect(url_for('resume_analysis'))
             
-            if not is_valid_resume(extracted_text):
-                flash('❌ The uploaded document does not appear to be a resume. Please upload a proper resume document.', 'danger')
-                return redirect(url_for('resume_analysis'))
-            
+            # Analyze the resume
             analysis = analyze_resume_content(extracted_text)
             
+            # Save to database
             resume_record = ResumeAnalysis(
                 user_id=current_user.id,
                 filename=filename,
@@ -564,13 +546,13 @@ def resume_analysis():
             return render_template('resume_results.html', analysis=analysis)
             
         except Exception as e:
-            print(f"Resume analysis error: {str(e)}")
-            flash('Error analyzing resume. Please try again.', 'danger')
+            print(f"Resume analysis error details: {str(e)}")
+            flash('Error analyzing resume. Please try again with a different PDF.', 'danger')
             return redirect(url_for('resume_analysis'))
     
     return render_template('resume_analysis.html')
 
-# ============ HELPER ROUTES FOR DIRECT INTERVIEW/QUIZ ============
+# ============ HELPER ROUTES ============
 @app.route('/start-mock-interview-direct', methods=['POST'])
 @login_required
 def start_mock_interview_direct():
@@ -747,7 +729,6 @@ def quiz_results():
     session.pop('quiz_results', None)
     return render_template('quiz_results.html', results=results)
 
-# ============ PERFORMANCE ROUTES ============
 @app.route('/performance')
 @login_required
 def performance():
