@@ -1,110 +1,80 @@
 {% extends "base.html" %}
 
-{% block title %}Resume Results - AI Interview Coach{% endblock %}
-
 {% block content %}
 <div style="max-width: 900px; margin: 0 auto;">
     <div class="card" style="padding: 2rem;">
-        <h2 style="margin-bottom: 1rem;">📊 Resume Analysis Results</h2>
-        
-        <!-- Score Cards -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
-            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1rem; border-radius: 15px; text-align: center; color: white;">
-                <div style="font-size: 0.875rem;">Match Score</div>
-                <div style="font-size: 2rem; font-weight: bold;">{{ analysis.score }}%</div>
-            </div>
-            <div style="background: {{ analysis.quality_color }}; padding: 1rem; border-radius: 15px; text-align: center; color: white;">
-                <div style="font-size: 0.875rem;">Resume Quality</div>
-                <div style="font-size: 1.2rem; font-weight: bold;">{{ analysis.quality }}</div>
-                <div style="font-size: 0.75rem;">{{ analysis.word_count }} words</div>
-            </div>
-        </div>
+        <h2>📊 Resume Analysis Results</h2>
         
         <!-- Best Match -->
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1.5rem; border-radius: 15px; margin-bottom: 1.5rem; color: white;">
-            <div style="font-size: 0.875rem;">🎯 Best Match</div>
-            <div style="font-size: 1.8rem; font-weight: bold; margin: 0.5rem 0;">{{ analysis.best_role }}</div>
-            <div style="display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap;">
-                <form action="/start-mock-interview-direct" method="POST">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1.5rem; border-radius: 15px; margin: 1rem 0; color: white;">
+            <div>🎯 Best Match</div>
+            <div style="font-size: 1.5rem; font-weight: bold;">{{ analysis.best_role }}</div>
+            <div>Match Score: {{ analysis.best_score }}%</div>
+            <div style="margin-top: 1rem;">
+                <form action="/start-from-resume" method="POST" style="display: inline;">
                     <input type="hidden" name="role" value="{{ analysis.best_role }}">
-                    <button type="submit" style="background: white; color: #667eea; padding: 0.75rem 1.5rem; border: none; border-radius: 10px; cursor: pointer; font-weight: bold;">🎤 Take Mock Interview</button>
+                    <input type="hidden" name="action" value="interview">
+                    <button type="submit" style="background: white; color: #667eea; padding: 0.5rem 1rem; border: none; border-radius: 5px; cursor: pointer;">🎤 Mock Interview</button>
                 </form>
-                <form action="/start-quiz-direct" method="POST">
-                    <input type="hidden" name="category" value="{{ analysis.best_role }}">
-                    <button type="submit" style="background: rgba(255,255,255,0.2); color: white; padding: 0.75rem 1.5rem; border: 2px solid white; border-radius: 10px; cursor: pointer; font-weight: bold;">📝 Take Skill Quiz</button>
+                <form action="/start-from-resume" method="POST" style="display: inline; margin-left: 0.5rem;">
+                    <input type="hidden" name="role" value="{{ analysis.best_role }}">
+                    <input type="hidden" name="action" value="quiz">
+                    <button type="submit" style="background: rgba(255,255,255,0.2); color: white; padding: 0.5rem 1rem; border: 1px solid white; border-radius: 5px; cursor: pointer;">📝 Skill Quiz</button>
                 </form>
             </div>
         </div>
         
-        <!-- Other Suitable Roles -->
-        {% if analysis.suggested_roles %}
-        <div style="border: 2px solid #667eea; border-radius: 15px; margin-bottom: 1.5rem; overflow: hidden;">
-            <div style="background: #667eea; color: white; padding: 1rem; font-weight: bold;">💼 Other Suitable Job Roles</div>
+        <!-- Suitable Roles -->
+        <div style="border: 2px solid #667eea; border-radius: 15px; margin: 1rem 0;">
+            <div style="background: #667eea; color: white; padding: 1rem; font-weight: bold;">💼 Suitable Job Roles</div>
             <div>
-                {% for role in analysis.suggested_roles %}
-                <div style="border-bottom: 1px solid #e2e8f0; padding: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                {% for role in analysis.suitable_roles %}
+                <div style="border-bottom: 1px solid #e2e8f0; padding: 1rem; display: flex; justify-content: space-between; align-items: center;">
                     <div>
-                        <div style="font-weight: bold;">{{ role.role }}</div>
-                        <div style="font-size: 0.875rem;">Match: <strong style="color: #667eea;">{{ role.match }}%</strong></div>
-                        {% if role.skills %}
-                        <div style="font-size: 0.75rem; color: #666;">Skills: {{ role.skills|join(', ') }}</div>
-                        {% endif %}
+                        <strong>{{ role.role }}</strong>
+                        <div style="font-size: 0.875rem;">Match: {{ role.score }}%</div>
                     </div>
-                    <div style="display: flex; gap: 0.5rem;">
-                        <form action="/start-mock-interview-direct" method="POST" style="display: inline;">
+                    <div>
+                        <form action="/start-from-resume" method="POST" style="display: inline;">
                             <input type="hidden" name="role" value="{{ role.role }}">
-                            <button type="submit" style="background: #667eea; color: white; padding: 0.5rem 1rem; border: none; border-radius: 8px; cursor: pointer;">🎤 Interview</button>
+                            <input type="hidden" name="action" value="interview">
+                            <button type="submit" style="background: #667eea; color: white; padding: 0.25rem 0.75rem; border: none; border-radius: 5px; cursor: pointer;">Interview</button>
                         </form>
-                        <form action="/start-quiz-direct" method="POST" style="display: inline;">
-                            <input type="hidden" name="category" value="{{ role.role }}">
-                            <button type="submit" style="background: #48bb78; color: white; padding: 0.5rem 1rem; border: none; border-radius: 8px; cursor: pointer;">📝 Quiz</button>
+                        <form action="/start-from-resume" method="POST" style="display: inline; margin-left: 0.5rem;">
+                            <input type="hidden" name="role" value="{{ role.role }}">
+                            <input type="hidden" name="action" value="quiz">
+                            <button type="submit" style="background: #48bb78; color: white; padding: 0.25rem 0.75rem; border: none; border-radius: 5px; cursor: pointer;">Quiz</button>
                         </form>
                     </div>
                 </div>
                 {% endfor %}
             </div>
         </div>
-        {% endif %}
         
-        <!-- Extracted Text -->
-        <div style="border: 1px solid #e2e8f0; border-radius: 15px; margin-bottom: 1.5rem; overflow: hidden;">
-            <div style="background: #4a5568; color: white; padding: 1rem; display: flex; justify-content: space-between; align-items: center;">
-                <span>📄 Resume Content Analyzed</span>
-                <button onclick="toggleText()" style="background: rgba(255,255,255,0.2); color: white; padding: 0.25rem 0.75rem; border: none; border-radius: 5px; cursor: pointer;">Show/Hide</button>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0;">
+            <div style="background: #f0fff4; padding: 1rem; border-radius: 10px;">
+                <h3>✅ Strengths</h3>
+                {% for s in analysis.strengths %}<p>{{ s }}</p>{% endfor %}
             </div>
-            <div id="extractedText" style="padding: 1rem; display: none; max-height: 300px; overflow-y: auto; background: #f7fafc; font-family: monospace; font-size: 0.875rem; white-space: pre-wrap;">
-                {{ analysis.full_text }}
+            <div style="background: #fff5f5; padding: 1rem; border-radius: 10px;">
+                <h3>📈 Improvements</h3>
+                {% for i in analysis.improvements %}<p>{{ i }}</p>{% endfor %}
             </div>
         </div>
         
-        <!-- Detected Skills -->
-        {% if analysis.matched_skills %}
-        <div style="margin-bottom: 1rem;">
+        <div>
             <h3>💡 Detected Skills</h3>
-            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
-                {% for skill in analysis.matched_skills %}
-                <span style="background: #667eea20; color: #667eea; padding: 0.5rem 1rem; border-radius: 25px;">{{ skill|title }}</span>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                {% for skill in analysis.skills %}
+                <span style="background: #667eea20; color: #667eea; padding: 0.25rem 0.75rem; border-radius: 20px;">{{ skill|title }}</span>
                 {% endfor %}
             </div>
         </div>
-        {% endif %}
         
-        <!-- Actions -->
-        <div style="display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap;">
-            <a href="/resume-analysis" class="btn btn-secondary" style="flex: 1; text-align: center; text-decoration: none;">📤 Analyze Another Resume</a>
-            <a href="/dashboard" class="btn btn-primary" style="flex: 1; text-align: center; text-decoration: none;">🏠 Go to Dashboard</a>
+        <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+            <a href="/resume-analysis" class="btn btn-secondary">Upload Another</a>
+            <a href="/dashboard" class="btn btn-primary">Dashboard</a>
         </div>
     </div>
 </div>
-
-<script>
-    function toggleText() {
-        var x = document.getElementById('extractedText');
-        if (x.style.display === 'none') {
-            x.style.display = 'block';
-        } else {
-            x.style.display = 'none';
-        }
-    }
-</script>
 {% endblock %}
