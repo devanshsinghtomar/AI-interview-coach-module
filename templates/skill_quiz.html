@@ -13,7 +13,7 @@
                 <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Select Category</label>
                 <select name="category" required style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 10px;">
                     {% for category in categories %}
-                    <option value="{{ category }}">{{ category }} ({{ range(150, 201) | random }}+ questions)</option>
+                    <option value="{{ category }}">{{ category }}</option>
                     {% endfor %}
                 </select>
             </div>
