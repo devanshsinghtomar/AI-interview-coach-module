@@ -1,14 +1,45 @@
-<!-- templates/interview_complete.html -->
 {% extends "base.html" %}
+
+{% block title %}Interview Complete - AI Interview Coach{% endblock %}
+
 {% block content %}
-<div style="max-width: 500px; margin: 2rem auto; text-align: center;">
-    <div class="card" style="padding: 2rem;">
-        <i class="fas fa-trophy" style="font-size: 4rem; color: #f59e0b;"></i>
-        <h2>Interview Completed!</h2>
-        <p>Great job! Check your performance in the dashboard.</p>
-        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-            <a href="/mock-interview" class="btn btn-primary">Practice Again</a>
-            <a href="/dashboard" class="btn btn-secondary">Dashboard</a>
+<div style="max-width: 600px; margin: 0 auto; text-align: center;" class="fade-in">
+    <div class="card">
+        <div class="card-body" style="padding: 3rem 2rem;">
+            <div style="font-size: 5rem;">🎉</div>
+            <h1 style="margin: 1rem 0;">Interview Complete!</h1>
+            <p style="color: var(--gray-600); margin-bottom: 2rem;">
+                Great job completing your mock interview. Keep practicing to improve your skills!
+            </p>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <a href="{{ url_for('mock_interview') }}" class="btn btn-primary">🎤 Practice Again</a>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">📊 View Dashboard</a>
+                <a href="{{ url_for('resume_analysis') }}" class="btn btn-outline">📄 Analyze Resume</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid" style="margin-top: 2rem;">
+        <div class="card">
+            <div class="card-body" style="text-align: center;">
+                <div style="font-size: 2rem;">💡</div>
+                <h3>Want to improve?</h3>
+                <p style="font-size: 0.875rem;">Review the feedback from your answers and practice more</p>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body" style="text-align: center;">
+                <div style="font-size: 2rem;">📚</div>
+                <h3>Study More</h3>
+                <p style="font-size: 0.875rem;">Take skill quizzes to strengthen your knowledge</p>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body" style="text-align: center;">
+                <div style="font-size: 2rem;">🎯</div>
+                <h3>Try Another Role</h3>
+                <p style="font-size: 0.875rem;">Practice interviews for different job positions</p>
+            </div>
         </div>
     </div>
 </div>
