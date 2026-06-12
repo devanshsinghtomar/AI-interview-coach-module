@@ -1,18 +1,47 @@
 {% extends "base.html" %}
 
+{% block title %}Skill Quiz - AI Interview Coach{% endblock %}
+
 {% block content %}
 <div style="max-width: 600px; margin: 0 auto;">
     <div class="card" style="padding: 2rem;">
-        <h2 style="text-align: center;">🧠 Skill Quiz</h2>
-        <p style="text-align: center; color: #666; margin-bottom: 2rem;">Test your knowledge</p>
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <i class="fas fa-brain" style="font-size: 3rem; color: #667eea;"></i>
+            <h2>Skill Assessment Quiz</h2>
+            <p style="color: #718096;">Test your knowledge across multiple domains</p>
+        </div>
         
         <form method="POST" action="/start-quiz">
-            <select name="category" required style="width: 100%; padding: 0.75rem; margin-bottom: 1rem; border: 2px solid #e2e8f0; border-radius: 10px;">
-                {% for category in categories %}
-                <option value="{{ category }}">{{ category }}</option>
-                {% endfor %}
-            </select>
-            <button type="submit" class="btn btn-primary" style="width: 100%;">Start Quiz →</button>
+            <div class="form-group">
+                <label class="form-label"><i class="fas fa-tag"></i> Select Category</label>
+                <select name="category" required style="width: 100%; padding: 0.75rem; border-radius: 12px; border: 2px solid #e2e8f0;">
+                    <option value="">-- Choose a category --</option>
+                    {% for category in categories %}
+                    <option value="{{ category }}">{{ category }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div style="background: #f7fafc; padding: 1rem; border-radius: 16px; margin: 1.5rem 0;">
+                <div class="grid grid-3" style="text-align: center;">
+                    <div>
+                        <i class="fas fa-question-circle" style="font-size: 1.5rem; color: #667eea;"></i>
+                        <div>12 Questions</div>
+                    </div>
+                    <div>
+                        <i class="fas fa-clock" style="font-size: 1.5rem; color: #667eea;"></i>
+                        <div>5-10 min</div>
+                    </div>
+                    <div>
+                        <i class="fas fa-chart-line" style="font-size: 1.5rem; color: #667eea;"></i>
+                        <div>Instant Results</div>
+                    </div>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                <i class="fas fa-play"></i> Start Quiz
+            </button>
         </form>
     </div>
 </div>
