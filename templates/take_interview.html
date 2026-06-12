@@ -2,6 +2,93 @@
 
 {% block title %}Interview - AI Interview Coach{% endblock %}
 
+{% block extra_css %}
+<style>
+    .mic-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .mic-btn:hover {
+        transform: scale(1.05);
+        box-shadow: var(--shadow-lg);
+    }
+    .mic-btn.listening {
+        animation: pulse 1.5s infinite;
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    }
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+        }
+        70% {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+        }
+        100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+        }
+    }
+    .tts-btn {
+        background: var(--gray-200);
+        color: var(--gray-700);
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .tts-btn:hover {
+        background: var(--primary-color);
+        color: white;
+        transform: scale(1.05);
+    }
+    .input-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+    .recording-status {
+        font-size: 0.875rem;
+        color: #ef4444;
+        display: none;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .recording-status.active {
+        display: flex;
+    }
+    .recording-dot {
+        width: 10px;
+        height: 10px;
+        background: #ef4444;
+        border-radius: 50%;
+        animation: blink 1s infinite;
+    }
+    @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="interview-container fade-in">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
@@ -17,10 +104,25 @@
     <div class="question-card">
         <div class="question-text">
             {{ question }}
+            <button class="tts-btn" onclick="speakText('{{ question|replace("'", "\\'")|replace('"', '&quot;') }}')" style="margin-left: 0.5rem;" title="Listen to question">
+                🔊
+            </button>
         </div>
         
         <form id="answerForm">
-            <textarea class="answer-input" id="answer" name="answer" placeholder="Type your answer here... Be specific and provide detailed examples. Aim for at least 3-4 sentences." rows="6"></textarea>
+            <div class="input-header">
+                <label style="font-weight: 500;">Your Answer:</label>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <div class="recording-status" id="recordingStatus">
+                        <span class="recording-dot"></span>
+                        <span>Recording... Speak now</span>
+                    </div>
+                    <button type="button" class="mic-btn" id="micBtn" title="Click to speak your answer">
+                        🎤
+                    </button>
+                </div>
+            </div>
+            <textarea class="answer-input" id="answer" name="answer" placeholder="Type your answer here... OR click the microphone button to speak your answer. Be specific and provide detailed examples. Aim for at least 3-4 sentences." rows="6"></textarea>
             <input type="hidden" id="question" value="{{ question }}">
             
             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
@@ -45,62 +147,166 @@
 </div>
 
 <script>
-    const form = document.getElementById('answerForm');
+    // Speech Recognition Setup
+    let recognition = null;
+    let isListening = false;
+    const micBtn = document.getElementById('micBtn');
     const answerInput = document.getElementById('answer');
+    const recordingStatus = document.getElementById('recordingStatus');
+    
+    // Check if browser supports speech recognition
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+        
+        recognition.onstart = function() {
+            isListening = true;
+            micBtn.classList.add('listening');
+            recordingStatus.classList.add('active');
+            micBtn.textContent = '⏹️';
+        };
+        
+        recognition.onend = function() {
+            isListening = false;
+            micBtn.classList.remove('listening');
+            recordingStatus.classList.remove('active');
+            micBtn.textContent = '🎤';
+        };
+        
+        recognition.onresult = function(event) {
+            const transcript = event.results[0][0].transcript;
+            const currentText = answerInput.value;
+            if (currentText) {
+                answerInput.value = currentText + ' ' + transcript;
+            } else {
+                answerInput.value = transcript.charAt(0).toUpperCase() + transcript.slice(1);
+            }
+            // Trigger word count update
+            const event = new Event('input');
+            answerInput.dispatchEvent(event);
+        };
+        
+        recognition.onerror = function(event) {
+            console.error('Speech recognition error:', event.error);
+            alert('Speech recognition error: ' + event.error + '. Please type your answer or try again.');
+            micBtn.classList.remove('listening');
+            recordingStatus.classList.remove('active');
+            micBtn.textContent = '🎤';
+            isListening = false;
+        };
+        
+        micBtn.addEventListener('click', function() {
+            if (isListening) {
+                recognition.stop();
+            } else {
+                try {
+                    recognition.start();
+                } catch (error) {
+                    console.error('Error starting recognition:', error);
+                    alert('Please click the microphone button again to start speaking.');
+                }
+            }
+        });
+    } else {
+        micBtn.style.display = 'none';
+        console.log('Speech recognition not supported in this browser');
+    }
+    
+    // Text-to-Speech Function
+    function speakText(text) {
+        if ('speechSynthesis' in window) {
+            // Cancel any ongoing speech
+            window.speechSynthesis.cancel();
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.9;
+            utterance.pitch = 1;
+            utterance.volume = 1;
+            
+            // Get available voices and try to select a good one
+            const voices = window.speechSynthesis.getVoices();
+            const preferredVoice = voices.find(voice => voice.lang === 'en-US' && voice.name.includes('Google'));
+            if (preferredVoice) {
+                utterance.voice = preferredVoice;
+            }
+            
+            window.speechSynthesis.speak(utterance);
+        } else {
+            alert('Text-to-speech is not supported in your browser');
+        }
+    }
+    
+    // Load voices (some browsers need this)
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.getVoices();
+    }
+    
+    // Word counter
+    answerInput.addEventListener('input', function() {
+        const words = this.value.trim().split(/\s+/).filter(w => w.length > 0).length;
+        const wordCountDiv = document.getElementById('wordCount');
+        wordCountDiv.textContent = `${words} words typed`;
+        if (words < 5) {
+            wordCountDiv.style.color = 'var(--warning-color)';
+        } else if (words < 15) {
+            wordCountDiv.style.color = 'var(--info-color)';
+        } else {
+            wordCountDiv.style.color = '#10b981';
+        }
+    });
+    
+    // Form submission
+    const form = document.getElementById('answerForm');
     const submitBtn = document.getElementById('submitBtn');
     const feedbackSection = document.getElementById('feedbackSection');
     const feedbackMessage = document.getElementById('feedbackMessage');
     const nextBtn = document.getElementById('nextBtn');
     const loadingSpinner = document.getElementById('loadingSpinner');
-    const wordCount = document.getElementById('wordCount');
-
-    // Word counter
-    answerInput.addEventListener('input', function() {
-        const words = this.value.trim().split(/\s+/).filter(w => w.length > 0).length;
-        wordCount.textContent = `${words} words typed`;
-        if (words < 5) {
-            wordCount.style.color = 'var(--warning-color)';
-        } else if (words < 15) {
-            wordCount.style.color = 'var(--info-color)';
-        } else {
-            wordCount.style.color = 'var(--success-color)';
-        }
-    });
-
+    
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        const answer = answerInput.value.trim();
+        let answer = answerInput.value.trim();
         if (!answer) {
             alert('Please provide an answer before submitting.');
             return;
         }
-
-        if (answer.split(/\s+/).length < 5) {
+        
+        const wordCount = answer.split(/\s+/).filter(w => w.length > 0).length;
+        if (wordCount < 5) {
             alert('Please provide a more detailed answer (at least 5 words).');
             return;
         }
-
+        
+        // Stop any ongoing speech recognition
+        if (isListening && recognition) {
+            recognition.stop();
+        }
+        
         // Show loading spinner
         loadingSpinner.style.display = 'block';
         submitBtn.disabled = true;
         submitBtn.textContent = 'Submitting...';
-
+        
         const formData = new FormData();
         formData.append('answer', answer);
         formData.append('question', document.getElementById('question').value);
-
+        
         try {
             const response = await fetch('{{ url_for("submit_answer") }}', {
                 method: 'POST',
                 body: formData
             });
             const data = await response.json();
-
+            
             loadingSpinner.style.display = 'none';
             submitBtn.disabled = false;
             submitBtn.textContent = 'Submit Answer';
-
+            
             if (data.completed) {
                 // Interview completed
                 feedbackMessage.innerHTML = `
@@ -114,19 +320,28 @@
                 nextBtn.onclick = () => {
                     window.location.href = '{{ url_for("interview_complete") }}';
                 };
+                // Announce completion with TTS
+                speakText(`Congratulations! You've completed the interview with a score of ${data.total} percent.`);
             } else {
                 // Show feedback
                 const scoreColor = data.score >= 70 ? '🟢' : (data.score >= 50 ? '🟡' : '🔴');
-                feedbackMessage.innerHTML = `
-                    <strong>${scoreColor} Score: ${data.score}%</strong><br>
-                    ${data.feedback}
-                `;
+                let feedbackHtml = `<strong>${scoreColor} Score: ${data.score}%</strong><br>${data.feedback}`;
+                
+                // Add hint for voice practice
+                if (data.score < 70) {
+                    feedbackHtml += `<br><br><small>💡 Tip: Click the microphone button on the next question to practice speaking your answers out loud!</small>`;
+                }
+                
+                feedbackMessage.innerHTML = feedbackHtml;
                 if (data.score >= 70) {
                     feedbackMessage.classList.add('feedback-positive');
                 } else {
                     feedbackMessage.classList.add('feedback-negative');
                 }
                 feedbackSection.style.display = 'block';
+                
+                // Speak the feedback
+                speakText(`Your score is ${data.score} percent. ${data.feedback.replace(/[❌✅⚠️📝👍]/g, '')}`);
                 
                 // Setup next question
                 nextBtn.onclick = () => {
@@ -139,6 +354,13 @@
             submitBtn.disabled = false;
             submitBtn.textContent = 'Submit Answer';
             alert('An error occurred. Please try again.');
+        }
+    });
+    
+    // Add keyboard shortcut (Ctrl+Enter to submit)
+    answerInput.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            form.dispatchEvent(new Event('submit'));
         }
     });
 </script>
