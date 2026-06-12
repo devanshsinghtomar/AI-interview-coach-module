@@ -8,6 +8,7 @@ import os
 import random
 import re
 import PyPDF2
+import io
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
@@ -194,100 +195,166 @@ QUIZ_QUESTIONS = {
 }
 
 def extract_text_from_file(filepath):
-    """Extract text from PDF and TXT files"""
+    """Extract text from PDF and TXT files with better error handling"""
     text = ""
     try:
-        if filepath.endswith('.pdf'):
+        if filepath.lower().endswith('.pdf'):
             with open(filepath, 'rb') as f:
-                reader = PyPDF2.PdfReader(f)
-                for page in reader.pages:
-                    page_text = page.extract_text()
-                    if page_text:
-                        text += page_text + "\n"
-        elif filepath.endswith('.txt'):
-            with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
-                text = f.read()
+                # Create PDF reader with error handling
+                try:
+                    reader = PyPDF2.PdfReader(f)
+                    for page_num, page in enumerate(reader.pages):
+                        try:
+                            page_text = page.extract_text()
+                            if page_text:
+                                text += page_text + "\n"
+                        except Exception as e:
+                            print(f"Error extracting page {page_num}: {e}")
+                            continue
+                except Exception as e:
+                    print(f"Error reading PDF: {e}")
+                    return ""
+        elif filepath.lower().endswith('.txt'):
+            # Try different encodings
+            encodings = ['utf-8', 'latin-1', 'cp1252', 'iso-8859-1']
+            for encoding in encodings:
+                try:
+                    with open(filepath, 'r', encoding=encoding, errors='ignore') as f:
+                        text = f.read()
+                    break
+                except:
+                    continue
+        else:
+            return ""
+        
+        # Clean up text
+        text = re.sub(r'\s+', ' ', text)  # Replace multiple whitespace with single space
+        text = text.strip()
+        
+        return text
     except Exception as e:
         print(f"Extraction error: {e}")
-        text = ""
-    return text
+        return ""
 
 def analyze_resume(text):
-    """Analyze resume content"""
+    """Analyze resume content with improved scoring"""
+    if not text or len(text.strip()) < 50:
+        return {
+            'best_role': 'General Professional',
+            'best_score': 30,
+            'suitable_roles': [],
+            'strengths': ['📄 Resume uploaded successfully'],
+            'improvements': ['📈 Add more content to your resume (minimum 50 characters)', '📈 Include technical skills and keywords'],
+            'skills': [],
+            'word_count': len(text.split()) if text else 0
+        }
+    
     text_lower = text.lower()
     
     role_keywords = {
-        'Python Developer': ['python', 'django', 'flask', 'pandas', 'numpy'],
-        'JavaScript Developer': ['javascript', 'react', 'angular', 'vue', 'node'],
-        'Data Scientist': ['data science', 'machine learning', 'python', 'analytics'],
-        'Full Stack Developer': ['react', 'angular', 'node', 'html', 'css'],
-        'DevOps Engineer': ['docker', 'kubernetes', 'jenkins', 'aws', 'ci/cd'],
-        'Java Developer': ['java', 'spring', 'hibernate', 'maven'],
-        'Cloud Engineer': ['aws', 'azure', 'gcp', 'cloud', 'terraform'],
-        'Machine Learning Engineer': ['machine learning', 'deep learning', 'tensorflow', 'keras'],
-        'Frontend Developer': ['react', 'vue', 'angular', 'css', 'html'],
-        'Backend Developer': ['node', 'python', 'java', 'api', 'database'],
-        'Cybersecurity Analyst': ['security', 'firewall', 'encryption', 'vulnerability'],
-        'Product Manager': ['product', 'agile', 'scrum', 'roadmap', 'user story'],
+        'Python Developer': ['python', 'django', 'flask', 'pandas', 'numpy', 'fastapi', 'pytest', 'scipy'],
+        'JavaScript Developer': ['javascript', 'react', 'angular', 'vue', 'node', 'express', 'typescript', 'jquery'],
+        'Data Scientist': ['data science', 'machine learning', 'python', 'analytics', 'sql', 'statistics', 'pandas', 'scikit-learn'],
+        'Full Stack Developer': ['react', 'angular', 'node', 'html', 'css', 'mongodb', 'express', 'api', 'frontend', 'backend'],
+        'DevOps Engineer': ['docker', 'kubernetes', 'jenkins', 'aws', 'ci/cd', 'terraform', 'linux', 'ansible'],
+        'Java Developer': ['java', 'spring', 'hibernate', 'maven', 'gradle', 'junit', 'eclipse', 'intellij'],
+        'Cloud Engineer': ['aws', 'azure', 'gcp', 'cloud', 'terraform', 'lambda', 'ec2', 's3', 'cloudformation'],
+        'Machine Learning Engineer': ['machine learning', 'deep learning', 'tensorflow', 'keras', 'pytorch', 'nlp', 'cv'],
+        'Frontend Developer': ['react', 'vue', 'angular', 'css', 'html', 'javascript', 'bootstrap', 'tailwind'],
+        'Backend Developer': ['node', 'python', 'java', 'api', 'database', 'sql', 'redis', 'microservices', 'rest'],
+        'Cybersecurity Analyst': ['security', 'firewall', 'encryption', 'vulnerability', 'penetration', 'cissp', 'network'],
+        'Product Manager': ['product', 'agile', 'scrum', 'roadmap', 'user story', 'jira', 'market', 'product management'],
     }
     
+    # Calculate scores
     scores = {}
     matched_skills = {}
     for role, keywords in role_keywords.items():
         score = 0
         matched = []
         for kw in keywords:
-            if kw in text_lower:
-                score += 15
+            # Count occurrences (more occurrences = better match)
+            count = text_lower.count(kw)
+            if count > 0:
+                score += min(20, count * 8)  # Max 20 points per keyword
                 matched.append(kw)
-        scores[role] = min(score, 100)
+        scores[role] = min(100, score)
         matched_skills[role] = matched
     
-    best_role = max(scores, key=scores.get) if scores else "Python Developer"
-    best_score = scores.get(best_role, 50)
+    # Find best match (if all scores are 0, return default)
+    if max(scores.values()) == 0:
+        best_role = "General Professional"
+        best_score = 30
+    else:
+        best_role = max(scores, key=scores.get)
+        best_score = scores.get(best_role, 30)
     
+    # Get suitable roles (score >= 20)
     suitable_roles = []
     for role, score in sorted(scores.items(), key=lambda x: x[1], reverse=True):
-        if score >= 25 and role != best_role:
+        if score >= 20 and role != best_role:
             suitable_roles.append({
                 'role': role,
                 'score': score,
                 'skills': matched_skills.get(role, [])[:3]
             })
     
+    # Generate strengths
     strengths = []
+    word_count = len(text.split())
+    
+    if word_count > 300:
+        strengths.append("✅ Good resume length and detail")
+    elif word_count > 150:
+        strengths.append("✅ Adequate resume content")
+    else:
+        strengths.append("📄 Resume uploaded - consider adding more detail")
+    
+    if '@' in text and '.' in text:
+        strengths.append("✅ Contact information included")
+    
+    if best_score >= 60:
+        strengths.append(f"✅ Good match for {best_role}")
+    elif best_score >= 40:
+        strengths.append(f"✅ Potential fit for {best_role}")
+    
+    # Generate improvements
     improvements = []
     
-    if len(text) > 500:
-        strengths.append("✅ Good resume length and detail")
-    if '@' in text:
-        strengths.append("✅ Contact information included")
-    if best_score >= 70:
-        strengths.append(f"✅ Strong match for {best_role}")
+    if word_count < 200:
+        improvements.append("📈 Add more details about your experience and skills")
     
-    if len(text) < 300:
-        improvements.append("📈 Add more details about your experience")
-    if best_score < 50:
-        improvements.append(f"📈 Add more {best_role} keywords")
+    if best_score < 40:
+        improvements.append(f"📈 Add more keywords related to {best_role}")
+    
+    # Check for missing common sections
+    if 'experience' not in text_lower and 'work' not in text_lower:
+        improvements.append("📈 Add work experience section")
+    
+    if 'education' not in text_lower and 'degree' not in text_lower and 'university' not in text_lower:
+        improvements.append("📈 Add education qualifications")
+    
+    # Ensure we have at least one improvement
+    if not improvements:
+        improvements = ["📈 Consider adding more technical skills and quantifiable achievements"]
     
     if not strengths:
         strengths = ["✅ Resume uploaded successfully"]
-    if not improvements:
-        improvements = ["📈 Consider adding more technical skills"]
     
+    # Get unique skills found
     all_skills = []
     for skills in matched_skills.values():
         all_skills.extend(skills)
-    unique_skills = list(set(all_skills))[:10]
+    unique_skills = list(set(all_skills))[:12]
     
     return {
         'best_role': best_role,
         'best_score': best_score,
-        'suitable_roles': suitable_roles[:6],
-        'strengths': strengths,
-        'improvements': improvements,
-        'skills': unique_skills,
-        'word_count': len(text.split())
+        'suitable_roles': suitable_roles[:5],
+        'strengths': strengths[:5],
+        'improvements': improvements[:5],
+        'skills': unique_skills if unique_skills else ['General Skills', 'Communication', 'Problem Solving'],
+        'word_count': word_count
     }
 
 def evaluate_answer(question, answer, role):
@@ -295,30 +362,34 @@ def evaluate_answer(question, answer, role):
     answer_lower = answer.lower().strip()
     
     if len(answer_lower.split()) < 5:
-        return 10, "❌ Answer too short. Please provide more details."
+        return 15, "❌ Answer too short. Please provide more details."
     
+    # Find the question in INTERVIEW_QUESTIONS
     for q in INTERVIEW_QUESTIONS.get(role, []):
         if q['question'] == question:
             keywords = q['keywords']
             matched = [kw for kw in keywords if kw in answer_lower]
             
             if not matched:
-                return 20, f"❌ Incorrect. Should mention: {', '.join(keywords[:3])}"
+                return 25, f"❌ Needs improvement. Key concepts to mention: {', '.join(keywords[:3])}"
             
-            score = min(95, int((len(matched) / len(keywords)) * 100))
+            # Calculate score based on keyword matches
+            score = int((len(matched) / len(keywords)) * 90) + 10
+            score = min(95, score)
             
             if score >= 85:
                 feedback = f"✅ Excellent! You covered: {', '.join(matched)}"
             elif score >= 70:
-                feedback = f"👍 Good! Also mention key concepts"
+                missing = [kw for kw in keywords if kw not in answer_lower][:2]
+                feedback = f"👍 Good! Consider mentioning: {', '.join(missing)}"
             elif score >= 50:
-                feedback = f"📝 Fair. Missing key concepts"
+                feedback = f"📝 Fair answer. Missing key concepts like: {', '.join(keywords[:2])}"
             else:
-                feedback = f"⚠️ Needs improvement. Expected: {', '.join(keywords)}"
+                feedback = f"⚠️ Needs improvement. Expected keywords: {', '.join(keywords)}"
             
             return score, feedback
     
-    return 50, "Good attempt!"
+    return 50, "Good attempt! Keep practicing."
 
 # Routes
 @app.route('/')
@@ -335,12 +406,20 @@ def register():
         password = request.form.get('password')
         confirm = request.form.get('confirm_password')
         
+        if not all([username, email, password]):
+            flash('All fields are required', 'danger')
+            return redirect(url_for('register'))
+        
         if password != confirm:
             flash('Passwords do not match', 'danger')
             return redirect(url_for('register'))
         
+        if len(password) < 6:
+            flash('Password must be at least 6 characters', 'danger')
+            return redirect(url_for('register'))
+        
         if User.query.filter_by(username=username).first():
-            flash('Username exists', 'danger')
+            flash('Username already exists', 'danger')
             return redirect(url_for('register'))
         
         if User.query.filter_by(email=email).first():
@@ -352,7 +431,7 @@ def register():
         db.session.add(user)
         db.session.commit()
         
-        flash('Registration successful!', 'success')
+        flash('Registration successful! Please login.', 'success')
         return redirect(url_for('login'))
     
     return render_template('register.html')
@@ -370,7 +449,7 @@ def login():
             flash(f'Welcome {username}!', 'success')
             return redirect(url_for('dashboard'))
         else:
-            flash('Invalid credentials', 'danger')
+            flash('Invalid username or password', 'danger')
     
     return render_template('login.html')
 
@@ -378,7 +457,7 @@ def login():
 @login_required
 def logout():
     logout_user()
-    flash('Logged out', 'info')
+    flash('Logged out successfully', 'info')
     return redirect(url_for('index'))
 
 @app.route('/dashboard')
@@ -417,7 +496,7 @@ def mock_interview():
 def start_mock_interview():
     role = request.form.get('role')
     if not role:
-        flash('Select a role', 'danger')
+        flash('Please select a role', 'danger')
         return redirect(url_for('mock_interview'))
     
     questions = [q['question'] for q in INTERVIEW_QUESTIONS.get(role, [])]
@@ -467,13 +546,15 @@ def submit_answer():
     
     if current >= len(questions):
         for item in session['interview_answers']:
+            # Get score for this specific answer
+            q_score, q_feedback = evaluate_answer(item['question'], item['answer'], role)
             interview = Interview(
                 user_id=current_user.id,
                 job_role=role,
                 question=item['question'],
-                answer=item['answer'][:500],
-                score=score,
-                feedback=feedback
+                answer=item['answer'][:1000],
+                score=q_score,
+                feedback=q_feedback
             )
             db.session.add(interview)
         db.session.commit()
@@ -509,30 +590,41 @@ def resume_analysis():
             flash('No file selected', 'danger')
             return redirect(url_for('resume_analysis'))
         
-        allowed = ['.pdf', '.txt']
+        # Check file extension
+        allowed_extensions = {'.pdf', '.txt'}
         ext = os.path.splitext(file.filename)[1].lower()
-        if ext not in allowed:
-            flash('Please upload PDF or TXT file', 'danger')
+        if ext not in allowed_extensions:
+            flash('Please upload PDF or TXT file only', 'danger')
             return redirect(url_for('resume_analysis'))
         
         try:
+            # Save file temporarily
             filename = secure_filename(file.filename)
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
             
+            # Extract text
             text = extract_text_from_file(filepath)
-            os.remove(filepath)
             
-            if not text or len(text.strip()) < 50:
-                flash('Could not extract text from file', 'danger')
+            # Clean up - remove temp file
+            try:
+                os.remove(filepath)
+            except:
+                pass
+            
+            # Check if text extraction was successful
+            if not text or len(text.strip()) < 30:
+                flash('Could not extract text from file. Please ensure the file is not corrupted or try a different file.', 'warning')
                 return redirect(url_for('resume_analysis'))
             
+            # Analyze resume
             analysis = analyze_resume(text)
             
+            # Save to database
             resume = ResumeAnalysis(
                 user_id=current_user.id,
                 filename=filename,
-                extracted_text=text[:2000],
+                extracted_text=text[:3000],
                 score=analysis['best_score'],
                 suggested_role=analysis['best_role'],
                 suggested_roles=json.dumps(analysis['suitable_roles']),
@@ -543,12 +635,12 @@ def resume_analysis():
             db.session.add(resume)
             db.session.commit()
             
-            flash(f'✅ Best match: {analysis["best_role"]} ({analysis["best_score"]}% match)', 'success')
+            flash(f'✅ Resume analyzed! Best match: {analysis["best_role"]} ({analysis["best_score"]}%)', 'success')
             return render_template('resume_results.html', analysis=analysis)
             
         except Exception as e:
-            print(f"Error: {e}")
-            flash('Error analyzing resume', 'danger')
+            print(f"Error in resume analysis: {str(e)}")
+            flash(f'Error analyzing resume: {str(e)[:100]}', 'danger')
             return redirect(url_for('resume_analysis'))
     
     return render_template('resume_analysis.html')
@@ -559,8 +651,17 @@ def start_from_resume():
     role = request.form.get('role')
     action = request.form.get('action')
     
+    if not role:
+        flash('Role not specified', 'danger')
+        return redirect(url_for('resume_analysis'))
+    
     if action == 'interview':
+        # Get questions for the role
         questions = [q['question'] for q in INTERVIEW_QUESTIONS.get(role, [])]
+        if not questions:
+            flash(f'No interview questions available for {role}', 'warning')
+            return redirect(url_for('resume_analysis'))
+        
         random.shuffle(questions)
         session['interview_role'] = role
         session['interview_questions'] = questions[:4]
@@ -570,12 +671,14 @@ def start_from_resume():
         return redirect(url_for('take_interview'))
     
     elif action == 'quiz':
-        quiz_cat = 'Python'
-        for cat in QUIZ_QUESTIONS:
-            if cat.lower() in role.lower():
+        # Find matching quiz category
+        quiz_cat = 'Python'  # default
+        for cat in QUIZ_QUESTIONS.keys():
+            if cat.lower() in role.lower() or role.lower() in cat.lower():
                 quiz_cat = cat
                 break
-        questions = QUIZ_QUESTIONS[quiz_cat][:8]
+        
+        questions = QUIZ_QUESTIONS.get(quiz_cat, QUIZ_QUESTIONS['Python'])[:8]
         random.shuffle(questions)
         session['quiz_category'] = f"{role} Quiz"
         session['quiz_questions'] = questions
@@ -583,6 +686,7 @@ def start_from_resume():
         session['quiz_current'] = 0
         return redirect(url_for('take_quiz'))
     
+    flash('Invalid action', 'danger')
     return redirect(url_for('resume_analysis'))
 
 @app.route('/skill-quiz')
@@ -595,100 +699,15 @@ def skill_quiz():
 @login_required
 def start_quiz():
     category = request.form.get('category')
-    questions = QUIZ_QUESTIONS.get(category, QUIZ_QUESTIONS['Python'])
+    if not category or category not in QUIZ_QUESTIONS:
+        flash('Invalid quiz category', 'danger')
+        return redirect(url_for('skill_quiz'))
+    
+    questions = QUIZ_QUESTIONS[category][:8]
     random.shuffle(questions)
     
     session['quiz_category'] = category
-    session['quiz_questions'] = questions[:8]
+    session['quiz_questions'] = questions
     session['quiz_answers'] = []
     session['quiz_current'] = 0
     
-    return redirect(url_for('take_quiz'))
-
-@app.route('/take-quiz')
-@login_required
-def take_quiz():
-    if 'quiz_questions' not in session:
-        return redirect(url_for('skill_quiz'))
-    
-    questions = session['quiz_questions']
-    current = session.get('quiz_current', 0)
-    
-    if current >= len(questions):
-        return redirect(url_for('quiz_complete'))
-    
-    return render_template('take_quiz.html',
-                         question=questions[current],
-                         num=current + 1,
-                         total=len(questions),
-                         category=session['quiz_category'])
-
-@app.route('/submit-quiz', methods=['POST'])
-@login_required
-def submit_quiz():
-    data = request.json
-    answer = data.get('answer')
-    correct = data.get('correct')
-    is_correct = (answer == correct)
-    
-    session['quiz_answers'].append({
-        'question': data.get('question'),
-        'answer': answer,
-        'correct': correct,
-        'is_correct': is_correct,
-        'explanation': data.get('explanation', '')
-    })
-    session['quiz_current'] = session.get('quiz_current', 0) + 1
-    
-    questions = session['quiz_questions']
-    current = session['quiz_current']
-    
-    if current >= len(questions):
-        correct_count = sum(1 for a in session['quiz_answers'] if a['is_correct'])
-        score = int((correct_count / len(questions)) * 100)
-        
-        result = QuizResult(
-            user_id=current_user.id,
-            category=session['quiz_category'],
-            score=score,
-            total_questions=len(questions),
-            correct_answers=correct_count
-        )
-        db.session.add(result)
-        db.session.commit()
-        
-        return jsonify({
-            'completed': True,
-            'score': score,
-            'correct': correct_count,
-            'total': len(questions),
-            'answers': session['quiz_answers']
-        })
-    
-    return jsonify({
-        'completed': False,
-        'next': questions[current],
-        'num': current + 1,
-        'total': len(questions)
-    })
-
-@app.route('/quiz-complete')
-@login_required
-def quiz_complete():
-    return render_template('quiz_complete.html')
-
-@app.route('/performance')
-@login_required
-def performance():
-    interviews = Interview.query.filter_by(user_id=current_user.id).all()
-    quizzes = QuizResult.query.filter_by(user_id=current_user.id).all()
-    resumes = ResumeAnalysis.query.filter_by(user_id=current_user.id).all()
-    
-    return render_template('performance.html',
-                         interviews=interviews,
-                         quizzes=quizzes,
-                         resumes=resumes)
-
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=True)
