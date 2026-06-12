@@ -2,38 +2,112 @@
 
 {% block title %}Resume Results - AI Interview Coach{% endblock %}
 
+{% block extra_css %}
+<style>
+    .quality-meter {
+        background: var(--gray-100);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+        text-align: center;
+    }
+    .quality-score {
+        font-size: 3rem;
+        font-weight: 700;
+        margin: 0.5rem 0;
+    }
+    .quality-label {
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+    .quality-excellent { color: #10b981; }
+    .quality-good { color: #3b82f6; }
+    .quality-fair { color: #f59e0b; }
+    .quality-poor { color: #ef4444; }
+    
+    .role-recommendation-card {
+        background: white;
+        border-radius: var(--radius);
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+        border: 1px solid var(--gray-200);
+        transition: all 0.3s ease;
+    }
+    .role-recommendation-card:hover {
+        transform: translateX(4px);
+        border-color: var(--primary-color);
+        box-shadow: var(--shadow-md);
+    }
+    .match-percentage {
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+    .action-buttons {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 1rem;
+        flex-wrap: wrap;
+    }
+    .btn-sm {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+    .skill-tag {
+        display: inline-block;
+        background: var(--gray-100);
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        margin: 0.25rem;
+    }
+    .strength-item, .improvement-item {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid var(--gray-100);
+    }
+    .strength-item:last-child, .improvement-item:last-child {
+        border-bottom: none;
+    }
+    .resume-summary {
+        background: linear-gradient(135deg, #667eea08 0%, #764ba208 100%);
+        border-radius: var(--radius);
+        padding: 1rem;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="fade-in">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
         <div>
-            <h1 style="margin: 0;">📊 Resume Analysis Results</h1>
-            <p style="color: var(--gray-600);">AI-powered analysis of your resume</p>
+            <h1 style="margin: 0;">📄 Resume Analysis Results</h1>
+            <p style="color: var(--gray-600);">AI-powered comprehensive resume analysis</p>
         </div>
-        <a href="{{ url_for('resume_analysis') }}" class="btn btn-secondary">📤 Upload Another</a>
+        <a href="{{ url_for('resume_analysis') }}" class="btn btn-secondary">📤 Upload Another Resume</a>
     </div>
 
-    <!-- Main Score Card -->
-    <div class="card" style="margin-bottom: 1.5rem; text-align: center;">
-        <div class="card-body" style="padding: 2rem;">
-            <div style="font-size: 4rem; margin-bottom: 1rem;">
-                {% if analysis.best_score >= 70 %}🎯
-                {% elif analysis.best_score >= 50 %}📈
-                {% else %}📝
-                {% endif %}
-            </div>
-            <div style="font-size: 3rem; font-weight: 700; color: var(--primary-color);">
-                {{ analysis.best_score }}%
-            </div>
-            <div style="font-size: 1.25rem; margin: 0.5rem 0;">
-                Match Score for <strong>{{ analysis.best_role }}</strong>
-            </div>
-            <div class="progress" style="margin: 1rem auto; max-width: 300px;">
-                <div class="progress-bar" style="width: {{ analysis.best_score }}%;"></div>
-            </div>
-            <div style="color: var(--gray-600); font-size: 0.875rem;">
-                Word count: {{ analysis.word_count }} words
-            </div>
+    <!-- Resume Quality Score Section -->
+    <div class="quality-meter" style="margin-bottom: 1.5rem;">
+        <h3 style="margin-bottom: 1rem;">📊 Resume Quality Score</h3>
+        <div class="quality-score {% if analysis.best_score >= 80 %}quality-excellent{% elif analysis.best_score >= 65 %}quality-good{% elif analysis.best_score >= 50 %}quality-fair{% else %}quality-poor{% endif %}">
+            {{ analysis.best_score }}/100
         </div>
+        <div class="quality-label">
+            {% if analysis.best_score >= 80 %}
+                🎯 Excellent Resume!
+            {% elif analysis.best_score >= 65 %}
+                👍 Good Resume
+            {% elif analysis.best_score >= 50 %}
+                📝 Fair Resume
+            {% else %}
+                ⚠️ Needs Improvement
+            {% endif %}
+        </div>
+        <div class="progress" style="margin-top: 1rem; max-width: 300px; margin-left: auto; margin-right: auto;">
+            <div class="progress-bar" style="width: {{ analysis.best_score }}%;"></div>
+        </div>
+        <p style="margin-top: 0.75rem; font-size: 0.875rem; color: var(--gray-600);">
+            Word count: {{ analysis.word_count }} words • 
+            Skills detected: {{ analysis.skills|length }}
+        </p>
     </div>
 
     <div class="grid">
@@ -43,11 +117,15 @@
                 <h3 style="margin: 0;">✅ Strengths</h3>
             </div>
             <div class="card-body">
-                <ul style="margin-left: 1rem; line-height: 1.8;">
+                {% if analysis.strengths %}
                     {% for strength in analysis.strengths %}
-                        <li>{{ strength }}</li>
+                        <div class="strength-item">
+                            {{ strength }}
+                        </div>
                     {% endfor %}
-                </ul>
+                {% else %}
+                    <p style="color: var(--gray-500);">No specific strengths identified yet.</p>
+                {% endif %}
             </div>
         </div>
 
@@ -57,11 +135,15 @@
                 <h3 style="margin: 0;">📈 Areas for Improvement</h3>
             </div>
             <div class="card-body">
-                <ul style="margin-left: 1rem; line-height: 1.8;">
+                {% if analysis.improvements %}
                     {% for improvement in analysis.improvements %}
-                        <li>{{ improvement }}</li>
+                        <div class="improvement-item">
+                            {{ improvement }}
+                        </div>
                     {% endfor %}
-                </ul>
+                {% else %}
+                    <p style="color: var(--gray-500);">Great resume! No major improvements needed.</p>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -69,61 +151,190 @@
     <!-- Skills Found -->
     <div class="card" style="margin-top: 1.5rem;">
         <div class="card-header">
-            <h3 style="margin: 0;">🔧 Skills Detected</h3>
+            <h3 style="margin: 0;">🔧 Skills Detected in Your Resume</h3>
         </div>
         <div class="card-body">
             <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
                 {% for skill in analysis.skills %}
-                    <span style="background: var(--gray-100); padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.875rem;">
+                    <span class="skill-tag">
                         {{ skill }}
                     </span>
                 {% endfor %}
                 {% if not analysis.skills %}
-                    <p style="color: var(--gray-500);">No specific technical skills detected. Consider adding more relevant keywords.</p>
+                    <p style="color: var(--gray-500);">No specific technical skills detected. Consider adding more relevant keywords from job descriptions.</p>
                 {% endif %}
             </div>
         </div>
     </div>
 
-    <!-- Suggested Roles -->
+    <!-- Resume Summary -->
+    <div class="resume-summary" style="margin-top: 1.5rem;">
+        <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; justify-content: space-around;">
+            <div style="text-align: center;">
+                <div style="font-size: 2rem;">📊</div>
+                <div><strong>{{ analysis.word_count }}</strong></div>
+                <div style="font-size: 0.875rem; color: var(--gray-600);">Total Words</div>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 2rem;">🔧</div>
+                <div><strong>{{ analysis.skills|length }}</strong></div>
+                <div style="font-size: 0.875rem; color: var(--gray-600);">Skills Found</div>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 2rem;">🎯</div>
+                <div><strong>{{ analysis.suitable_roles|length + 1 }}</strong></div>
+                <div style="font-size: 0.875rem; color: var(--gray-600);">Matching Roles</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Primary Recommended Role -->
+    <div class="card" style="margin-top: 1.5rem; background: linear-gradient(135deg, #667eea08 0%, #764ba208 100%); border: 2px solid var(--primary-color);">
+        <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <h3 style="margin: 0;">🎯 Top Recommended Role</h3>
+        </div>
+        <div class="card-body" style="text-align: center;">
+            <div style="font-size: 3rem;">
+                {% if 'Python' in analysis.best_role %}🐍
+                {% elif 'JavaScript' in analysis.best_role %}📜
+                {% elif 'Data' in analysis.best_role %}🤖
+                {% elif 'Full' in analysis.best_role %}🌐
+                {% elif 'DevOps' in analysis.best_role %}🐳
+                {% elif 'Java' in analysis.best_role %}☕
+                {% elif 'Cloud' in analysis.best_role %}☁️
+                {% elif 'Machine' in analysis.best_role %}🧠
+                {% elif 'Frontend' in analysis.best_role %}🎨
+                {% elif 'Backend' in analysis.best_role %}⚙️
+                {% elif 'Cyber' in analysis.best_role %}🔒
+                {% elif 'Product' in analysis.best_role %}📊
+                {% else %}💼
+                {% endif %}
+            </div>
+            <div style="font-size: 1.75rem; font-weight: 700; margin: 0.5rem 0;">
+                {{ analysis.best_role }}
+            </div>
+            <div class="match-percentage" style="color: var(--primary-color);">
+                {{ analysis.best_score }}% Match
+            </div>
+            <div class="action-buttons" style="justify-content: center;">
+                <form method="POST" action="{{ url_for('start_from_resume') }}" style="display: inline;">
+                    <input type="hidden" name="role" value="{{ analysis.best_role }}">
+                    <input type="hidden" name="action" value="interview">
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        🎤 Mock Interview for {{ analysis.best_role }}
+                    </button>
+                </form>
+                <form method="POST" action="{{ url_for('start_from_resume') }}" style="display: inline;">
+                    <input type="hidden" name="role" value="{{ analysis.best_role }}">
+                    <input type="hidden" name="action" value="quiz">
+                    <button type="submit" class="btn btn-secondary btn-sm">
+                        🧠 Take Related Quiz
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Other Recommended Job Roles -->
     {% if analysis.suitable_roles %}
     <div class="card" style="margin-top: 1.5rem;">
         <div class="card-header">
-            <h3 style="margin: 0;">🎯 Other Roles You May Fit</h3>
+            <h3 style="margin: 0;">💼 Other Roles You May Fit Well</h3>
+            <p style="margin: 0.25rem 0 0; font-size: 0.875rem; color: var(--gray-500);">Based on your skills and experience</p>
         </div>
         <div class="card-body">
-            <div style="display: grid; gap: 1rem;">
-                {% for role in analysis.suitable_roles %}
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: var(--gray-50); border-radius: var(--radius);">
+            {% for role in analysis.suitable_roles %}
+                <div class="role-recommendation-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
                         <div>
-                            <strong>{{ role.role }}</strong>
-                            <div style="font-size: 0.75rem; color: var(--gray-500);">
-                                Skills: {{ role.skills|join(', ') }}
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <div style="font-size: 1.5rem;">
+                                    {% if 'Python' in role.role %}🐍
+                                    {% elif 'JavaScript' in role.role %}📜
+                                    {% elif 'Data' in role.role %}🤖
+                                    {% elif 'Full' in role.role %}🌐
+                                    {% elif 'DevOps' in role.role %}🐳
+                                    {% elif 'Java' in role.role %}☕
+                                    {% elif 'Cloud' in role.role %}☁️
+                                    {% elif 'Machine' in role.role %}🧠
+                                    {% elif 'Frontend' in role.role %}🎨
+                                    {% elif 'Backend' in role.role %}⚙️
+                                    {% elif 'Cyber' in role.role %}🔒
+                                    {% elif 'Product' in role.role %}📊
+                                    {% else %}💼
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <div style="font-weight: 700; font-size: 1.1rem;">{{ role.role }}</div>
+                                    <div style="font-size: 0.75rem; color: var(--gray-500);">
+                                        Matching skills: 
+                                        {% for skill in role.skills %}
+                                            <span class="skill-tag">{{ skill }}</span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="score-badge {% if role.score >= 70 %}score-high{% elif role.score >= 50 %}score-medium{% else %}score-low{% endif %}">
-                            {{ role.score }}% match
+                        <div style="text-align: center;">
+                            <div class="match-percentage" style="font-size: 1.25rem; color: {% if role.score >= 70 %}var(--secondary-color){% elif role.score >= 50 %}var(--warning-color){% else %}var(--danger-color){% endif %};">
+                                {{ role.score }}% Match
+                            </div>
                         </div>
                     </div>
-                {% endfor %}
-            </div>
+                    <div class="action-buttons">
+                        <form method="POST" action="{{ url_for('start_from_resume') }}" style="display: inline;">
+                            <input type="hidden" name="role" value="{{ role.role }}">
+                            <input type="hidden" name="action" value="interview">
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                🎤 Mock Interview
+                            </button>
+                        </form>
+                        <form method="POST" action="{{ url_for('start_from_resume') }}" style="display: inline;">
+                            <input type="hidden" name="role" value="{{ role.role }}">
+                            <input type="hidden" name="action" value="quiz">
+                            <button type="submit" class="btn btn-secondary btn-sm">
+                                🧠 Take Quiz
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
         </div>
     </div>
     {% endif %}
 
-    <!-- Action Buttons -->
+    <!-- Resume Improvement Tips -->
+    <div class="card" style="margin-top: 1.5rem;">
+        <div class="card-header">
+            <h3 style="margin: 0;">💡 Pro Tips to Improve Your Resume</h3>
+        </div>
+        <div class="card-body">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                <div>
+                    <strong>🎯 Use Action Verbs</strong>
+                    <p style="font-size: 0.875rem; color: var(--gray-600);">Start bullet points with words like "Led", "Developed", "Implemented"</p>
+                </div>
+                <div>
+                    <strong>📊 Quantify Achievements</strong>
+                    <p style="font-size: 0.875rem; color: var(--gray-600);">Use numbers: "Improved performance by 30%"</p>
+                </div>
+                <div>
+                    <strong>🔑 Include Keywords</strong>
+                    <p style="font-size: 0.875rem; color: var(--gray-600);">Add skills mentioned in job descriptions</p>
+                </div>
+                <div>
+                    <strong>📏 Keep It Concise</strong>
+                    <p style="font-size: 0.875rem; color: var(--gray-600);">1-2 pages is ideal for most positions</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Buttons -->
     <div style="display: flex; gap: 1rem; margin-top: 1.5rem; justify-content: center; flex-wrap: wrap;">
-        <form method="POST" action="{{ url_for('start_from_resume') }}">
-            <input type="hidden" name="role" value="{{ analysis.best_role }}">
-            <input type="hidden" name="action" value="interview">
-            <button type="submit" class="btn btn-primary">🎤 Start {{ analysis.best_role }} Interview</button>
-        </form>
-        <form method="POST" action="{{ url_for('start_from_resume') }}">
-            <input type="hidden" name="role" value="{{ analysis.best_role }}">
-            <input type="hidden" name="action" value="quiz">
-            <button type="submit" class="btn btn-secondary">🧠 Take Related Quiz</button>
-        </form>
         <a href="{{ url_for('dashboard') }}" class="btn btn-outline">📊 Go to Dashboard</a>
+        <a href="{{ url_for('mock_interview') }}" class="btn btn-secondary">🎤 Browse All Roles</a>
+        <a href="{{ url_for('skill_quiz') }}" class="btn btn-secondary">🧠 Explore Quizzes</a>
     </div>
 </div>
 {% endblock %}
