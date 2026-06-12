@@ -75,7 +75,7 @@ with app.app_context():
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Enhanced Interview Questions (More roles and questions)
+# Interview Questions (15+ ROLES)
 INTERVIEW_QUESTIONS = {
     'Python Developer': [
         {"question": "What is the difference between a list and a tuple?", "keywords": ["mutable", "immutable", "change", "modify"]},
@@ -161,57 +161,35 @@ INTERVIEW_QUESTIONS = {
         {"question": "Explain KPI.", "keywords": ["performance", "metric", "measure", "goal"]},
         {"question": "What is market research?", "keywords": ["customer", "competition", "demand", "analysis"]},
     ],
-    'UI/UX Designer': [
-        {"question": "What is the difference between UI and UX?", "keywords": ["user", "interface", "experience", "design"]},
-        {"question": "Explain design thinking.", "keywords": ["empathize", "define", "ideate", "prototype"]},
-        {"question": "What is a wireframe?", "keywords": ["layout", "structure", "blueprint", "low-fidelity"]},
-        {"question": "Explain usability testing.", "keywords": ["user", "feedback", "task", "observation"]},
-        {"question": "What is a design system?", "keywords": ["component", "guideline", "consistency", "library"]},
-    ],
 }
 
-# Enhanced Quiz Questions
+# Quiz Questions
 QUIZ_QUESTIONS = {
     'Python': [
-        {"question": "What is the correct way to create a function?", "options": ["def myFunc():", "function myFunc():", "create myFunc():", "func myFunc():"], "correct": "def myFunc():", "explanation": "def keyword is used to define functions in Python"},
-        {"question": "What does len() function do?", "options": ["Returns length", "Converts to string", "Finds maximum", "Rounds number"], "correct": "Returns length", "explanation": "len() returns the number of items in an object"},
-        {"question": "Which operator is used for exponentiation?", "options": ["**", "^", "exp()", "&&"], "correct": "**", "explanation": "** is the exponentiation operator (e.g., 2**3 = 8)"},
-        {"question": "What is the output of print(type(10))?", "options": ["<class 'int'>", "<class 'float'>", "<class 'str'>", "<class 'list'>"], "correct": "<class 'int'>", "explanation": "10 is an integer, so type() returns int"},
-        {"question": "How do you create a list?", "options": ["[1, 2, 3]", "(1, 2, 3)", "{1, 2, 3}", "<1, 2, 3>"], "correct": "[1, 2, 3]", "explanation": "Square brackets [] are used to create lists"},
-        {"question": "What is the correct while loop syntax?", "options": ["while x > y:", "while (x > y)", "x > y while {", "while x > y then:"], "correct": "while x > y:", "explanation": "A colon is required after the while condition"},
-        {"question": "What does append() do?", "options": ["Adds to end", "Removes item", "Inserts at start", "Sorts list"], "correct": "Adds to end", "explanation": "append() adds an element to the end of a list"},
-        {"question": "What is 10 // 3?", "options": ["3", "3.33", "3.0", "1"], "correct": "3", "explanation": "// is floor division - it returns the integer part of division"},
-        {"question": "What is the output of print('Hello'[1])?", "options": ["e", "H", "l", "o"], "correct": "e", "explanation": "String indexing starts at 0, so index 1 gives the second character 'e'"},
-        {"question": "Which keyword is used for exception handling?", "options": ["try", "catch", "except", "both try and except"], "correct": "both try and except", "explanation": "try-except blocks are used for exception handling in Python"},
+        {"question": "What is the correct way to create a function?", "options": ["def myFunc():", "function myFunc():", "create myFunc():", "func myFunc():"], "correct": "def myFunc():", "explanation": "def keyword is used to define functions"},
+        {"question": "What does len() function do?", "options": ["Returns length", "Converts to string", "Finds maximum", "Rounds number"], "correct": "Returns length", "explanation": "len() returns number of items in an object"},
+        {"question": "Which operator is used for exponentiation?", "options": ["**", "^", "exp()", "&&"], "correct": "**", "explanation": "** is the exponentiation operator"},
+        {"question": "What is the output of print(type(10))?", "options": ["<class 'int'>", "<class 'float'>", "<class 'str'>", "<class 'list'>"], "correct": "<class 'int'>", "explanation": "10 is an integer"},
+        {"question": "How do you create a list?", "options": ["[1, 2, 3]", "(1, 2, 3)", "{1, 2, 3}", "<1, 2, 3>"], "correct": "[1, 2, 3]", "explanation": "Square brackets create lists"},
+        {"question": "What is the correct while loop syntax?", "options": ["while x > y:", "while (x > y)", "x > y while {", "while x > y then:"], "correct": "while x > y:", "explanation": "Colon required after condition"},
+        {"question": "What does append() do?", "options": ["Adds to end", "Removes item", "Inserts at start", "Sorts list"], "correct": "Adds to end", "explanation": "append() adds element to end of list"},
+        {"question": "What is 10 // 3?", "options": ["3", "3.33", "3.0", "1"], "correct": "3", "explanation": "// is floor division"},
     ],
     'JavaScript': [
-        {"question": "How to declare a variable in JavaScript?", "options": ["let x;", "variable x;", "v x;", "declare x;"], "correct": "let x;", "explanation": "let, const, and var are used to declare variables"},
-        {"question": "What does console.log() do?", "options": ["Prints to console", "Shows alert", "Returns value", "Creates file"], "correct": "Prints to console", "explanation": "Outputs a message to the web console"},
-        {"question": "How to write a function in JavaScript?", "options": ["function myFunc() {}", "def myFunc() {}", "create myFunc() {}", "func myFunc() {}"], "correct": "function myFunc() {}", "explanation": "function keyword defines functions in JavaScript"},
-        {"question": "What does === do?", "options": ["Compares value and type", "Compares only value", "Compares only type", "Assigns value"], "correct": "Compares value and type", "explanation": "=== is the strict equality operator"},
-        {"question": "What is an array in JavaScript?", "options": ["Data structure", "Function", "Loop", "Condition"], "correct": "Data structure", "explanation": "Arrays are data structures that store multiple values"},
-        {"question": "How do you add a comment in JavaScript?", "options": ["// This is a comment", "<!-- This is a comment -->", "# This is a comment", "/* This is a comment"], "correct": "// This is a comment", "explanation": "// is used for single-line comments"},
+        {"question": "How to declare a variable?", "options": ["let x;", "variable x;", "v x;", "declare x;"], "correct": "let x;", "explanation": "let, const, var declare variables"},
+        {"question": "What does console.log() do?", "options": ["Prints to console", "Shows alert", "Returns value", "Creates file"], "correct": "Prints to console", "explanation": "Outputs to browser console"},
+        {"question": "How to write a function?", "options": ["function myFunc() {}", "def myFunc() {}", "create myFunc() {}", "func myFunc() {}"], "correct": "function myFunc() {}", "explanation": "function keyword defines functions"},
+        {"question": "What does === do?", "options": ["Compares value and type", "Compares only value", "Compares only type", "Assigns value"], "correct": "Compares value and type", "explanation": "Strict equality operator"},
     ],
     'SQL': [
-        {"question": "What does SQL stand for?", "options": ["Structured Query Language", "Simple Query Language", "Standard Query Language", "System Query Language"], "correct": "Structured Query Language", "explanation": "SQL stands for Structured Query Language"},
-        {"question": "Which statement is used to extract data?", "options": ["SELECT", "EXTRACT", "GET", "OPEN"], "correct": "SELECT", "explanation": "SELECT is used to retrieve data from databases"},
-        {"question": "What does WHERE clause do?", "options": ["Filters records", "Sorts records", "Groups records", "Joins tables"], "correct": "Filters records", "explanation": "WHERE filters records based on specified conditions"},
-        {"question": "What is a primary key?", "options": ["Unique identifier", "Foreign reference", "Index", "Constraint"], "correct": "Unique identifier", "explanation": "A primary key uniquely identifies each record in a table"},
-        {"question": "What does JOIN do?", "options": ["Combines tables", "Separates tables", "Deletes tables", "Creates tables"], "correct": "Combines tables", "explanation": "JOIN combines rows from two or more tables"},
-        {"question": "What is the difference between DELETE and TRUNCATE?", "options": ["DELETE can have WHERE, TRUNCATE cannot", "TRUNCATE can have WHERE, DELETE cannot", "Both are same", "DELETE is faster"], "correct": "DELETE can have WHERE, TRUNCATE cannot", "explanation": "DELETE can filter rows with WHERE; TRUNCATE removes all rows"},
+        {"question": "What does SQL stand for?", "options": ["Structured Query Language", "Simple Query Language", "Standard Query", "System Query"], "correct": "Structured Query Language", "explanation": "SQL = Structured Query Language"},
+        {"question": "Which statement extracts data?", "options": ["SELECT", "EXTRACT", "GET", "OPEN"], "correct": "SELECT", "explanation": "SELECT retrieves data"},
+        {"question": "What does WHERE do?", "options": ["Filters records", "Sorts records", "Groups records", "Joins tables"], "correct": "Filters records", "explanation": "WHERE filters based on conditions"},
     ],
     'Data Science': [
-        {"question": "What is supervised learning?", "options": ["Learning with labeled data", "Learning with unlabeled data", "Learning with rewards", "Learning without data"], "correct": "Learning with labeled data", "explanation": "Supervised learning uses labeled input-output pairs"},
-        {"question": "What is overfitting?", "options": ["Model too complex", "Model too simple", "Model perfect", "Model missing data"], "correct": "Model too complex", "explanation": "Overfitting occurs when a model learns noise in the training data"},
-        {"question": "What is cross-validation?", "options": ["Validating on different data subsets", "Using same data", "No validation", "Random guessing"], "correct": "Validating on different data subsets", "explanation": "Cross-validation tests model generalization on unseen data"},
-        {"question": "What is the purpose of train-test split?", "options": ["Evaluate model performance", "Increase data", "Decrease computation", "Remove outliers"], "correct": "Evaluate model performance", "explanation": "Train-test split helps evaluate how well the model generalizes"},
-        {"question": "What is dimensionality reduction?", "options": ["Reducing number of features", "Reducing data size", "Reducing model complexity", "All of the above"], "correct": "Reducing number of features", "explanation": "Dimensionality reduction decreases the number of input variables"},
-    ],
-    'General Knowledge': [
-        {"question": "What does RAM stand for?", "options": ["Random Access Memory", "Readily Available Memory", "Rapid Access Module", "Random Allocation Memory"], "correct": "Random Access Memory", "explanation": "RAM is computer memory that can be accessed randomly"},
-        {"question": "What does CPU stand for?", "options": ["Central Processing Unit", "Computer Personal Unit", "Central Program Utility", "Core Processing Utility"], "correct": "Central Processing Unit", "explanation": "CPU is the primary component of a computer"},
-        {"question": "What is the cloud in computing?", "options": ["Internet-based computing", "Weather storage", "Sky computing", "Virtual rain"], "correct": "Internet-based computing", "explanation": "Cloud computing delivers services over the internet"},
-        {"question": "What is an IP address?", "options": ["Network identifier", "Computer password", "Internet provider", "Software license"], "correct": "Network identifier", "explanation": "IP address identifies devices on a network"},
+        {"question": "Supervised vs Unsupervised?", "options": ["Labeled vs Unlabeled", "Fast vs Slow", "New vs Old", "Big vs Small"], "correct": "Labeled vs Unlabeled", "explanation": "Supervised uses labeled data"},
+        {"question": "What is overfitting?", "options": ["Model too complex", "Model too simple", "Model perfect", "No model"], "correct": "Model too complex", "explanation": "Overfitting learns noise"},
+        {"question": "What is cross-validation?", "options": ["Validating on different data", "Same data", "No validation", "Random"], "correct": "Validating on different data", "explanation": "Tests model generalization"},
     ],
 }
 
@@ -235,44 +213,39 @@ def extract_text_from_file(filepath):
     return text
 
 def analyze_resume(text):
-    """Enhanced resume analysis"""
+    """Analyze resume content"""
     text_lower = text.lower()
     
     role_keywords = {
-        'Python Developer': ['python', 'django', 'flask', 'pandas', 'numpy', 'fastapi', 'requests', 'pytest'],
-        'JavaScript Developer': ['javascript', 'react', 'angular', 'vue', 'node', 'express', 'typescript'],
-        'Data Scientist': ['data science', 'machine learning', 'python', 'analytics', 'sql', 'statistics', 'pandas'],
-        'Full Stack Developer': ['react', 'angular', 'node', 'html', 'css', 'mongodb', 'express', 'api'],
-        'DevOps Engineer': ['docker', 'kubernetes', 'jenkins', 'aws', 'ci/cd', 'terraform', 'linux'],
-        'Java Developer': ['java', 'spring', 'hibernate', 'maven', 'gradle', 'junit', 'eclipse'],
-        'Cloud Engineer': ['aws', 'azure', 'gcp', 'cloud', 'terraform', 'lambda', 'ec2', 's3'],
-        'Machine Learning Engineer': ['machine learning', 'deep learning', 'tensorflow', 'keras', 'pytorch', 'nlp'],
-        'Frontend Developer': ['react', 'vue', 'angular', 'css', 'html', 'javascript', 'bootstrap', 'tailwind'],
-        'Backend Developer': ['node', 'python', 'java', 'api', 'database', 'sql', 'redis', 'microservices'],
-        'Cybersecurity Analyst': ['security', 'firewall', 'encryption', 'vulnerability', 'penetration', 'cissp'],
-        'Product Manager': ['product', 'agile', 'scrum', 'roadmap', 'user story', 'jira', 'market'],
-        'UI/UX Designer': ['ui', 'ux', 'design', 'figma', 'adobe', 'wireframe', 'prototype', 'user research'],
+        'Python Developer': ['python', 'django', 'flask', 'pandas', 'numpy'],
+        'JavaScript Developer': ['javascript', 'react', 'angular', 'vue', 'node'],
+        'Data Scientist': ['data science', 'machine learning', 'python', 'analytics'],
+        'Full Stack Developer': ['react', 'angular', 'node', 'html', 'css'],
+        'DevOps Engineer': ['docker', 'kubernetes', 'jenkins', 'aws', 'ci/cd'],
+        'Java Developer': ['java', 'spring', 'hibernate', 'maven'],
+        'Cloud Engineer': ['aws', 'azure', 'gcp', 'cloud', 'terraform'],
+        'Machine Learning Engineer': ['machine learning', 'deep learning', 'tensorflow', 'keras'],
+        'Frontend Developer': ['react', 'vue', 'angular', 'css', 'html'],
+        'Backend Developer': ['node', 'python', 'java', 'api', 'database'],
+        'Cybersecurity Analyst': ['security', 'firewall', 'encryption', 'vulnerability'],
+        'Product Manager': ['product', 'agile', 'scrum', 'roadmap', 'user story'],
     }
     
-    # Calculate scores
     scores = {}
     matched_skills = {}
     for role, keywords in role_keywords.items():
         score = 0
         matched = []
         for kw in keywords:
-            count = text_lower.count(kw)
-            if count > 0:
-                score += min(15, count * 5)
+            if kw in text_lower:
+                score += 15
                 matched.append(kw)
         scores[role] = min(score, 100)
         matched_skills[role] = matched
     
-    # Find best match
     best_role = max(scores, key=scores.get) if scores else "Python Developer"
     best_score = scores.get(best_role, 50)
     
-    # Get suitable roles
     suitable_roles = []
     for role, score in sorted(scores.items(), key=lambda x: x[1], reverse=True):
         if score >= 25 and role != best_role:
@@ -282,96 +255,47 @@ def analyze_resume(text):
                 'skills': matched_skills.get(role, [])[:3]
             })
     
-    # Generate feedback
     strengths = []
     improvements = []
     
-    # Content analysis
-    word_count = len(text.split())
-    if word_count > 500:
-        strengths.append("✅ Excellent resume length and detail")
-    elif word_count > 300:
-        strengths.append("✅ Good resume length")
-    else:
-        improvements.append("📈 Add more details about your experience (aim for 300+ words)")
-    
-    if '@' in text and any(domain in text for domain in ['.com', '.in', '.org']):
-        strengths.append("✅ Professional contact information included")
-    else:
-        improvements.append("📈 Add professional contact information (email with proper domain)")
-    
+    if len(text) > 500:
+        strengths.append("✅ Good resume length and detail")
+    if '@' in text:
+        strengths.append("✅ Contact information included")
     if best_score >= 70:
-        strengths.append(f"✅ Strong match for {best_role} ({best_score}%)")
-    elif best_score >= 50:
-        strengths.append(f"✅ Good match for {best_role}")
-    else:
-        improvements.append(f"📈 Add more {best_role}-related keywords to improve match")
+        strengths.append(f"✅ Strong match for {best_role}")
     
-    # Skill analysis
-    skills_found = set()
-    for skills in matched_skills.values():
-        skills_found.update(skills)
-    
-    if len(skills_found) >= 5:
-        strengths.append(f"✅ Great technical skills detected ({len(skills_found)}+ skills)")
-    elif len(skills_found) >= 3:
-        strengths.append(f"✅ Good technical skills found")
-    else:
-        improvements.append("📈 List more technical skills relevant to your target role")
-    
-    # Education section check
-    education_words = ['bachelor', 'master', 'phd', 'degree', 'university', 'college', 'b.tech', 'm.tech', 'b.e', 'm.e']
-    if any(word in text_lower for word in education_words):
-        strengths.append("✅ Education information present")
-    else:
-        improvements.append("📈 Add your educational qualifications")
-    
-    # Experience section check
-    experience_words = ['experience', 'worked', 'intern', 'job', 'position', 'role', 'company']
-    if any(word in text_lower for word in experience_words):
-        strengths.append("✅ Work experience included")
-    else:
-        improvements.append("📈 Add work experience or internship details")
+    if len(text) < 300:
+        improvements.append("📈 Add more details about your experience")
+    if best_score < 50:
+        improvements.append(f"📈 Add more {best_role} keywords")
     
     if not strengths:
-        strengths = ["✅ Resume uploaded successfully - we can help improve it!"]
+        strengths = ["✅ Resume uploaded successfully"]
     if not improvements:
-        improvements = ["🎉 Great resume! Consider adding more metrics/achievements"]
+        improvements = ["📈 Consider adding more technical skills"]
     
-    # Add a few improvement suggestions by default
-    if len(improvements) < 2:
-        improvements.append("📈 Add quantifiable achievements (e.g., 'Improved performance by 20%')")
+    all_skills = []
+    for skills in matched_skills.values():
+        all_skills.extend(skills)
+    unique_skills = list(set(all_skills))[:10]
     
     return {
         'best_role': best_role,
         'best_score': best_score,
-        'suitable_roles': suitable_roles[:5],
-        'strengths': strengths[:5],
-        'improvements': improvements[:5],
-        'skills': list(skills_found)[:15],
-        'word_count': word_count,
-        'score_grade': get_score_grade(best_score)
+        'suitable_roles': suitable_roles[:6],
+        'strengths': strengths,
+        'improvements': improvements,
+        'skills': unique_skills,
+        'word_count': len(text.split())
     }
 
-def get_score_grade(score):
-    if score >= 80:
-        return {'grade': 'A+', 'color': '#10b981', 'text': 'Excellent Match!'}
-    elif score >= 65:
-        return {'grade': 'B+', 'color': '#3b82f6', 'text': 'Good Match'}
-    elif score >= 50:
-        return {'grade': 'C', 'color': '#f59e0b', 'text': 'Fair Match'}
-    else:
-        return {'grade': 'D', 'color': '#ef4444', 'text': 'Needs Improvement'}
-
 def evaluate_answer(question, answer, role):
-    """Enhanced answer evaluation"""
+    """Evaluate answer"""
     answer_lower = answer.lower().strip()
     
     if len(answer_lower.split()) < 5:
-        return 15, "❌ Answer too short (minimum 5 words). Please provide more details."
-    
-    if len(answer_lower.split()) < 15:
-        return 25, "⚠️ Good start! Add more details to strengthen your answer."
+        return 10, "❌ Answer too short. Please provide more details."
     
     for q in INTERVIEW_QUESTIONS.get(role, []):
         if q['question'] == question:
@@ -379,37 +303,24 @@ def evaluate_answer(question, answer, role):
             matched = [kw for kw in keywords if kw in answer_lower]
             
             if not matched:
-                return 20, f"❌ Incorrect. Key concepts to mention: {', '.join(keywords[:3])}"
+                return 20, f"❌ Incorrect. Should mention: {', '.join(keywords[:3])}"
             
-            # Calculate score based on keyword matches
-            base_score = int((len(matched) / len(keywords)) * 80) + 20
+            score = min(95, int((len(matched) / len(keywords)) * 100))
             
-            # Bonus for answer length
-            word_count = len(answer_lower.split())
-            if word_count > 50:
-                base_score += 10
-            elif word_count > 30:
-                base_score += 5
-            
-            final_score = min(98, base_score)
-            
-            # Detailed feedback
-            missing = [kw for kw in keywords if kw not in answer_lower][:3]
-            
-            if final_score >= 85:
-                feedback = f"✅ Excellent answer! Score: {final_score}% - You covered key concepts well."
-            elif final_score >= 70:
-                missing_text = f"Consider mentioning: {', '.join(missing)}" if missing else "Great job!"
-                feedback = f"👍 Good answer! Score: {final_score}% - {missing_text}"
-            elif final_score >= 50:
-                feedback = f"📝 Fair answer. Score: {final_score}% - Missing: {', '.join(missing)}"
+            if score >= 85:
+                feedback = f"✅ Excellent! You covered: {', '.join(matched)}"
+            elif score >= 70:
+                feedback = f"👍 Good! Also mention key concepts"
+            elif score >= 50:
+                feedback = f"📝 Fair. Missing key concepts"
             else:
-                feedback = f"⚠️ Needs improvement. Score: {final_score}% - Expected keywords: {', '.join(keywords[:3])}"
+                feedback = f"⚠️ Needs improvement. Expected: {', '.join(keywords)}"
             
-            return final_score, feedback
+            return score, feedback
     
-    return 50, "Good attempt! Keep practicing to improve your answers."
+    return 50, "Good attempt!"
 
+# Routes
 @app.route('/')
 def index():
     if current_user.is_authenticated:
@@ -424,20 +335,12 @@ def register():
         password = request.form.get('password')
         confirm = request.form.get('confirm_password')
         
-        if not all([username, email, password]):
-            flash('All fields are required', 'danger')
-            return redirect(url_for('register'))
-        
         if password != confirm:
             flash('Passwords do not match', 'danger')
             return redirect(url_for('register'))
         
-        if len(password) < 6:
-            flash('Password must be at least 6 characters', 'danger')
-            return redirect(url_for('register'))
-        
         if User.query.filter_by(username=username).first():
-            flash('Username already exists', 'danger')
+            flash('Username exists', 'danger')
             return redirect(url_for('register'))
         
         if User.query.filter_by(email=email).first():
@@ -449,7 +352,7 @@ def register():
         db.session.add(user)
         db.session.commit()
         
-        flash('Registration successful! Please login.', 'success')
+        flash('Registration successful!', 'success')
         return redirect(url_for('login'))
     
     return render_template('register.html')
@@ -464,10 +367,10 @@ def login():
         user = User.query.filter_by(username=username).first()
         if user and bcrypt.check_password_hash(user.password_hash, password):
             login_user(user, remember=remember)
-            flash(f'Welcome back, {username}!', 'success')
+            flash(f'Welcome {username}!', 'success')
             return redirect(url_for('dashboard'))
         else:
-            flash('Invalid username or password', 'danger')
+            flash('Invalid credentials', 'danger')
     
     return render_template('login.html')
 
@@ -475,7 +378,7 @@ def login():
 @login_required
 def logout():
     logout_user()
-    flash('You have been logged out', 'info')
+    flash('Logged out', 'info')
     return redirect(url_for('index'))
 
 @app.route('/dashboard')
@@ -486,23 +389,17 @@ def dashboard():
     resumes = ResumeAnalysis.query.filter_by(user_id=current_user.id).all()
     
     total_interviews = len(interviews)
-    avg_score = round(sum(i.score for i in interviews) / total_interviews, 1) if total_interviews > 0 else 0
+    avg_score = sum(i.score for i in interviews) / total_interviews if total_interviews > 0 else 0
     total_quizzes = len(quizzes)
-    avg_quiz = round(sum(q.score for q in quizzes) / total_quizzes, 1) if total_quizzes > 0 else 0
+    avg_quiz = sum(q.score for q in quizzes) / total_quizzes if total_quizzes > 0 else 0
     latest_resume = resumes[-1].score if resumes else 0
-    
-    # Get recent activities
-    recent_interviews = interviews[-5:] if interviews else []
-    recent_quizzes = quizzes[-5:] if quizzes else []
     
     return render_template('dashboard.html',
                          total_interviews=total_interviews,
-                         avg_score=avg_score,
+                         avg_score=round(avg_score, 1),
                          total_quizzes=total_quizzes,
-                         avg_quiz=avg_quiz,
-                         resume_score=latest_resume,
-                         recent_interviews=recent_interviews,
-                         recent_quizzes=recent_quizzes)
+                         avg_quiz=round(avg_quiz, 1),
+                         resume_score=latest_resume)
 
 @app.route('/mock-interview')
 @login_required
@@ -515,7 +412,7 @@ def mock_interview():
 def start_mock_interview():
     role = request.form.get('role')
     if not role:
-        flash('Please select a role', 'danger')
+        flash('Select a role', 'danger')
         return redirect(url_for('mock_interview'))
     
     questions = [q['question'] for q in INTERVIEW_QUESTIONS.get(role, [])]
@@ -564,17 +461,14 @@ def submit_answer():
     current = session['interview_current']
     
     if current >= len(questions):
-        # Save all answers to database
         for item in session['interview_answers']:
-            # Get score for this specific answer
-            q_score, q_feedback = evaluate_answer(item['question'], item['answer'], role)
             interview = Interview(
                 user_id=current_user.id,
                 job_role=role,
                 question=item['question'],
-                answer=item['answer'][:1000],
-                score=q_score,
-                feedback=q_feedback
+                answer=item['answer'][:500],
+                score=score,
+                feedback=feedback
             )
             db.session.add(interview)
         db.session.commit()
@@ -593,4 +487,171 @@ def submit_answer():
     })
 
 @app.route('/interview-complete')
-@
+@login_required
+def interview_complete():
+    return render_template('interview_complete.html')
+
+@app.route('/resume-analysis', methods=['GET', 'POST'])
+@login_required
+def resume_analysis():
+    if request.method == 'POST':
+        if 'resume' not in request.files:
+            flash('No file uploaded', 'danger')
+            return redirect(url_for('resume_analysis'))
+        
+        file = request.files['resume']
+        if file.filename == '':
+            flash('No file selected', 'danger')
+            return redirect(url_for('resume_analysis'))
+        
+        allowed = ['.pdf', '.txt']
+        ext = os.path.splitext(file.filename)[1].lower()
+        if ext not in allowed:
+            flash('Please upload PDF or TXT file', 'danger')
+            return redirect(url_for('resume_analysis'))
+        
+        try:
+            filename = secure_filename(file.filename)
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(filepath)
+            
+            text = extract_text_from_file(filepath)
+            os.remove(filepath)
+            
+            if not text or len(text.strip()) < 50:
+                flash('Could not extract text from file', 'danger')
+                return redirect(url_for('resume_analysis'))
+            
+            analysis = analyze_resume(text)
+            
+            resume = ResumeAnalysis(
+                user_id=current_user.id,
+                filename=filename,
+                extracted_text=text[:2000],
+                score=analysis['best_score'],
+                suggested_role=analysis['best_role'],
+                suggested_roles=json.dumps(analysis['suitable_roles']),
+                strengths=json.dumps(analysis['strengths']),
+                improvements=json.dumps(analysis['improvements']),
+                skills_found=json.dumps(analysis['skills'])
+            )
+            db.session.add(resume)
+            db.session.commit()
+            
+            flash(f'✅ Best match: {analysis["best_role"]} ({analysis["best_score"]}% match)', 'success')
+            return render_template('resume_results.html', analysis=analysis)
+            
+        except Exception as e:
+            print(f"Error: {e}")
+            flash('Error analyzing resume', 'danger')
+            return redirect(url_for('resume_analysis'))
+    
+    return render_template('resume_analysis.html')
+
+@app.route('/skill-quiz')
+@login_required
+def skill_quiz():
+    categories = list(QUIZ_QUESTIONS.keys())
+    return render_template('skill_quiz.html', categories=categories)
+
+@app.route('/start-quiz', methods=['POST'])
+@login_required
+def start_quiz():
+    category = request.form.get('category')
+    questions = QUIZ_QUESTIONS.get(category, QUIZ_QUESTIONS['Python'])
+    random.shuffle(questions)
+    
+    session['quiz_category'] = category
+    session['quiz_questions'] = questions[:8]
+    session['quiz_answers'] = []
+    session['quiz_current'] = 0
+    
+    return redirect(url_for('take_quiz'))
+
+@app.route('/take-quiz')
+@login_required
+def take_quiz():
+    if 'quiz_questions' not in session:
+        return redirect(url_for('skill_quiz'))
+    
+    questions = session['quiz_questions']
+    current = session.get('quiz_current', 0)
+    
+    if current >= len(questions):
+        return redirect(url_for('quiz_complete'))
+    
+    return render_template('take_quiz.html',
+                         question=questions[current],
+                         num=current + 1,
+                         total=len(questions),
+                         category=session['quiz_category'])
+
+@app.route('/submit-quiz', methods=['POST'])
+@login_required
+def submit_quiz():
+    data = request.json
+    answer = data.get('answer')
+    correct = data.get('correct')
+    is_correct = (answer == correct)
+    
+    session['quiz_answers'].append({
+        'question': data.get('question'),
+        'answer': answer,
+        'correct': correct,
+        'is_correct': is_correct,
+        'explanation': data.get('explanation', '')
+    })
+    session['quiz_current'] = session.get('quiz_current', 0) + 1
+    
+    questions = session['quiz_questions']
+    current = session['quiz_current']
+    
+    if current >= len(questions):
+        correct_count = sum(1 for a in session['quiz_answers'] if a['is_correct'])
+        score = int((correct_count / len(questions)) * 100)
+        
+        result = QuizResult(
+            user_id=current_user.id,
+            category=session['quiz_category'],
+            score=score,
+            total_questions=len(questions),
+            correct_answers=correct_count
+        )
+        db.session.add(result)
+        db.session.commit()
+        
+        return jsonify({
+            'completed': True,
+            'score': score,
+            'correct': correct_count,
+            'total': len(questions),
+            'answers': session['quiz_answers']
+        })
+    
+    return jsonify({
+        'completed': False,
+        'next': questions[current],
+        'num': current + 1,
+        'total': len(questions)
+    })
+
+@app.route('/quiz-complete')
+@login_required
+def quiz_complete():
+    return render_template('quiz_complete.html')
+
+@app.route('/performance')
+@login_required
+def performance():
+    interviews = Interview.query.filter_by(user_id=current_user.id).all()
+    quizzes = QuizResult.query.filter_by(user_id=current_user.id).all()
+    resumes = ResumeAnalysis.query.filter_by(user_id=current_user.id).all()
+    
+    return render_template('performance.html',
+                         interviews=interviews,
+                         quizzes=quizzes,
+                         resumes=resumes)
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
