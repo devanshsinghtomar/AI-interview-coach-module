@@ -1,7 +1,7 @@
 import multiprocessing
 
 bind = "0.0.0.0:8080"
-workers = 1  # Reduce workers for better stability
+workers = 2
 worker_class = "sync"
 timeout = 120
 graceful_timeout = 30
