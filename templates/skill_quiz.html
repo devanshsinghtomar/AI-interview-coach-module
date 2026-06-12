@@ -1,15 +1,61 @@
-<div class="bg-white rounded-xl shadow-md p-6">
-    <h2 class="text-2xl font-bold text-gray-800 mb-4">📝 Skill Quiz</h2>
-    <div class="grid grid-cols-2 gap-4 mb-4"><div><label class="block text-gray-700">Select Role:</label><select id="quizRole" class="w-full p-2 border rounded-lg"><option value="frontend">Frontend Developer</option><option value="backend">Backend Developer</option><option value="datascience">Data Scientist</option></select></div><div><label class="block text-gray-700">Difficulty:</label><select id="quizLevel" class="w-full p-2 border rounded-lg"><option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option></select></div></div>
-    <button onclick="startQuiz()" class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 w-full">Start Quiz</button>
-    <div id="quizArea" class="mt-6 hidden"><div id="questionText" class="text-lg font-semibold mb-4"></div><div id="optionsArea" class="space-y-2 mb-4"></div><button onclick="nextQuestion()" class="bg-blue-600 text-white px-6 py-2 rounded-lg">Next Question</button><p class="mt-2 text-gray-600">Question <span id="qNum">1</span>/<span id="totalQ">5</span></p></div>
-    <div id="quizResult" class="mt-6 hidden"><div class="bg-gradient-to-r from-green-50 to-blue-50 p-4 rounded-lg"><p class="text-xl font-bold" id="resultText"></p><p id="scoreBreakdown" class="mt-2"></p></div></div>
+{% extends "base.html" %}
+
+{% block title %}Skill Quiz - AI Interview Coach{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <h1>🧠 Skill Assessment Quiz</h1>
+    <p style="color: var(--gray-600); margin-bottom: 2rem;">Test your knowledge across different technical domains. Each quiz contains multiple-choice questions with instant feedback.</p>
+
+    <div class="grid">
+        {% for category in categories %}
+            <div class="card" onclick="selectCategory('{{ category }}')" style="cursor: pointer;">
+                <div class="card-body" style="text-align: center;">
+                    <div class="feature-icon">
+                        {% if category == 'Python' %}🐍
+                        {% elif category == 'JavaScript' %}📜
+                        {% elif category == 'SQL' %}🗄️
+                        {% elif category == 'Data Science' %}🤖
+                        {% else %}📚
+                        {% endif %}
+                    </div>
+                    <h3 class="feature-title">{{ category }}</h3>
+                    <p class="feature-description">
+                        Test your {{ category }} knowledge with multiple-choice questions
+                    </p>
+                    <div style="margin-top: 1rem;">
+                        <span class="score-badge score-high">Start Quiz →</span>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Quiz Tips -->
+    <div class="card" style="margin-top: 2rem;">
+        <div class="card-header">
+            <h3 style="margin: 0;">📌 Quiz Tips</h3>
+        </div>
+        <div class="card-body">
+            <ul style="margin-left: 1.5rem; line-height: 1.8;">
+                <li>Read each question carefully before answering</li>
+                <li>You'll receive immediate feedback after each answer</li>
+                <li>Your scores are saved to track progress over time</li>
+                <li>Review explanations to learn from mistakes</li>
+            </ul>
+        </div>
+    </div>
 </div>
+
+<!-- Hidden Form for Category Selection -->
+<form id="quizForm" method="POST" action="{{ url_for('start_quiz') }}" style="display: none;">
+    <input type="hidden" name="category" id="selectedCategory">
+</form>
+
 <script>
-const questionBank={frontend:{easy:[{q:"What does HTML stand for?",o:["Hyper Text Markup Language","High Tech Modern Language","Hyper Transfer Markup Language"],a:0},{q:"Which CSS property changes text color?",o:["text-color","color","font-color"],a:1}],medium:[{q:"What is React?",o:["JS library","Database","CSS framework"],a:0}],hard:[{q:"What is the virtual DOM?",o:["Real DOM copy","React's optimization","Browser API"],a:1}]},backend:{easy:[{q:"What is SQL used for?",o:["Styling","Database queries","Animation"],a:1}],medium:[{q:"What is an API?",o:["Application Interface","Programming tool","Database"],a:0}],hard:[{q:"What is load balancing?",o:["Traffic distribution","Data backup","Security"],a:0}]},datascience:{easy:[{q:"What is Python?",o:["Snake","Programming language","Database"],a:1}],medium:[{q:"What is Machine Learning?",o:["Hardware","AI subset","Database"],a:1}],hard:[{q:"What is a neural network?",o:["Brain simulation","Social network","Computer network"],a:0}]}};
-let currentQuiz=[],currentQ=0,score=0,answeredQuestions=[];
-function startQuiz(){const role=document.getElementById('quizRole').value;const level=document.getElementById('quizLevel').value;const bank=questionBank[role][level];if(!bank||bank.length===0){alert('No questions available');return;}currentQuiz=[...bank];for(let i=currentQuiz.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[currentQuiz[i],currentQuiz[j]]=[currentQuiz[j],currentQuiz[i]];}currentQuiz=currentQuiz.slice(0,5);currentQ=0;score=0;answeredQuestions=[];document.getElementById('quizArea').classList.remove('hidden');document.getElementById('quizResult').classList.add('hidden');document.getElementById('totalQ').innerText=currentQuiz.length;loadQuestion();}
-function loadQuestion(){if(currentQ<currentQuiz.length){const q=currentQuiz[currentQ];document.getElementById('questionText').innerHTML=q.q;let html='';q.o.forEach((opt,idx)=>{html+=`<label class="flex items-center p-2 border rounded-lg cursor-pointer hover:bg-gray-50"><input type="radio" name="answer" value="${idx}" class="mr-3">${opt}</label>`;});document.getElementById('optionsArea').innerHTML=html;document.getElementById('qNum').innerText=currentQ+1;}else{endQuiz();}}
-function nextQuestion(){const selected=document.querySelector('input[name="answer"]:checked');if(!selected){alert('Please select an answer');return;}const answer=parseInt(selected.value);const correct=currentQuiz[currentQ].a;if(answer===correct){score++;}currentQ++;if(currentQ<currentQuiz.length){loadQuestion();}else{endQuiz();}}
-function endQuiz(){const percentage=Math.round((score/currentQuiz.length)*100);document.getElementById('quizArea').classList.add('hidden');document.getElementById('quizResult').classList.remove('hidden');document.getElementById('resultText').innerHTML=`You scored ${score}/${currentQuiz.length} (${percentage}%)`;document.getElementById('scoreBreakdown').innerHTML=percentage>=70?'🎉 Excellent! You\'re well prepared!':percentage>=50?'📚 Good! Keep practicing!':'💪 Need more practice. Try again!';window.incrementQuiz(percentage);}
+    function selectCategory(category) {
+        document.getElementById('selectedCategory').value = category;
+        document.getElementById('quizForm').submit();
+    }
 </script>
+{% endblock %}
