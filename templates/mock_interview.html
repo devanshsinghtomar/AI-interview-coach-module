@@ -2,10 +2,38 @@
 
 {% block title %}Mock Interview - AI Interview Coach{% endblock %}
 
+{% block extra_css %}
+<style>
+    .feature-badge {
+        display: inline-block;
+        background: var(--gray-100);
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        margin-top: 0.5rem;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="fade-in">
     <h1>🎤 Mock Interview</h1>
     <p style="color: var(--gray-600); margin-bottom: 2rem;">Select a job role to start your practice interview. You'll receive real-time feedback on your answers.</p>
+
+    <!-- Speech Features Info -->
+    <div class="card" style="margin-bottom: 1.5rem; background: linear-gradient(135deg, #667eea10 0%, #764ba210 100%);">
+        <div class="card-body">
+            <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                <div style="font-size: 2rem;">🎤🔊</div>
+                <div>
+                    <strong>Voice Features Available!</strong>
+                    <p style="margin: 0.25rem 0 0; font-size: 0.875rem; color: var(--gray-600);">
+                        Click the microphone button 🎤 to speak your answers (Speech-to-Text) • Click 🔊 to hear questions read aloud (Text-to-Speech)
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="grid" style="margin-bottom: 2rem;">
         {% for role in roles %}
@@ -28,6 +56,7 @@
                 </div>
                 <div class="role-title">{{ role }}</div>
                 <div class="role-description">Practice interview questions for {{ role }} position</div>
+                <div class="feature-badge">🎤 Voice Enabled</div>
             </div>
         {% endfor %}
     </div>
@@ -42,7 +71,7 @@
                 <li><strong>Be specific:</strong> Use concrete examples from your experience</li>
                 <li><strong>STAR Method:</strong> Situation, Task, Action, Result for behavioral questions</li>
                 <li><strong>Be honest:</strong> If you don't know something, say so and explain how you'd learn</li>
-                <li><strong>Practice out loud:</strong> Speaking your answers helps build confidence</li>
+                <li><strong>Practice out loud:</strong> Use the microphone button 🎤 to practice speaking your answers</li>
                 <li><strong>Take your time:</strong> It's okay to pause and think before answering</li>
             </ul>
         </div>
