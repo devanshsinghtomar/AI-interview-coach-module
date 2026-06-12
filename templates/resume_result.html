@@ -3,113 +3,127 @@
 {% block title %}Resume Results - AI Interview Coach{% endblock %}
 
 {% block content %}
-<div style="max-width: 1000px; margin: 0 auto;">
-    <div class="card" style="padding: 2rem;">
-        <h2><i class="fas fa-chart-bar"></i> Resume Analysis Results</h2>
-        <p style="color: #718096; margin-bottom: 1.5rem;">Here's a detailed analysis of your resume</p>
-        
-        <!-- Best Match Card -->
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px; padding: 1.5rem; margin-bottom: 1.5rem; color: white;">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                <div>
-                    <i class="fas fa-trophy"></i> Best Match
-                    <div style="font-size: 1.5rem; font-weight: bold; margin-top: 0.25rem;">{{ analysis.best_role }}</div>
-                    <div style="font-size: 0.875rem; opacity: 0.9;">{{ analysis.word_count }} words analyzed</div>
-                </div>
-                <div style="text-align: center;">
-                    <div style="font-size: 2rem; font-weight: bold;">{{ analysis.best_score }}%</div>
-                    <div>Match Score</div>
-                </div>
+<div class="fade-in">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h1 style="margin: 0;">📊 Resume Analysis Results</h1>
+            <p style="color: var(--gray-600);">AI-powered analysis of your resume</p>
+        </div>
+        <a href="{{ url_for('resume_analysis') }}" class="btn btn-secondary">📤 Upload Another</a>
+    </div>
+
+    <!-- Main Score Card -->
+    <div class="card" style="margin-bottom: 1.5rem; text-align: center;">
+        <div class="card-body" style="padding: 2rem;">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">
+                {% if analysis.best_score >= 70 %}🎯
+                {% elif analysis.best_score >= 50 %}📈
+                {% else %}📝
+                {% endif %}
             </div>
-            <div class="progress-bar" style="margin: 1rem 0; background: rgba(255,255,255,0.3);">
-                <div class="progress-fill" style="width: {{ analysis.best_score }}%; background: white;"></div>
+            <div style="font-size: 3rem; font-weight: 700; color: var(--primary-color);">
+                {{ analysis.best_score }}%
             </div>
-            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                <form action="/start-from-resume" method="POST">
-                    <input type="hidden" name="role" value="{{ analysis.best_role }}">
-                    <input type="hidden" name="action" value="interview">
-                    <button type="submit" class="btn" style="background: white; color: #667eea;">
-                        <i class="fas fa-microphone-alt"></i> Start Interview
-                    </button>
-                </form>
-                <form action="/start-from-resume" method="POST">
-                    <input type="hidden" name="role" value="{{ analysis.best_role }}">
-                    <input type="hidden" name="action" value="quiz">
-                    <button type="submit" class="btn" style="background: rgba(255,255,255,0.2); color: white;">
-                        <i class="fas fa-brain"></i> Take Quiz
-                    </button>
-                </form>
+            <div style="font-size: 1.25rem; margin: 0.5rem 0;">
+                Match Score for <strong>{{ analysis.best_role }}</strong>
+            </div>
+            <div class="progress" style="margin: 1rem auto; max-width: 300px;">
+                <div class="progress-bar" style="width: {{ analysis.best_score }}%;"></div>
+            </div>
+            <div style="color: var(--gray-600); font-size: 0.875rem;">
+                Word count: {{ analysis.word_count }} words
             </div>
         </div>
-        
-        <!-- Suitable Roles -->
-        <div style="border: 2px solid #e2e8f0; border-radius: 20px; margin-bottom: 1.5rem; overflow: hidden;">
-            <div style="background: #f7fafc; padding: 1rem; font-weight: bold; border-bottom: 1px solid #e2e8f0;">
-                <i class="fas fa-briefcase"></i> Suitable Job Roles
+    </div>
+
+    <div class="grid">
+        <!-- Strengths Section -->
+        <div class="card">
+            <div class="card-header">
+                <h3 style="margin: 0;">✅ Strengths</h3>
             </div>
-            <div>
+            <div class="card-body">
+                <ul style="margin-left: 1rem; line-height: 1.8;">
+                    {% for strength in analysis.strengths %}
+                        <li>{{ strength }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- Improvements Section -->
+        <div class="card">
+            <div class="card-header">
+                <h3 style="margin: 0;">📈 Areas for Improvement</h3>
+            </div>
+            <div class="card-body">
+                <ul style="margin-left: 1rem; line-height: 1.8;">
+                    {% for improvement in analysis.improvements %}
+                        <li>{{ improvement }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Skills Found -->
+    <div class="card" style="margin-top: 1.5rem;">
+        <div class="card-header">
+            <h3 style="margin: 0;">🔧 Skills Detected</h3>
+        </div>
+        <div class="card-body">
+            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                {% for skill in analysis.skills %}
+                    <span style="background: var(--gray-100); padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.875rem;">
+                        {{ skill }}
+                    </span>
+                {% endfor %}
+                {% if not analysis.skills %}
+                    <p style="color: var(--gray-500);">No specific technical skills detected. Consider adding more relevant keywords.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Suggested Roles -->
+    {% if analysis.suitable_roles %}
+    <div class="card" style="margin-top: 1.5rem;">
+        <div class="card-header">
+            <h3 style="margin: 0;">🎯 Other Roles You May Fit</h3>
+        </div>
+        <div class="card-body">
+            <div style="display: grid; gap: 1rem;">
                 {% for role in analysis.suitable_roles %}
-                <div style="padding: 1rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                    <div>
-                        <strong>{{ role.role }}</strong>
-                        <div style="font-size: 0.875rem; color: #718096;">{{ role.score }}% match</div>
-                        <div style="font-size: 0.75rem; color: #a0aec0; margin-top: 0.25rem;">
-                            Skills: {{ role.skills|join(', ') }}
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: var(--gray-50); border-radius: var(--radius);">
+                        <div>
+                            <strong>{{ role.role }}</strong>
+                            <div style="font-size: 0.75rem; color: var(--gray-500);">
+                                Skills: {{ role.skills|join(', ') }}
+                            </div>
+                        </div>
+                        <div class="score-badge {% if role.score >= 70 %}score-high{% elif role.score >= 50 %}score-medium{% else %}score-low{% endif %}">
+                            {{ role.score }}% match
                         </div>
                     </div>
-                    <div style="display: flex; gap: 0.5rem;">
-                        <form action="/start-from-resume" method="POST" style="display: inline;">
-                            <input type="hidden" name="role" value="{{ role.role }}">
-                            <input type="hidden" name="action" value="interview">
-                            <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1rem;">
-                                <i class="fas fa-microphone-alt"></i> Interview
-                            </button>
-                        </form>
-                        <form action="/start-from-resume" method="POST" style="display: inline;">
-                            <input type="hidden" name="role" value="{{ role.role }}">
-                            <input type="hidden" name="action" value="quiz">
-                            <button type="submit" class="btn btn-secondary" style="padding: 0.5rem 1rem;">
-                                <i class="fas fa-brain"></i> Quiz
-                            </button>
-                        </form>
-                    </div>
-                </div>
                 {% endfor %}
             </div>
         </div>
-        
-        <!-- Strengths & Improvements -->
-        <div class="grid grid-2" style="margin-bottom: 1.5rem;">
-            <div style="background: #f0fff4; padding: 1rem; border-radius: 16px;">
-                <h3><i class="fas fa-check-circle" style="color: #48bb78;"></i> Strengths</h3>
-                {% for s in analysis.strengths %}
-                <p style="margin: 0.5rem 0;">{{ s }}</p>
-                {% endfor %}
-            </div>
-            <div style="background: #fff5f5; padding: 1rem; border-radius: 16px;">
-                <h3><i class="fas fa-chart-line" style="color: #ed8936;"></i> Improvements</h3>
-                {% for i in analysis.improvements %}
-                <p style="margin: 0.5rem 0;">{{ i }}</p>
-                {% endfor %}
-            </div>
-        </div>
-        
-        <!-- Detected Skills -->
-        <div>
-            <h3><i class="fas fa-code"></i> Detected Skills</h3>
-            <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.75rem;">
-                {% for skill in analysis.skills %}
-                <span style="background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%); padding: 0.5rem 1rem; border-radius: 25px; font-size: 0.875rem;">
-                    <i class="fas fa-tag"></i> {{ skill|title }}
-                </span>
-                {% endfor %}
-            </div>
-        </div>
-        
-        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-            <a href="/resume-analysis" class="btn btn-secondary"><i class="fas fa-upload"></i> Upload Another</a>
-            <a href="/dashboard" class="btn btn-primary"><i class="fas fa-chart-line"></i> Dashboard</a>
-        </div>
+    </div>
+    {% endif %}
+
+    <!-- Action Buttons -->
+    <div style="display: flex; gap: 1rem; margin-top: 1.5rem; justify-content: center; flex-wrap: wrap;">
+        <form method="POST" action="{{ url_for('start_from_resume') }}">
+            <input type="hidden" name="role" value="{{ analysis.best_role }}">
+            <input type="hidden" name="action" value="interview">
+            <button type="submit" class="btn btn-primary">🎤 Start {{ analysis.best_role }} Interview</button>
+        </form>
+        <form method="POST" action="{{ url_for('start_from_resume') }}">
+            <input type="hidden" name="role" value="{{ analysis.best_role }}">
+            <input type="hidden" name="action" value="quiz">
+            <button type="submit" class="btn btn-secondary">🧠 Take Related Quiz</button>
+        </form>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline">📊 Go to Dashboard</a>
     </div>
 </div>
 {% endblock %}
