@@ -1,51 +1,32 @@
 {% extends "base.html" %}
 
 {% block content %}
-<!-- Dashboard Section -->
 <div id="dashboardSection">
     <h2 class="text-3xl font-bold text-gray-800 mb-6">Dashboard Overview</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white rounded-xl shadow-md p-6 card-hover transition-all"><div class="flex items-center justify-between"><div><p class="text-gray-500 text-sm">Mock Interviews</p><p class="text-3xl font-bold text-gray-800" id="mockCount">0</p></div><div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center"><i class="fas fa-microphone text-blue-600 text-xl"></i></div></div></div>
-        <div class="bg-white rounded-xl shadow-md p-6 card-hover transition-all"><div class="flex items-center justify-between"><div><p class="text-gray-500 text-sm">Resumes Analyzed</p><p class="text-3xl font-bold text-gray-800" id="resumeCount">0</p></div><div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center"><i class="fas fa-file-alt text-purple-600 text-xl"></i></div></div></div>
-        <div class="bg-white rounded-xl shadow-md p-6 card-hover transition-all"><div class="flex items-center justify-between"><div><p class="text-gray-500 text-sm">Quizzes Taken</p><p class="text-3xl font-bold text-gray-800" id="quizCount">0</p></div><div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center"><i class="fas fa-brain text-orange-600 text-xl"></i></div></div></div>
-        <div class="bg-white rounded-xl shadow-md p-6 card-hover transition-all"><div class="flex items-center justify-between"><div><p class="text-gray-500 text-sm">Avg. Score</p><p class="text-3xl font-bold text-gray-800" id="avgScore">0%</p></div><div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center"><i class="fas fa-chart-line text-green-600 text-xl"></i></div></div></div>
+        <div class="bg-white rounded-xl shadow-md p-6 card-hover"><div class="flex items-center justify-between"><div><p class="text-gray-500 text-sm">Mock Interviews</p><p class="text-3xl font-bold text-gray-800" id="mockCount">0</p></div><div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center"><i class="fas fa-microphone text-blue-600 text-xl"></i></div></div></div>
+        <div class="bg-white rounded-xl shadow-md p-6 card-hover"><div class="flex items-center justify-between"><div><p class="text-gray-500 text-sm">Resumes Analyzed</p><p class="text-3xl font-bold text-gray-800" id="resumeCount">0</p></div><div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center"><i class="fas fa-file-alt text-purple-600 text-xl"></i></div></div></div>
+        <div class="bg-white rounded-xl shadow-md p-6 card-hover"><div class="flex items-center justify-between"><div><p class="text-gray-500 text-sm">Quizzes Taken</p><p class="text-3xl font-bold text-gray-800" id="quizCount">0</p></div><div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center"><i class="fas fa-brain text-orange-600 text-xl"></i></div></div></div>
+        <div class="bg-white rounded-xl shadow-md p-6 card-hover"><div class="flex items-center justify-between"><div><p class="text-gray-500 text-sm">Avg. Score</p><p class="text-3xl font-bold text-gray-800" id="avgScore">0%</p></div><div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center"><i class="fas fa-chart-line text-green-600 text-xl"></i></div></div></div>
     </div>
     <div class="bg-white rounded-xl shadow-md p-6"><h3 class="text-xl font-semibold text-gray-800 mb-4">Recent Activity</h3><div id="activityLog" class="space-y-3"><p class="text-gray-500 text-center py-4">No activities yet. Start using the features above!</p></div></div>
 </div>
 
-<!-- Include all feature sections (they remain exactly as they were - no changes to functionality) -->
 <div id="mockInterviewSection" class="hidden">{% include 'mock_interview.html' %}</div>
 <div id="resumeAnalysisSection" class="hidden">{% include 'resume_analysis.html' %}</div>
 <div id="skillQuizSection" class="hidden">{% include 'skill_quiz.html' %}</div>
 <div id="performanceSection" class="hidden">{% include 'performance.html' %}</div>
 
 <script>
-let mockCount = 0, resumeCount = 0, quizCount = 0, totalScore = 0;
-
-function updateDashboardStats() {
-    document.getElementById('mockCount').innerText = mockCount;
-    document.getElementById('resumeCount').innerText = resumeCount;
-    document.getElementById('quizCount').innerText = quizCount;
-    document.getElementById('avgScore').innerText = quizCount > 0 ? Math.round(totalScore / quizCount) + '%' : '0%';
-}
-
-function addActivity(message, type) {
-    const log = document.getElementById('activityLog');
-    const item = document.createElement('div');
-    item.className = 'p-3 bg-gray-50 rounded-lg border-l-4 border-blue-500';
-    item.innerHTML = `<div class="flex items-center space-x-3"><i class="fas fa-${type === 'interview' ? 'microphone' : type === 'resume' ? 'file' : 'brain'} text-${type === 'interview' ? 'blue' : type === 'resume' ? 'purple' : 'orange'}-500"></i><span class="text-gray-700">${message}</span><span class="text-xs text-gray-400 ml-auto">${new Date().toLocaleTimeString()}</span></div>`;
-    log.prepend(item);
-    if (log.children.length > 5) log.removeChild(log.lastChild);
-}
-
-// Storage functions
-function saveToLocalStorage() { localStorage.setItem('dashboardData', JSON.stringify({ mockCount, resumeCount, quizCount, totalScore })); }
-function loadFromLocalStorage() { const data = localStorage.getItem('dashboardData'); if(data) { const d=JSON.parse(data); mockCount=d.mockCount||0; resumeCount=d.resumeCount||0; quizCount=d.quizCount||0; totalScore=d.totalScore||0; updateDashboardStats(); } }
+let mockCount=0,resumeCount=0,quizCount=0,totalScore=0;
+function updateDashboardStats(){document.getElementById('mockCount').innerText=mockCount;document.getElementById('resumeCount').innerText=resumeCount;document.getElementById('quizCount').innerText=quizCount;document.getElementById('avgScore').innerText=quizCount>0?Math.round(totalScore/quizCount)+'%':'0%';}
+function addActivity(msg,type){const log=document.getElementById('activityLog');const item=document.createElement('div');item.className='p-3 bg-gray-50 rounded-lg border-l-4 border-blue-500';item.innerHTML=`<div class="flex items-center space-x-3"><i class="fas fa-${type==='interview'?'microphone':type==='resume'?'file':'brain'} text-${type==='interview'?'blue':type==='resume'?'purple':'orange'}-500"></i><span class="text-gray-700">${msg}</span><span class="text-xs text-gray-400 ml-auto">${new Date().toLocaleTimeString()}</span></div>`;log.prepend(item);if(log.children.length>5)log.removeChild(log.lastChild);}
+function saveToLocalStorage(){localStorage.setItem('dashboardData',JSON.stringify({mockCount,resumeCount,quizCount,totalScore}));}
+function loadFromLocalStorage(){const data=localStorage.getItem('dashboardData');if(data){const d=JSON.parse(data);mockCount=d.mockCount||0;resumeCount=d.resumeCount||0;quizCount=d.quizCount||0;totalScore=d.totalScore||0;updateDashboardStats();}}
 loadFromLocalStorage();
-window.addActivity = addActivity;
-window.updateDashboardStats = updateDashboardStats;
-window.incrementMock = () => { mockCount++; saveToLocalStorage(); updateDashboardStats(); };
-window.incrementResume = () => { resumeCount++; saveToLocalStorage(); updateDashboardStats(); };
-window.incrementQuiz = (score) => { quizCount++; totalScore+=score; saveToLocalStorage(); updateDashboardStats(); };
+window.addActivity=addActivity;window.updateDashboardStats=updateDashboardStats;
+window.incrementMock=()=>{mockCount++;saveToLocalStorage();updateDashboardStats();addActivity('Completed a mock interview','interview');};
+window.incrementResume=()=>{resumeCount++;saveToLocalStorage();updateDashboardStats();addActivity('Resume analysis completed','resume');};
+window.incrementQuiz=(score)=>{quizCount++;totalScore+=score;saveToLocalStorage();updateDashboardStats();addActivity(`Completed quiz with ${score}% score`,'quiz');};
 </script>
 {% endblock %}
