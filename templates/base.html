@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}AI Interview Coach{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -12,15 +14,16 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Inter', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
         }
         
+        /* Navbar */
         .navbar {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.98);
             backdrop-filter: blur(10px);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
             padding: 1rem 2rem;
             position: sticky;
             top: 0;
@@ -28,7 +31,7 @@
         }
         
         .nav-container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             display: flex;
             justify-content: space-between;
@@ -37,77 +40,125 @@
         
         .logo {
             font-size: 1.5rem;
-            font-weight: bold;
+            font-weight: 800;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
             text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
         
         .nav-links {
             display: flex;
-            gap: 1.5rem;
+            gap: 2rem;
             align-items: center;
+            flex-wrap: wrap;
         }
         
         .nav-links a {
             text-decoration: none;
             color: #4a5568;
             font-weight: 500;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
         
         .nav-links a:hover {
             color: #667eea;
+            transform: translateY(-2px);
         }
         
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .username {
+            font-weight: 600;
+            color: #2d3748;
+            background: #f7fafc;
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+        }
+        
+        .logout-btn {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            padding: 0.5rem 1.2rem;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .logout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(239,68,68,0.3);
+        }
+        
+        /* Container */
         .container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
         }
         
+        /* Flash Messages */
         .flash-messages {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 1rem auto 0;
             padding: 0 2rem;
         }
         
         .flash-message {
-            padding: 1rem;
-            border-radius: 10px;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
             margin-bottom: 1rem;
             animation: slideIn 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
         }
         
         @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
         .flash-success { background: #48bb78; color: white; }
-        .flash-error { background: #f56565; color: white; }
+        .flash-danger { background: #f56565; color: white; }
         .flash-info { background: #4299e1; color: white; }
+        .flash-warning { background: #ed8936; color: white; }
         
+        /* Buttons */
         .btn {
             padding: 0.75rem 1.5rem;
             border: none;
-            border-radius: 10px;
+            border-radius: 12px;
             font-weight: 600;
             cursor: pointer;
+            transition: all 0.3s;
             text-decoration: none;
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
         }
         
         .btn-primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102,126,234,0.4);
         }
         
         .btn-secondary {
@@ -116,21 +167,162 @@
             border: 2px solid #667eea;
         }
         
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+        }
+        
+        /* Cards */
         .card {
+            background: white;
+            border-radius: 24px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+        }
+        
+        /* Stats Cards */
+        .stat-card {
             background: white;
             border-radius: 20px;
             padding: 1.5rem;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: all 0.3s;
         }
         
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            color: #718096;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+        
+        /* Grid */
+        .grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+        
+        .grid-2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+        .grid-3 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+        .grid-4 { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+        
+        /* Forms */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #2d3748;
+        }
+        
+        .form-control, select, textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+        
+        .form-control:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+        }
+        
+        /* Progress Bar */
+        .progress-bar {
+            background: #e2e8f0;
+            border-radius: 10px;
+            height: 8px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            height: 100%;
+            transition: width 0.3s;
+        }
+        
+        /* Responsive */
         @media (max-width: 768px) {
             .nav-container {
                 flex-direction: column;
                 gap: 1rem;
             }
-            .container {
-                padding: 0 1rem;
+            
+            .nav-links {
+                justify-content: center;
+                gap: 1rem;
             }
+            
+            .container {
+                padding: 1rem;
+            }
+            
+            .grid-2, .grid-3, .grid-4 {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .fade-in {
+            animation: fadeInUp 0.5s ease-out;
+        }
+        
+        /* Loading Spinner */
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #e2e8f0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
     {% block extra_css %}{% endblock %}
@@ -139,15 +331,20 @@
     {% if current_user.is_authenticated %}
     <nav class="navbar">
         <div class="nav-container">
-            <a href="/dashboard" class="logo">🤖 AI Interview Coach</a>
+            <a href="/dashboard" class="logo">
+                <i class="fas fa-robot"></i>
+                AI Interview Coach
+            </a>
             <div class="nav-links">
-                <a href="/dashboard">Dashboard</a>
-                <a href="/mock-interview">Mock Interview</a>
-                <a href="/resume-analysis">Resume Analysis</a>
-                <a href="/skill-quiz">Skill Quiz</a>
-                <a href="/performance">Performance</a>
-                <span style="color: #4a5568;">👤 {{ current_user.username }}</span>
-                <a href="/logout" class="btn btn-primary" style="padding: 0.5rem 1rem;">Logout</a>
+                <a href="/dashboard"><i class="fas fa-chart-line"></i> Dashboard</a>
+                <a href="/mock-interview"><i class="fas fa-microphone-alt"></i> Mock Interview</a>
+                <a href="/resume-analysis"><i class="fas fa-file-alt"></i> Resume Analysis</a>
+                <a href="/skill-quiz"><i class="fas fa-brain"></i> Skill Quiz</a>
+                <a href="/performance"><i class="fas fa-chart-bar"></i> Performance</a>
+                <div class="user-menu">
+                    <span class="username"><i class="fas fa-user-circle"></i> {{ current_user.username }}</span>
+                    <a href="/logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </div>
             </div>
         </div>
     </nav>
@@ -156,12 +353,15 @@
     <div class="flash-messages">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% for category, message in messages %}
-                <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                <div class="flash-message flash-{{ category }}">
+                    <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'danger' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %}"></i>
+                    {{ message }}
+                </div>
             {% endfor %}
         {% endwith %}
     </div>
     
-    <div class="container">
+    <div class="container fade-in">
         {% block content %}{% endblock %}
     </div>
     
@@ -171,7 +371,7 @@
                 msg.style.opacity = '0';
                 setTimeout(() => msg.remove(), 300);
             });
-        }, 3000);
+        }, 4000);
     </script>
     {% block extra_js %}{% endblock %}
 </body>
