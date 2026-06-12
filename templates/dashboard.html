@@ -1,317 +1,147 @@
 {% extends "base.html" %}
-{% block title %}Dashboard — AI Interview Coach{% endblock %}
-{% block page_title %}Dashboard{% endblock %}
-{% block page_breadcrumb %}Welcome back, {{ current_user.username }}{% endblock %}
 
-{% block extra_css %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-    .hero-banner {
-        background: linear-gradient(135deg, #091224 0%, #0d1d38 40%, #122548 100%);
-        border: 1px solid var(--border);
-        border-radius: 20px;
-        padding: 2rem;
-        margin-bottom: 1.5rem;
-        position: relative; overflow: hidden;
-        display: flex; align-items: center; justify-content: space-between; gap: 1.5rem;
-    }
-    .hero-banner::before {
-        content: '';
-        position: absolute; top: -80px; right: -80px;
-        width: 300px; height: 300px;
-        background: radial-gradient(circle, rgba(34,211,238,0.08) 0%, transparent 70%);
-        border-radius: 50%;
-    }
-    .hero-banner::after {
-        content: '';
-        position: absolute; bottom: -60px; left: 40%;
-        width: 200px; height: 200px;
-        background: radial-gradient(circle, rgba(139,92,246,0.06) 0%, transparent 70%);
-        border-radius: 50%;
-    }
-    .hero-greeting { font-size: 1.6rem; font-weight: 800; color: var(--text-primary); }
-    .hero-sub { font-size: 0.875rem; color: var(--text-muted); margin-top: 0.35rem; max-width: 460px; }
-    .hero-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; position: relative; z-index: 1; }
-
-    .feature-card {
-        background: var(--card-bg);
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        padding: 1.5rem;
-        text-decoration: none;
-        display: flex; flex-direction: column; gap: 1rem;
-        transition: all 0.25s;
-        position: relative; overflow: hidden;
-    }
-    .feature-card:hover { transform: translateY(-4px); border-color: var(--border-light); }
-    .feature-card::after {
-        content: '';
-        position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
-        opacity: 0; transition: opacity 0.25s;
-    }
-    .feature-card.fc-cyan::after  { background: linear-gradient(90deg, var(--cyan-400), transparent); }
-    .feature-card.fc-violet::after{ background: linear-gradient(90deg, var(--violet-400), transparent); }
-    .feature-card.fc-emerald::after{background: linear-gradient(90deg, var(--emerald-400), transparent);}
-    .feature-card:hover::after { opacity: 1; }
-
-    .fc-icon-wrap {
-        width: 52px; height: 52px; border-radius: 14px;
-        display: flex; align-items: center; justify-content: center; font-size: 1.25rem;
-    }
-    .fc-title { font-size: 1rem; font-weight: 700; color: var(--text-primary); }
-    .fc-desc  { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; }
-    .fc-arrow { margin-top: auto; color: var(--text-muted); font-size: 0.8rem; display: flex; align-items: center; gap: 0.4rem; transition: gap 0.2s; }
-    .feature-card:hover .fc-arrow { gap: 0.65rem; }
-
-    .chart-card {
-        background: var(--card-bg);
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        padding: 1.5rem;
-    }
-    .chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
-    .chart-title { font-size: 0.9rem; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 0.6rem; }
-    .chart-dot { width: 8px; height: 8px; border-radius: 50%; }
-
-    .activity-row {
-        display: flex; align-items: center; gap: 1rem;
-        padding: 0.85rem 0;
-        border-bottom: 1px solid var(--border);
-    }
-    .activity-row:last-child { border-bottom: none; }
-    .activity-icon { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; flex-shrink: 0; }
-    .activity-text { flex: 1; }
-    .activity-title { font-size: 0.83rem; font-weight: 600; color: var(--text-primary); }
-    .activity-meta  { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.1rem; }
-
-    .score-pill {
-        padding: 0.25rem 0.75rem; border-radius: 20px;
-        font-size: 0.75rem; font-weight: 700;
-    }
-    .score-high   { background: rgba(52,211,153,0.15); color: var(--emerald-400); }
-    .score-medium { background: rgba(251,191,36,0.15);  color: var(--amber-400); }
-    .score-low    { background: rgba(251,113,133,0.15); color: var(--rose-400); }
-</style>
-{% endblock %}
+{% block title %}Dashboard - AI Interview Coach{% endblock %}
 
 {% block content %}
-<!-- Hero Banner -->
-<div class="hero-banner">
-    <div>
-        <div class="hero-greeting">Good {{ 'morning' if now.hour < 12 else ('afternoon' if now.hour < 17 else 'evening') }}, {{ current_user.username }} 👋</div>
-        <p class="hero-sub">Your interview readiness score is trending up. Keep practising to land your dream role.</p>
-        <div class="hero-actions" style="margin-top:1.25rem;">
-            <a href="/mock-interview" class="btn btn-primary"><i class="fas fa-microphone"></i> Start Interview</a>
-            <a href="/resume-analysis" class="btn btn-violet"><i class="fas fa-file-lines"></i> Analyse Resume</a>
-        </div>
-    </div>
-    <div style="text-align:right; flex-shrink:0; position:relative; z-index:1; display:flex; flex-direction:column; align-items:flex-end; gap:0.5rem;">
-        <div style="font-size:3.5rem; font-weight:800; color:var(--cyan-400); font-family:'JetBrains Mono',monospace; line-height:1;">{{ avg_score }}%</div>
-        <div style="font-size:0.78rem; color:var(--text-muted);">Overall Readiness</div>
-        <div class="progress-bar" style="width:180px; margin-top:0.5rem;">
-            <div class="progress-fill" style="width:{{ avg_score }}%;"></div>
-        </div>
-    </div>
-</div>
+<div class="fade-in">
+    <h1 style="margin-bottom: 0.5rem;">Welcome back, {{ current_user.username }}! 👋</h1>
+    <p style="color: var(--gray-600); margin-bottom: 2rem;">Track your progress and continue your interview preparation journey</p>
 
-<!-- Stat Cards -->
-<div class="grid grid-4" style="margin-bottom:1.5rem;">
-    <div class="stat-card">
-        <div class="stat-icon" style="background:rgba(34,211,238,0.1); color:var(--cyan-400);"><i class="fas fa-microphone"></i></div>
-        <div class="stat-value">{{ total_interviews }}</div>
-        <div class="stat-label">Interviews Taken</div>
-        <div class="stat-trend trend-up"><i class="fas fa-arrow-trend-up"></i> Keep practising</div>
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">🎤</div>
+            <div class="stat-value">{{ total_interviews }}</div>
+            <div class="stat-label">Interviews Completed</div>
+            {% if avg_score > 0 %}
+                <small style="color: var(--primary-color);">Avg Score: {{ avg_score }}%</small>
+            {% endif %}
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🧠</div>
+            <div class="stat-value">{{ total_quizzes }}</div>
+            <div class="stat-label">Quizzes Taken</div>
+            {% if avg_quiz > 0 %}
+                <small style="color: var(--primary-color);">Avg Score: {{ avg_quiz }}%</small>
+            {% endif %}
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📄</div>
+            <div class="stat-value">{{ resume_score }}%</div>
+            <div class="stat-label">Latest Resume Score</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🏆</div>
+            <div class="stat-value">{{ (avg_score + avg_quiz + resume_score) // 3 if (avg_score + avg_quiz + resume_score) > 0 else 0 }}%</div>
+            <div class="stat-label">Overall Performance</div>
+        </div>
     </div>
-    <div class="stat-card">
-        <div class="stat-icon" style="background:rgba(139,92,246,0.1); color:var(--violet-400);"><i class="fas fa-chart-line"></i></div>
-        <div class="stat-value">{{ avg_score }}%</div>
-        <div class="stat-label">Avg Interview Score</div>
-        <div class="stat-trend trend-up"><i class="fas fa-arrow-trend-up"></i> Good progress</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-icon" style="background:rgba(52,211,153,0.1); color:var(--emerald-400);"><i class="fas fa-brain"></i></div>
-        <div class="stat-value">{{ total_quizzes }}</div>
-        <div class="stat-label">Quizzes Completed</div>
-        <div class="stat-trend" style="color:var(--text-muted);"><i class="fas fa-star"></i> {{ avg_quiz }}% avg score</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-icon" style="background:rgba(251,191,36,0.1); color:var(--amber-400);"><i class="fas fa-file-lines"></i></div>
-        <div class="stat-value">{{ resumes|default([])|length }}</div>
-        <div class="stat-label">Resumes Analysed</div>
-        <div class="stat-trend" style="color:var(--text-muted);"><i class="fas fa-circle-check"></i> AI-powered analysis</div>
-    </div>
-</div>
 
-<!-- Feature Cards -->
-<div class="grid grid-3" style="margin-bottom:1.5rem;">
-    <a href="/mock-interview" class="feature-card fc-cyan">
-        <div class="fc-icon-wrap" style="background:rgba(34,211,238,0.1); color:var(--cyan-400);"><i class="fas fa-microphone"></i></div>
-        <div>
-            <div class="fc-title">Mock Interview</div>
-            <div class="fc-desc">AI-powered interviews across 15+ roles with real-time scoring, speech-to-text input, and detailed feedback.</div>
-        </div>
-        <div class="fc-arrow" style="color:var(--cyan-400);">Start practising <i class="fas fa-arrow-right"></i></div>
-    </a>
-    <a href="/resume-analysis" class="feature-card fc-violet">
-        <div class="fc-icon-wrap" style="background:rgba(139,92,246,0.1); color:var(--violet-400);"><i class="fas fa-file-lines"></i></div>
-        <div>
-            <div class="fc-title">Resume Analysis</div>
-            <div class="fc-desc">Drag-and-drop your resume for instant AI analysis — role suitability scores, gap identification, and tailored interview prep.</div>
-        </div>
-        <div class="fc-arrow" style="color:var(--violet-400);">Upload resume <i class="fas fa-arrow-right"></i></div>
-    </a>
-    <a href="/skill-quiz" class="feature-card fc-emerald">
-        <div class="fc-icon-wrap" style="background:rgba(52,211,153,0.1); color:var(--emerald-400);"><i class="fas fa-brain"></i></div>
-        <div>
-            <div class="fc-title">Skill Quiz</div>
-            <div class="fc-desc">Adaptive quizzes across Easy / Medium / Hard levels. Non-repeating random questions across 15+ tech and business roles.</div>
-        </div>
-        <div class="fc-arrow" style="color:var(--emerald-400);">Test your skills <i class="fas fa-arrow-right"></i></div>
-    </a>
-</div>
+    <!-- Quick Actions -->
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem;">
+        <a href="{{ url_for('mock_interview') }}" class="btn btn-primary" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">🎤 Start Mock Interview</a>
+        <a href="{{ url_for('resume_analysis') }}" class="btn btn-secondary">📄 Analyze Resume</a>
+        <a href="{{ url_for('skill_quiz') }}" class="btn btn-secondary">🧠 Take a Quiz</a>
+        <a href="{{ url_for('performance') }}" class="btn btn-outline">📊 View Detailed Analytics</a>
+    </div>
 
-<!-- Charts + Activity -->
-<div class="grid grid-2" style="margin-bottom:1.5rem;">
-    <div class="chart-card">
-        <div class="chart-header">
-            <div class="chart-title">
-                <span class="chart-dot" style="background:var(--cyan-400);"></span>
-                Interview Score Progress
+    <div class="grid">
+        <!-- Recent Interviews -->
+        <div class="card">
+            <div class="card-header">
+                <h3 style="margin: 0;">📋 Recent Interviews</h3>
             </div>
-            <span class="badge badge-cyan">Last 10</span>
-        </div>
-        <canvas id="interviewChart" style="max-height:240px;"></canvas>
-    </div>
-    <div class="chart-card">
-        <div class="chart-header">
-            <div class="chart-title">
-                <span class="chart-dot" style="background:var(--violet-400);"></span>
-                Performance by Role
-            </div>
-            <span class="badge badge-violet">Pie view</span>
-        </div>
-        <canvas id="pieChart" style="max-height:240px;"></canvas>
-    </div>
-</div>
-
-<div class="grid grid-2">
-    <div class="chart-card">
-        <div class="chart-header">
-            <div class="chart-title">
-                <span class="chart-dot" style="background:var(--emerald-400);"></span>
-                Quiz Score Trend
+            <div class="card-body">
+                {% if recent_interviews %}
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        {% for interview in recent_interviews %}
+                            <div style="padding: 0.75rem; background: var(--gray-50); border-radius: var(--radius);">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <strong>{{ interview.job_role }}</strong>
+                                        <div style="font-size: 0.875rem; color: var(--gray-500); margin-top: 0.25rem;">
+                                            {{ interview.date.strftime('%Y-%m-%d %H:%M') }}
+                                        </div>
+                                    </div>
+                                    <span class="score-badge {% if interview.score >= 70 %}score-high{% elif interview.score >= 50 %}score-medium{% else %}score-low{% endif %}">
+                                        {{ interview.score }}%
+                                    </span>
+                                </div>
+                                <div style="font-size: 0.875rem; margin-top: 0.5rem; color: var(--gray-600);">
+                                    {{ interview.question[:100] }}...
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p style="text-align: center; color: var(--gray-500); padding: 2rem;">
+                        No interviews yet. <a href="{{ url_for('mock_interview') }}">Start your first mock interview!</a>
+                    </p>
+                {% endif %}
             </div>
         </div>
-        <canvas id="quizChart" style="max-height:220px;"></canvas>
+
+        <!-- Recent Quizzes -->
+        <div class="card">
+            <div class="card-header">
+                <h3 style="margin: 0;">📝 Recent Quizzes</h3>
+            </div>
+            <div class="card-body">
+                {% if recent_quizzes %}
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        {% for quiz in recent_quizzes %}
+                            <div style="padding: 0.75rem; background: var(--gray-50); border-radius: var(--radius);">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <strong>{{ quiz.category }}</strong>
+                                        <div style="font-size: 0.875rem; color: var(--gray-500); margin-top: 0.25rem;">
+                                            {{ quiz.date.strftime('%Y-%m-%d %H:%M') }}
+                                        </div>
+                                    </div>
+                                    <span class="score-badge {% if quiz.score >= 70 %}score-high{% elif quiz.score >= 50 %}score-medium{% else %}score-low{% endif %}">
+                                        {{ quiz.score }}%
+                                    </span>
+                                </div>
+                                <div style="font-size: 0.875rem; margin-top: 0.5rem; color: var(--gray-600);">
+                                    {{ quiz.correct_answers }}/{{ quiz.total_questions }} correct
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p style="text-align: center; color: var(--gray-500); padding: 2rem;">
+                        No quizzes taken yet. <a href="{{ url_for('skill_quiz') }}">Take your first quiz!</a>
+                    </p>
+                {% endif %}
+            </div>
+        </div>
     </div>
 
-    <div class="chart-card">
-        <div class="chart-header">
-            <div class="chart-title"><i class="fas fa-clock-rotate-left" style="color:var(--amber-400);"></i> Recent Activity</div>
-            <a href="/performance" class="btn btn-sm btn-ghost">View all</a>
+    <!-- Tips Section -->
+    <div class="card fade-in" style="margin-top: 1rem;">
+        <div class="card-header">
+            <h3 style="margin: 0;">💡 Pro Tips for Success</h3>
         </div>
-        {% if recent_activity %}
-            {% for item in recent_activity[:6] %}
-            <div class="activity-row">
-                <div class="activity-icon" style="background:rgba({% if item.type == 'interview' %}34,211,238{% else %}139,92,246{% endif %},0.12); color:var({% if item.type == 'interview' %}--cyan-400{% else %}--violet-400{% endif %});">
-                    <i class="fas fa-{{ 'microphone' if item.type == 'interview' else 'brain' }}"></i>
+        <div class="card-body">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                <div>
+                    <strong>🎤 Practice Daily</strong>
+                    <p style="font-size: 0.875rem; color: var(--gray-600); margin-top: 0.25rem;">Regular practice improves confidence and reduces interview anxiety.</p>
                 </div>
-                <div class="activity-text">
-                    <div class="activity-title">{{ item.label }}</div>
-                    <div class="activity-meta">{{ item.date }}</div>
+                <div>
+                    <strong>📄 Update Your Resume</strong>
+                    <p style="font-size: 0.875rem; color: var(--gray-600); margin-top: 0.25rem;">Upload your latest resume for accurate analysis and suggestions.</p>
                 </div>
-                <span class="score-pill {{ 'score-high' if item.score >= 70 else ('score-medium' if item.score >= 50 else 'score-low') }}">{{ item.score }}%</span>
+                <div>
+                    <strong>🧠 Test Your Knowledge</strong>
+                    <p style="font-size: 0.875rem; color: var(--gray-600); margin-top: 0.25rem;">Take quizzes to identify knowledge gaps and improve.</p>
+                </div>
+                <div>
+                    <strong>📊 Track Progress</strong>
+                    <p style="font-size: 0.875rem; color: var(--gray-600); margin-top: 0.25rem;">Review your performance to see improvement over time.</p>
+                </div>
             </div>
-            {% endfor %}
-        {% else %}
-            <div style="text-align:center; padding:2rem; color:var(--text-muted);">
-                <i class="fas fa-inbox" style="font-size:2rem; margin-bottom:0.75rem; display:block;"></i>
-                No activity yet. Start your first interview!
-            </div>
-        {% endif %}
+        </div>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-const chartDefaults = {
-    color: '#8ba5c8',
-    font: { family: "'Plus Jakarta Sans', sans-serif", size: 11 }
-};
-Chart.defaults.color = chartDefaults.color;
-Chart.defaults.font  = chartDefaults.font;
-
-const gridColor = 'rgba(30,53,88,0.8)';
-
-// Interview line chart
-new Chart(document.getElementById('interviewChart'), {
-    type: 'line',
-    data: {
-        labels: {{ interview_dates|safe }},
-        datasets: [{
-            label: 'Score (%)',
-            data: {{ interview_scores|safe }},
-            borderColor: '#22d3ee',
-            backgroundColor: 'rgba(34,211,238,0.07)',
-            tension: 0.4, fill: true,
-            pointBackgroundColor: '#22d3ee',
-            pointBorderColor: '#050d1a',
-            pointBorderWidth: 2, pointRadius: 5, pointHoverRadius: 7
-        }]
-    },
-    options: {
-        responsive: true, maintainAspectRatio: true,
-        scales: {
-            x: { grid: { color: gridColor }, ticks: { maxTicksLimit: 6 } },
-            y: { beginAtZero: true, max: 100, grid: { color: gridColor },
-                 title: { display: true, text: 'Score %' } }
-        },
-        plugins: { legend: { display: false } }
-    }
-});
-
-// Pie chart
-new Chart(document.getElementById('pieChart'), {
-    type: 'doughnut',
-    data: {
-        labels: {{ role_performance.keys()|list|tojson|safe }},
-        datasets: [{
-            data: {{ role_performance.values()|list|tojson|safe }},
-            backgroundColor: ['#22d3ee','#a78bfa','#34d399','#fbbf24','#fb7185','#06b6d4','#8b5cf6','#10b981'],
-            borderColor: '#091224', borderWidth: 3, hoverOffset: 8
-        }]
-    },
-    options: {
-        responsive: true, maintainAspectRatio: true, cutout: '60%',
-        plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 14 } } }
-    }
-});
-
-// Quiz line chart
-new Chart(document.getElementById('quizChart'), {
-    type: 'line',
-    data: {
-        labels: {{ quiz_dates|safe }},
-        datasets: [{
-            label: 'Quiz Score (%)',
-            data: {{ quiz_scores|safe }},
-            borderColor: '#34d399',
-            backgroundColor: 'rgba(52,211,153,0.07)',
-            tension: 0.4, fill: true,
-            pointBackgroundColor: '#34d399',
-            pointBorderColor: '#050d1a',
-            pointBorderWidth: 2, pointRadius: 5, pointHoverRadius: 7
-        }]
-    },
-    options: {
-        responsive: true, maintainAspectRatio: true,
-        scales: {
-            x: { grid: { color: gridColor }, ticks: { maxTicksLimit: 6 } },
-            y: { beginAtZero: true, max: 100, grid: { color: gridColor } }
-        },
-        plugins: { legend: { display: false } }
-    }
-});
-</script>
 {% endblock %}
