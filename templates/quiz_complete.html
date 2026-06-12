@@ -1,11 +1,11 @@
+<!-- templates/quiz_complete.html -->
 {% extends "base.html" %}
-
 {% block content %}
-<div style="max-width: 600px; margin: 0 auto; text-align: center;">
+<div style="max-width: 500px; margin: 2rem auto; text-align: center;">
     <div class="card" style="padding: 2rem;">
-        <div style="font-size: 4rem;">📊</div>
+        <i class="fas fa-chart-line" style="font-size: 4rem; color: #48bb78;"></i>
         <h2>Quiz Completed!</h2>
-        <p>Check your performance in the dashboard!</p>
+        <p>Check your score and keep learning!</p>
         <div style="display: flex; gap: 1rem; margin-top: 1rem;">
             <a href="/skill-quiz" class="btn btn-primary">Take Another</a>
             <a href="/dashboard" class="btn btn-secondary">Dashboard</a>
