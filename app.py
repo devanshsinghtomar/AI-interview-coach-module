@@ -711,3 +711,92 @@ def start_quiz():
     session['quiz_answers'] = []
     session['quiz_current'] = 0
     
+    return redirect(url_for('take_quiz'))
+
+@app.route('/take-quiz')
+@login_required
+def take_quiz():
+    if 'quiz_questions' not in session:
+        return redirect(url_for('skill_quiz'))
+    
+    questions = session['quiz_questions']
+    current = session.get('quiz_current', 0)
+    
+    if current >= len(questions):
+        return redirect(url_for('quiz_complete'))
+    
+    return render_template('take_quiz.html',
+                         question=questions[current],
+                         num=current + 1,
+                         total=len(questions),
+                         category=session['quiz_category'])
+
+@app.route('/submit-quiz', methods=['POST'])
+@login_required
+def submit_quiz():
+    data = request.json
+    answer = data.get('answer')
+    correct = data.get('correct')
+    is_correct = (answer == correct)
+    
+    session['quiz_answers'].append({
+        'question': data.get('question'),
+        'answer': answer,
+        'correct': correct,
+        'is_correct': is_correct,
+        'explanation': data.get('explanation', '')
+    })
+    session['quiz_current'] = session.get('quiz_current', 0) + 1
+    
+    questions = session['quiz_questions']
+    current = session['quiz_current']
+    
+    if current >= len(questions):
+        correct_count = sum(1 for a in session['quiz_answers'] if a['is_correct'])
+        score = int((correct_count / len(questions)) * 100)
+        
+        result = QuizResult(
+            user_id=current_user.id,
+            category=session['quiz_category'],
+            score=score,
+            total_questions=len(questions),
+            correct_answers=correct_count
+        )
+        db.session.add(result)
+        db.session.commit()
+        
+        return jsonify({
+            'completed': True,
+            'score': score,
+            'correct': correct_count,
+            'total': len(questions),
+            'answers': session['quiz_answers']
+        })
+    
+    return jsonify({
+        'completed': False,
+        'next': questions[current],
+        'num': current + 1,
+        'total': len(questions)
+    })
+
+@app.route('/quiz-complete')
+@login_required
+def quiz_complete():
+    return render_template('quiz_complete.html')
+
+@app.route('/performance')
+@login_required
+def performance():
+    interviews = Interview.query.filter_by(user_id=current_user.id).all()
+    quizzes = QuizResult.query.filter_by(user_id=current_user.id).all()
+    resumes = ResumeAnalysis.query.filter_by(user_id=current_user.id).all()
+    
+    return render_template('performance.html',
+                         interviews=interviews,
+                         quizzes=quizzes,
+                         resumes=resumes)
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
