@@ -1,27 +1,93 @@
 {% extends "base.html" %}
 
+{% block title %}Resume Analysis - AI Interview Coach{% endblock %}
+
 {% block content %}
-<div style="max-width: 600px; margin: 0 auto;">
+<div style="max-width: 700px; margin: 0 auto;">
     <div class="card" style="padding: 2rem; text-align: center;">
-        <div style="font-size: 4rem;">📄</div>
-        <h2>Resume Analysis</h2>
-        <p>Upload your PDF resume</p>
+        <i class="fas fa-cloud-upload-alt" style="font-size: 4rem; color: #667eea; margin-bottom: 1rem;"></i>
+        <h2>Upload Your Resume</h2>
+        <p style="color: #718096; margin-bottom: 2rem;">Support PDF, DOCX, TXT files. Get AI-powered analysis and job recommendations.</p>
         
-        <form method="POST" enctype="multipart/form-data">
-            <div style="border: 2px dashed #cbd5e0; border-radius: 10px; padding: 2rem; margin: 1rem 0; cursor: pointer;" onclick="document.getElementById('file').click()">
-                <div id="fileName">Click or drag PDF here</div>
-                <input type="file" name="resume" id="file" accept=".pdf" style="display: none;" required>
+        <form method="POST" enctype="multipart/form-data" id="uploadForm">
+            <div id="dropZone" style="border: 2px dashed #cbd5e0; border-radius: 16px; padding: 3rem; margin-bottom: 1.5rem; cursor: pointer; transition: all 0.3s;">
+                <i id="uploadIcon" class="fas fa-file-pdf" style="font-size: 3rem; color: #cbd5e0; margin-bottom: 1rem;"></i>
+                <p id="uploadText">Click or drag & drop your resume here</p>
+                <p style="font-size: 0.875rem; color: #a0aec0; margin-top: 0.5rem;">PDF, DOCX, TXT (Max 5MB)</p>
+                <input type="file" name="resume" id="fileInput" accept=".pdf,.docx,.txt" style="display: none;" required>
             </div>
-            <button type="submit" class="btn btn-primary" style="width: 100%;">Analyze</button>
+            <button type="submit" id="submitBtn" class="btn btn-primary" style="width: 100%;" disabled>
+                <i class="fas fa-chart-line"></i> Analyze Resume
+            </button>
         </form>
+        
+        <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
+            <div class="grid grid-3" style="gap: 1rem;">
+                <div>
+                    <i class="fas fa-check-circle" style="color: #48bb78;"></i>
+                    <span style="font-size: 0.875rem;">ATS-friendly analysis</span>
+                </div>
+                <div>
+                    <i class="fas fa-bullseye" style="color: #48bb78;"></i>
+                    <span style="font-size: 0.875rem;">Job role matching</span>
+                </div>
+                <div>
+                    <i class="fas fa-chart-line" style="color: #48bb78;"></i>
+                    <span style="font-size: 0.875rem;">Score & improvements</span>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
-document.getElementById('file').onchange = (e) => {
-    if (e.target.files[0]) {
-        document.getElementById('fileName').innerHTML = `✅ ${e.target.files[0].name}`;
-    }
-};
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const uploadIcon = document.getElementById('uploadIcon');
+    const uploadText = document.getElementById('uploadText');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    dropZone.addEventListener('click', () => fileInput.click());
+    
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files[0]) {
+            const file = e.target.files[0];
+            const ext = file.name.split('.').pop().toLowerCase();
+            
+            uploadText.innerHTML = `✅ Selected: ${file.name}`;
+            submitBtn.disabled = false;
+            
+            if (ext === 'pdf') uploadIcon.className = 'fas fa-file-pdf';
+            else if (ext === 'docx') uploadIcon.className = 'fas fa-file-word';
+            else uploadIcon.className = 'fas fa-file-alt';
+            uploadIcon.style.color = '#48bb78';
+            dropZone.style.borderColor = '#48bb78';
+        }
+    });
+    
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = '#667eea';
+        dropZone.style.background = '#f7fafc';
+    });
+    
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.style.borderColor = '#cbd5e0';
+        dropZone.style.background = 'white';
+    });
+    
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const file = e.dataTransfer.files[0];
+        if (file && (file.name.endsWith('.pdf') || file.name.endsWith('.docx') || file.name.endsWith('.txt'))) {
+            fileInput.files = e.dataTransfer.files;
+            uploadText.innerHTML = `✅ Selected: ${file.name}`;
+            submitBtn.disabled = false;
+            uploadIcon.style.color = '#48bb78';
+            dropZone.style.borderColor = '#48bb78';
+        } else {
+            alert('Please upload PDF, DOCX, or TXT file');
+        }
+    });
 </script>
 {% endblock %}
