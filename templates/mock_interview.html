@@ -1,48 +1,350 @@
 {% extends "base.html" %}
+{% block title %}Mock Interview — AI Interview Coach{% endblock %}
+{% block page_title %}Mock Interview{% endblock %}
+{% block page_breadcrumb %}Select a role and start practising{% endblock %}
 
-{% block title %}Mock Interview - AI Interview Coach{% endblock %}
+{% block extra_css %}
+<style>
+    .interview-hero {
+        background: linear-gradient(135deg, rgba(34,211,238,0.06), rgba(139,92,246,0.06));
+        border: 1px solid rgba(34,211,238,0.15);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+    .interview-hero h1 { font-size: 1.6rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.5rem; }
+    .interview-hero p  { color: var(--text-muted); font-size: 0.875rem; }
+
+    .mode-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .mode-card {
+        background: var(--card-bg); border: 2px solid var(--border);
+        border-radius: 14px; padding: 1.25rem; cursor: pointer;
+        transition: all 0.2s; text-align: center;
+    }
+    .mode-card:hover, .mode-card.selected {
+        border-color: var(--cyan-500);
+        background: rgba(34,211,238,0.05);
+    }
+    .mode-card.selected { box-shadow: 0 0 0 3px rgba(34,211,238,0.1); }
+    .mode-icon { font-size: 2rem; margin-bottom: 0.6rem; }
+    .mode-title { font-size: 0.875rem; font-weight: 700; color: var(--text-primary); }
+    .mode-desc  { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+    .role-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); gap: 0.75rem; }
+    .role-chip {
+        display: flex; align-items: center; gap: 0.6rem;
+        padding: 0.65rem 1rem;
+        background: var(--navy-800); border: 1px solid var(--border);
+        border-radius: 10px; cursor: pointer; font-size: 0.8rem; font-weight: 500;
+        color: var(--text-secondary); transition: all 0.2s;
+    }
+    .role-chip:hover { border-color: var(--border-light); color: var(--text-primary); }
+    .role-chip.selected {
+        background: rgba(34,211,238,0.1); border-color: var(--cyan-500);
+        color: var(--cyan-400); font-weight: 600;
+    }
+    .role-chip input[type="radio"] { display: none; }
+
+    .difficulty-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
+    .diff-tab {
+        padding: 0.45rem 1.1rem; border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--navy-800); cursor: pointer;
+        font-size: 0.8rem; font-weight: 600;
+        transition: all 0.2s; color: var(--text-muted);
+    }
+    .diff-tab:hover { border-color: var(--border-light); color: var(--text-primary); }
+    .diff-tab.easy.active   { background: rgba(52,211,153,0.15); border-color: var(--emerald-400); color: var(--emerald-400); }
+    .diff-tab.medium.active { background: rgba(251,191,36,0.15);  border-color: var(--amber-400); color: var(--amber-400); }
+    .diff-tab.hard.active   { background: rgba(251,113,133,0.15); border-color: var(--rose-400); color: var(--rose-400); }
+
+    .interview-options { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; }
+    .option-toggle {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 1rem 1.25rem;
+        background: var(--navy-800); border: 1px solid var(--border);
+        border-radius: 12px;
+    }
+    .option-label { font-size: 0.83rem; font-weight: 600; color: var(--text-secondary); }
+    .option-icon  { font-size: 1rem; color: var(--cyan-400); }
+    .toggle {
+        width: 44px; height: 24px; background: var(--navy-600);
+        border-radius: 12px; position: relative; cursor: pointer;
+        border: none; transition: background 0.2s;
+    }
+    .toggle::after {
+        content: ''; position: absolute; top: 3px; left: 3px;
+        width: 18px; height: 18px; background: white; border-radius: 50%;
+        transition: transform 0.2s;
+    }
+    .toggle.on { background: var(--cyan-500); }
+    .toggle.on::after { transform: translateX(20px); }
+
+    /* LIVE INTERVIEW UI */
+    .interview-ui { display: none; }
+    .question-card {
+        background: linear-gradient(135deg, rgba(34,211,238,0.06), rgba(139,92,246,0.04));
+        border: 1px solid rgba(34,211,238,0.2);
+        border-radius: 16px; padding: 2rem; margin-bottom: 1.25rem;
+    }
+    .question-num { font-size: 0.75rem; font-weight: 700; color: var(--cyan-400); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.75rem; }
+    .question-text { font-size: 1.15rem; font-weight: 600; color: var(--text-primary); line-height: 1.6; }
+
+    .answer-area {
+        position: relative;
+    }
+    .answer-textarea {
+        width: 100%; min-height: 140px;
+        background: var(--navy-800); border: 1px solid var(--border);
+        border-radius: 12px; padding: 1rem; color: var(--text-primary);
+        font-size: 0.9rem; font-family: inherit; resize: vertical;
+        transition: border-color 0.2s;
+    }
+    .answer-textarea:focus { outline: none; border-color: var(--cyan-500); box-shadow: 0 0 0 3px rgba(6,182,212,0.08); }
+    .answer-textarea.recording { border-color: var(--rose-400); animation: pulse-border 1.5s infinite; }
+    @keyframes pulse-border { 0%,100%{border-color:var(--rose-400);} 50%{border-color:rgba(251,113,133,0.4);} }
+
+    .answer-controls {
+        display: flex; align-items: center; gap: 0.75rem; margin-top: 0.75rem; flex-wrap: wrap;
+    }
+    .mic-btn {
+        display: flex; align-items: center; gap: 0.6rem;
+        padding: 0.6rem 1.2rem; border-radius: 10px; border: none;
+        background: var(--navy-700); border: 1px solid var(--border);
+        color: var(--text-secondary); cursor: pointer; font-size: 0.82rem;
+        font-family: inherit; font-weight: 600; transition: all 0.2s;
+    }
+    .mic-btn:hover { background: var(--navy-600); color: var(--text-primary); }
+    .mic-btn.active { background: rgba(251,113,133,0.15); border-color: var(--rose-400); color: var(--rose-400); }
+    .recording-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--rose-400); animation: blink 1s infinite; }
+    @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.2;} }
+
+    .tts-btn {
+        display: flex; align-items: center; gap: 0.6rem;
+        padding: 0.6rem 1.2rem; border-radius: 10px; border: 1px solid var(--border);
+        background: var(--navy-700); color: var(--text-secondary);
+        cursor: pointer; font-size: 0.82rem; font-family: inherit; font-weight: 600;
+        transition: all 0.2s;
+    }
+    .tts-btn:hover { background: var(--navy-600); color: var(--cyan-400); border-color: var(--cyan-500); }
+
+    .progress-top { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+    .q-counter { font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; }
+
+    .timer-badge {
+        background: var(--navy-800); border: 1px solid var(--border);
+        border-radius: 8px; padding: 0.35rem 0.9rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.9rem; font-weight: 700; color: var(--amber-400);
+        margin-left: auto;
+    }
+    .timer-badge.warning { color: var(--rose-400); border-color: var(--rose-400); }
+</style>
+{% endblock %}
 
 {% block content %}
-<div style="max-width: 700px; margin: 0 auto;">
-    <div class="card" style="padding: 2rem;">
-        <div style="text-align: center; margin-bottom: 2rem;">
-            <i class="fas fa-microphone-alt" style="font-size: 3rem; color: #667eea;"></i>
-            <h2>Mock Interview</h2>
-            <p style="color: #718096;">Select a role to start practicing</p>
-        </div>
-        
-        <form method="POST" action="/start-mock-interview">
-            <div class="form-group">
-                <label class="form-label"><i class="fas fa-briefcase"></i> Select Job Role</label>
-                <select name="role" required style="width: 100%; padding: 0.75rem; border-radius: 12px; border: 2px solid #e2e8f0;">
-                    <option value="">-- Choose a role --</option>
-                    {% for role in roles %}
-                    <option value="{{ role }}">{{ role }}</option>
-                    {% endfor %}
-                </select>
+<div id="setupPanel">
+    <div class="interview-hero">
+        <div style="font-size:2.5rem; margin-bottom:0.75rem;">🎤</div>
+        <h1>Mock Interview</h1>
+        <p>Choose your role, difficulty, and preferred answer method. The AI will score and coach you after each answer.</p>
+    </div>
+
+    <form method="POST" action="/start-mock-interview" id="interviewForm">
+        <!-- Step 1: Mode -->
+        <div class="card" style="margin-bottom:1.25rem;">
+            <div class="card-header">
+                <div class="card-title"><i class="fas fa-sliders" style="color:var(--cyan-400);"></i> Step 1 — Answer Mode</div>
             </div>
-            
-            <div style="background: #f7fafc; padding: 1rem; border-radius: 16px; margin: 1.5rem 0;">
-                <div class="grid grid-3" style="text-align: center;">
-                    <div>
-                        <i class="fas fa-question-circle" style="font-size: 1.5rem; color: #667eea;"></i>
-                        <div>6 Questions</div>
-                    </div>
-                    <div>
-                        <i class="fas fa-clock" style="font-size: 1.5rem; color: #667eea;"></i>
-                        <div>10-15 min</div>
-                    </div>
-                    <div>
-                        <i class="fas fa-chart-line" style="font-size: 1.5rem; color: #667eea;"></i>
-                        <div>AI Scoring</div>
-                    </div>
+            <div class="mode-grid">
+                <div class="mode-card selected" onclick="selectMode('text', this)">
+                    <div class="mode-icon">⌨️</div>
+                    <div class="mode-title">Text Input</div>
+                    <div class="mode-desc">Type your answers at your own pace</div>
+                </div>
+                <div class="mode-card" onclick="selectMode('speech', this)">
+                    <div class="mode-icon">🎤</div>
+                    <div class="mode-title">Speech to Text</div>
+                    <div class="mode-desc">Speak your answers — AI transcribes in real-time</div>
+                </div>
+                <div class="mode-card" onclick="selectMode('hybrid', this)">
+                    <div class="mode-icon">🔀</div>
+                    <div class="mode-title">Hybrid</div>
+                    <div class="mode-desc">Type or speak — switch freely anytime</div>
                 </div>
             </div>
-            
-            <button type="submit" class="btn btn-primary" style="width: 100%;">
-                <i class="fas fa-play"></i> Start Interview
-            </button>
-        </form>
-    </div>
+            <input type="hidden" name="answer_mode" id="answerMode" value="text">
+        </div>
+
+        <!-- Step 2: Role -->
+        <div class="card" style="margin-bottom:1.25rem;">
+            <div class="card-header">
+                <div class="card-title"><i class="fas fa-briefcase" style="color:var(--violet-400);"></i> Step 2 — Select Job Role</div>
+                <div class="card-subtitle">Choose one role for your practice session</div>
+            </div>
+            <div class="role-grid">
+                {% for role in roles %}
+                <label class="role-chip" id="chip-{{ loop.index }}">
+                    <input type="radio" name="role" value="{{ role }}" onchange="selectRole('chip-{{ loop.index }}')">
+                    <i class="fas fa-circle-dot" style="font-size:0.7rem; color:var(--cyan-400);"></i>
+                    {{ role }}
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Step 3: Difficulty -->
+        <div class="card" style="margin-bottom:1.25rem;">
+            <div class="card-header">
+                <div class="card-title"><i class="fas fa-gauge-high" style="color:var(--emerald-400);"></i> Step 3 — Difficulty Level</div>
+            </div>
+            <div class="difficulty-tabs">
+                <button type="button" class="diff-tab easy active" onclick="setDiff('easy', this)">🟢 Easy — Fundamentals</button>
+                <button type="button" class="diff-tab medium" onclick="setDiff('medium', this)">🟡 Medium — Applied</button>
+                <button type="button" class="diff-tab hard" onclick="setDiff('hard', this)">🔴 Hard — Expert</button>
+            </div>
+            <input type="hidden" name="difficulty" id="difficulty" value="easy">
+        </div>
+
+        <!-- Step 4: Options -->
+        <div class="card" style="margin-bottom:1.5rem;">
+            <div class="card-header">
+                <div class="card-title"><i class="fas fa-gear" style="color:var(--amber-400);"></i> Step 4 — Interview Options</div>
+            </div>
+            <div class="interview-options">
+                <div class="option-toggle">
+                    <div>
+                        <div class="option-label"><i class="option-icon fas fa-volume-high"></i> Read Questions Aloud</div>
+                        <div style="font-size:0.72rem; color:var(--text-muted); margin-top:0.2rem;">Text-to-speech for questions</div>
+                    </div>
+                    <button type="button" class="toggle" id="ttsToggle" onclick="toggleOpt('ttsToggle','ttsEnabled')"></button>
+                </div>
+                <div class="option-toggle">
+                    <div>
+                        <div class="option-label"><i class="option-icon fas fa-clock"></i> Timed Mode</div>
+                        <div style="font-size:0.72rem; color:var(--text-muted); margin-top:0.2rem;">2 minutes per answer</div>
+                    </div>
+                    <button type="button" class="toggle" id="timerToggle" onclick="toggleOpt('timerToggle','timerEnabled')"></button>
+                </div>
+                <div class="option-toggle">
+                    <div>
+                        <div class="option-label"><i class="option-icon fas fa-comment-dots"></i> Show Hints</div>
+                        <div style="font-size:0.72rem; color:var(--text-muted); margin-top:0.2rem;">Key points to cover</div>
+                    </div>
+                    <button type="button" class="toggle on" id="hintsToggle" onclick="toggleOpt('hintsToggle','hintsEnabled')"></button>
+                </div>
+                <div class="option-toggle">
+                    <div>
+                        <div class="option-label"><i class="option-icon fas fa-chart-simple"></i> Instant Feedback</div>
+                        <div style="font-size:0.72rem; color:var(--text-muted); margin-top:0.2rem;">Score after each answer</div>
+                    </div>
+                    <button type="button" class="toggle on" id="feedbackToggle" onclick="toggleOpt('feedbackToggle','feedbackEnabled')"></button>
+                </div>
+            </div>
+            <input type="hidden" name="tts_enabled" id="ttsEnabled" value="0">
+            <input type="hidden" name="timer_enabled" id="timerEnabled" value="0">
+            <input type="hidden" name="hints_enabled" id="hintsEnabled" value="1">
+            <input type="hidden" name="feedback_enabled" id="feedbackEnabled" value="1">
+        </div>
+
+        <!-- Summary + Launch -->
+        <div class="card" style="border:1px solid rgba(34,211,238,0.2); background:rgba(34,211,238,0.03);">
+            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem;">
+                <div style="display:flex; gap:1.5rem; flex-wrap:wrap;">
+                    <div style="font-size:0.78rem; color:var(--text-muted);">
+                        <span style="color:var(--text-secondary); font-weight:600;">Questions:</span> 6
+                    </div>
+                    <div style="font-size:0.78rem; color:var(--text-muted);">
+                        <span style="color:var(--text-secondary); font-weight:600;">Est. time:</span> 10–15 min
+                    </div>
+                    <div style="font-size:0.78rem; color:var(--text-muted);">
+                        <span style="color:var(--text-secondary); font-weight:600;">Scoring:</span> AI-powered
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg" id="launchBtn">
+                    <i class="fas fa-play"></i> Launch Interview
+                </button>
+            </div>
+        </div>
+    </form>
 </div>
+
+<script>
+    function selectMode(val, el) {
+        document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+        document.getElementById('answerMode').value = val;
+    }
+
+    function selectRole(chipId) {
+        document.querySelectorAll('.role-chip').forEach(c => c.classList.remove('selected'));
+        document.getElementById(chipId).classList.add('selected');
+    }
+
+    function setDiff(val, el) {
+        document.querySelectorAll('.diff-tab').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById('difficulty').value = val;
+    }
+
+    function toggleOpt(btnId, inputId) {
+        const btn = document.getElementById(btnId);
+        const inp = document.getElementById(inputId);
+        btn.classList.toggle('on');
+        inp.value = btn.classList.contains('on') ? '1' : '0';
+    }
+
+    // Speech-to-text for take_interview.html (hooked via global)
+    window.startSTT = function(targetId) {
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+            alert('Speech recognition is not supported in your browser. Please use Chrome.'); return;
+        }
+        const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new Rec();
+        recognition.lang = 'en-US';
+        recognition.continuous = true;
+        recognition.interimResults = true;
+
+        const btn  = document.getElementById('micBtn');
+        const area = document.getElementById(targetId);
+
+        btn.classList.add('active');
+        btn.innerHTML = '<span class="recording-dot"></span> Recording… (click to stop)';
+        area.classList.add('recording');
+
+        let finalTranscript = area.value;
+
+        recognition.onresult = (e) => {
+            let interim = '';
+            for (let i = e.resultIndex; i < e.results.length; i++) {
+                if (e.results[i].isFinal) finalTranscript += e.results[i][0].transcript + ' ';
+                else interim += e.results[i][0].transcript;
+            }
+            area.value = finalTranscript + interim;
+        };
+
+        recognition.onerror = () => stopRec();
+
+        function stopRec() {
+            recognition.stop();
+            btn.classList.remove('active');
+            btn.innerHTML = '<i class="fas fa-microphone"></i> Speak Answer';
+            area.classList.remove('recording');
+            area.value = finalTranscript.trim();
+        }
+
+        btn.onclick = () => stopRec();
+        recognition.start();
+    };
+
+    // TTS helper
+    window.speakText = function(text) {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        const utt = new SpeechSynthesisUtterance(text);
+        utt.rate = 0.9; utt.pitch = 1;
+        window.speechSynthesis.speak(utt);
+    };
+</script>
 {% endblock %}
