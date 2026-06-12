@@ -1,36 +1,160 @@
 {% extends "base.html" %}
 
+{% block title %}Performance Analytics - AI Interview Coach{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
 {% block content %}
 <div>
-    <h1>📈 Performance Analytics</h1>
+    <h1><i class="fas fa-chart-line"></i> Performance Analytics</h1>
+    <p style="color: #718096; margin-bottom: 2rem;">Track your interview preparation progress</p>
     
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 2rem 0;">
-        <div class="card" style="text-align: center;">
-            <div style="font-size: 2rem; font-weight: bold; color: #667eea;">{{ interviews|length }}</div>
-            <div>Interviews</div>
+    <!-- Stats Summary -->
+    <div class="grid grid-4" style="margin-bottom: 2rem;">
+        <div class="stat-card">
+            <div class="stat-number">{{ interviews|length }}</div>
+            <div class="stat-label"><i class="fas fa-microphone-alt"></i> Interviews</div>
         </div>
-        <div class="card" style="text-align: center;">
-            <div style="font-size: 2rem; font-weight: bold; color: #667eea;">{{ quizzes|length }}</div>
-            <div>Quizzes</div>
+        <div class="stat-card">
+            <div class="stat-number">{{ quizzes|length }}</div>
+            <div class="stat-label"><i class="fas fa-brain"></i> Quizzes</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ resumes|length }}</div>
+            <div class="stat-label"><i class="fas fa-file-alt"></i> Resumes</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ (interviews|sum(attribute='score') / (interviews|length) if interviews else 0)|round(1) }}%</div>
+            <div class="stat-label"><i class="fas fa-star"></i> Avg Score</div>
         </div>
     </div>
     
+    <!-- Charts -->
+    <div class="grid grid-2" style="margin-bottom: 2rem;">
+        <div class="card">
+            <h3><i class="fas fa-chart-line"></i> Interview Progress</h3>
+            <canvas id="interviewChart" style="max-height: 300px;"></canvas>
+        </div>
+        <div class="card">
+            <h3><i class="fas fa-chart-line"></i> Quiz Progress</h3>
+            <canvas id="quizChart" style="max-height: 300px;"></canvas>
+        </div>
+    </div>
+    
+    <div class="grid grid-2" style="margin-bottom: 2rem;">
+        <div class="card">
+            <h3><i class="fas fa-chart-pie"></i> Performance by Role</h3>
+            <canvas id="rolePieChart" style="max-height: 300px;"></canvas>
+        </div>
+        <div class="card">
+            <h3><i class="fas fa-chart-pie"></i> Quiz Performance by Category</h3>
+            <canvas id="quizPieChart" style="max-height: 300px;"></canvas>
+        </div>
+    </div>
+    
+    <!-- Recent Activity -->
     <div class="card">
-        <h3>Recent Interviews</h3>
-        {% for i in interviews[:5] %}
-        <div style="padding: 0.5rem 0; border-bottom: 1px solid #e2e8f0;">
-            {{ i.job_role }} - Score: {{ i.score }}% ({{ i.date.strftime('%Y-%m-%d') }})
+        <h3><i class="fas fa-history"></i> Recent Activity</h3>
+        <div style="margin-top: 1rem;">
+            {% for interview in interviews[:5] %}
+            <div style="padding: 0.75rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <i class="fas fa-microphone-alt" style="color: #667eea;"></i>
+                    <strong>{{ interview.job_role }}</strong>
+                    <div style="font-size: 0.875rem; color: #718096;">{{ interview.date.strftime('%Y-%m-%d %H:%M') }}</div>
+                </div>
+                <span style="background: {% if interview.score >= 70 %}#48bb78{% elif interview.score >= 50 %}#ed8936{% else %}#ef4444{% endif %}; color: white; padding: 0.25rem 0.75rem; border-radius: 20px;">
+                    {{ interview.score }}%
+                </span>
+            </div>
+            {% endfor %}
         </div>
-        {% endfor %}
-    </div>
-    
-    <div class="card" style="margin-top: 1rem;">
-        <h3>Recent Quizzes</h3>
-        {% for q in quizzes[:5] %}
-        <div style="padding: 0.5rem 0; border-bottom: 1px solid #e2e8f0;">
-            {{ q.category }} - Score: {{ q.score }}% ({{ q.date.strftime('%Y-%m-%d') }})
-        </div>
-        {% endfor %}
     </div>
 </div>
+
+<script>
+// Interview Chart
+new Chart(document.getElementById('interviewChart'), {
+    type: 'line',
+    data: {
+        labels: {{ interview_dates|safe }},
+        datasets: [{
+            label: 'Interview Score (%)',
+            data: {{ interview_scores|safe }},
+            borderColor: '#667eea',
+            backgroundColor: 'rgba(102,126,234,0.1)',
+            tension: 0.3,
+            fill: true,
+            pointBackgroundColor: '#667eea',
+            pointRadius: 5
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        scales: { y: { beginAtZero: true, max: 100, title: { display: true, text: 'Score (%)' } } }
+    }
+});
+
+// Quiz Chart
+new Chart(document.getElementById('quizChart'), {
+    type: 'line',
+    data: {
+        labels: {{ quiz_dates|safe }},
+        datasets: [{
+            label: 'Quiz Score (%)',
+            data: {{ quiz_scores|safe }},
+            borderColor: '#48bb78',
+            backgroundColor: 'rgba(72,187,120,0.1)',
+            tension: 0.3,
+            fill: true,
+            pointBackgroundColor: '#48bb78',
+            pointRadius: 5
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        scales: { y: { beginAtZero: true, max: 100, title: { display: true, text: 'Score (%)' } } }
+    }
+});
+
+// Role Performance Pie Chart
+new Chart(document.getElementById('rolePieChart'), {
+    type: 'pie',
+    data: {
+        labels: {{ role_performance.keys()|list|tojson|safe }},
+        datasets: [{
+            data: {{ role_performance.values()|list|tojson|safe }},
+            backgroundColor: ['#667eea', '#48bb78', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec489a', '#10b981'],
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: { legend: { position: 'bottom' } }
+    }
+});
+
+// Quiz Performance Pie Chart
+new Chart(document.getElementById('quizPieChart'), {
+    type: 'pie',
+    data: {
+        labels: {{ quiz_performance.keys()|list|tojson|safe }},
+        datasets: [{
+            data: {{ quiz_performance.values()|list|tojson|safe }},
+            backgroundColor: ['#667eea', '#48bb78', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec489a', '#10b981'],
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: { legend: { position: 'bottom' } }
+    }
+});
+</script>
 {% endblock %}
