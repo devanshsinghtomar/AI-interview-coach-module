@@ -1,15 +1,80 @@
-<div class="bg-white rounded-xl shadow-md p-6">
-    <h2 class="text-2xl font-bold text-gray-800 mb-4">📄 Resume Analysis</h2>
-    <div id="dropZone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 transition-all"><i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-2"></i><p class="text-gray-600">Drag & drop your resume here or click to upload</p><input type="file" id="fileInput" class="hidden" accept=".pdf,.docx,.txt"></div>
-    <div id="analysisResult" class="mt-6 hidden"><div class="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg"><p class="text-lg font-semibold" id="suitabilityText"></p><div class="mt-3"><p class="font-semibold">🎯 Suggested Roles:</p><p id="rolesList" class="text-gray-700"></p><p class="font-semibold mt-2">📋 Key Responsibilities:</p><p id="responsibilitiesList" class="text-gray-700"></p></div><button onclick="startMockFromResume()" class="mt-4 bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700"><i class="fas fa-microphone mr-2"></i>Start Mock Interview Based on Resume</button></div></div>
+{% extends "base.html" %}
+
+{% block title %}Resume Analysis - AI Interview Coach{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <h1>📄 Resume Analysis</h1>
+    <p style="color: var(--gray-600); margin-bottom: 2rem;">Upload your resume (PDF or TXT) for AI-powered analysis. Get detailed feedback, strengths, and role recommendations.</p>
+
+    <div class="grid">
+        <div class="card">
+            <div class="card-header">
+                <h3 style="margin: 0;">📤 Upload Resume</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('resume_analysis') }}" enctype="multipart/form-data" id="uploadForm">
+                    <div class="form-group">
+                        <label class="form-label" for="resume">Select Resume File</label>
+                        <input type="file" class="form-control" id="resume" name="resume" accept=".pdf,.txt" required>
+                        <small style="color: var(--gray-500);">Supported formats: PDF, TXT (Max 16MB)</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block" id="uploadBtn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        📊 Analyze Resume
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 style="margin: 0;">📋 What We Analyze</h3>
+            </div>
+            <div class="card-body">
+                <ul style="margin-left: 1rem; line-height: 1.8;">
+                    <li>✅ Skills matching for different job roles</li>
+                    <li>✅ Resume content and structure</li>
+                    <li>✅ Keyword optimization</li>
+                    <li>✅ Contact information completeness</li>
+                    <li>✅ Experience and education details</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tips for Better Resume -->
+    <div class="card" style="margin-top: 1.5rem;">
+        <div class="card-header">
+            <h3 style="margin: 0;">💡 Tips for a Great Resume</h3>
+        </div>
+        <div class="card-body">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                <div>
+                    <strong>🎯 Tailor Your Resume</strong>
+                    <p style="font-size: 0.875rem; color: var(--gray-600);">Customize your resume for each job application</p>
+                </div>
+                <div>
+                    <strong>📊 Use Action Verbs</strong>
+                    <p style="font-size: 0.875rem; color: var(--gray-600);">Start bullet points with strong action words</p>
+                </div>
+                <div>
+                    <strong>🔑 Include Keywords</strong>
+                    <p style="font-size: 0.875rem; color: var(--gray-600);">Use industry-specific keywords from job descriptions</p>
+                </div>
+                <div>
+                    <strong>📏 Keep It Concise</strong>
+                    <p style="font-size: 0.875rem; color: var(--gray-600);">Aim for 1-2 pages maximum</p>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
 <script>
-const dropZone=document.getElementById('dropZone');const fileInput=document.getElementById('fileInput');
-dropZone.addEventListener('click',()=>fileInput.click());
-dropZone.addEventListener('dragover',(e)=>{e.preventDefault();dropZone.classList.add('drag-active');});
-dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('drag-active'));
-dropZone.addEventListener('drop',(e)=>{e.preventDefault();dropZone.classList.remove('drag-active');const file=e.dataTransfer.files[0];if(file)analyzeResume(file);});
-fileInput.addEventListener('change',(e)=>{if(e.target.files[0])analyzeResume(e.target.files[0]);});
-function analyzeResume(file){window.incrementResume();document.getElementById('analysisResult').classList.remove('hidden');const roles=["Frontend Developer","Backend Developer","Full Stack Developer","Data Scientist","DevOps Engineer"];const randomRole=roles[Math.floor(Math.random()*roles.length)];const suitability=Math.floor(Math.random()*41)+60;document.getElementById('suitabilityText').innerHTML=`<i class="fas fa-chart-line text-blue-500 mr-2"></i>Suitability: ${suitability}% for ${randomRole}`;document.getElementById('rolesList').innerHTML=randomRole==="Frontend Developer"?"• React/Vue/Angular Developer<br>• UI/UX focused Engineer":randomRole==="Backend Developer"?"• API Developer<br>• Database Engineer":randomRole==="Data Scientist"?"• ML Engineer<br>• Data Analyst":"• Cloud Engineer<br>• Automation Expert";document.getElementById('responsibilitiesList').innerHTML="• Design and implement features<br>• Write clean, maintainable code<br>• Collaborate with cross-functional teams<br>• Troubleshoot and debug issues";window.resumeContext={role:randomRole,suitability:suitability};addActivity(`Resume analyzed: ${suitability}% match for ${randomRole}`,'resume');}
-function startMockFromResume(){if(window.resumeContext){showSection('mockInterview');setTimeout(()=>{document.getElementById('currentQuestion').innerText=`Based on your ${window.resumeContext.role} resume, tell me about your most relevant project.`;document.getElementById('feedback').innerHTML='<span class="text-green-500">🎯 This question is tailored to your resume!</span>';},500);}}
+    document.getElementById('uploadForm').addEventListener('submit', function() {
+        const btn = document.getElementById('uploadBtn');
+        btn.disabled = true;
+        btn.textContent = 'Analyzing... ⏳';
+    });
 </script>
+{% endblock %}
