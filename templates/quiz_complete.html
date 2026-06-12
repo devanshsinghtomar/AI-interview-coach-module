@@ -1,14 +1,45 @@
-<!-- templates/quiz_complete.html -->
 {% extends "base.html" %}
+
+{% block title %}Quiz Complete - AI Interview Coach{% endblock %}
+
 {% block content %}
-<div style="max-width: 500px; margin: 2rem auto; text-align: center;">
-    <div class="card" style="padding: 2rem;">
-        <i class="fas fa-chart-line" style="font-size: 4rem; color: #48bb78;"></i>
-        <h2>Quiz Completed!</h2>
-        <p>Check your score and keep learning!</p>
-        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-            <a href="/skill-quiz" class="btn btn-primary">Take Another</a>
-            <a href="/dashboard" class="btn btn-secondary">Dashboard</a>
+<div style="max-width: 600px; margin: 0 auto; text-align: center;" class="fade-in">
+    <div class="card">
+        <div class="card-body" style="padding: 3rem 2rem;">
+            <div style="font-size: 5rem;">🏆</div>
+            <h1 style="margin: 1rem 0;">Quiz Complete!</h1>
+            <p style="color: var(--gray-600); margin-bottom: 2rem;">
+                Great job completing the quiz! Check your performance and keep learning.
+            </p>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <a href="{{ url_for('skill_quiz') }}" class="btn btn-primary">🧠 Take Another Quiz</a>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">📊 View Dashboard</a>
+                <a href="{{ url_for('mock_interview') }}" class="btn btn-outline">🎤 Practice Interview</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid" style="margin-top: 2rem;">
+        <div class="card">
+            <div class="card-body" style="text-align: center;">
+                <div style="font-size: 2rem;">📚</div>
+                <h3>Review Your Answers</h3>
+                <p style="font-size: 0.875rem;">Go back and review questions you got wrong</p>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body" style="text-align: center;">
+                <div style="font-size: 2rem;">🎯</div>
+                <h3>Focus on Weak Areas</h3>
+                <p style="font-size: 0.875rem;">Identify topics that need more practice</p>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body" style="text-align: center;">
+                <div style="font-size: 2rem;">📈</div>
+                <h3>Track Progress</h3>
+                <p style="font-size: 0.875rem;">Take quizzes regularly to see improvement</p>
+            </div>
         </div>
     </div>
 </div>
