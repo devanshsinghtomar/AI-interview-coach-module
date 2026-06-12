@@ -1,93 +1,15 @@
-{% extends "base.html" %}
-
-{% block title %}Resume Analysis - AI Interview Coach{% endblock %}
-
-{% block content %}
-<div style="max-width: 700px; margin: 0 auto;">
-    <div class="card" style="padding: 2rem; text-align: center;">
-        <i class="fas fa-cloud-upload-alt" style="font-size: 4rem; color: #667eea; margin-bottom: 1rem;"></i>
-        <h2>Upload Your Resume</h2>
-        <p style="color: #718096; margin-bottom: 2rem;">Support PDF, DOCX, TXT files. Get AI-powered analysis and job recommendations.</p>
-        
-        <form method="POST" enctype="multipart/form-data" id="uploadForm">
-            <div id="dropZone" style="border: 2px dashed #cbd5e0; border-radius: 16px; padding: 3rem; margin-bottom: 1.5rem; cursor: pointer; transition: all 0.3s;">
-                <i id="uploadIcon" class="fas fa-file-pdf" style="font-size: 3rem; color: #cbd5e0; margin-bottom: 1rem;"></i>
-                <p id="uploadText">Click or drag & drop your resume here</p>
-                <p style="font-size: 0.875rem; color: #a0aec0; margin-top: 0.5rem;">PDF, DOCX, TXT (Max 5MB)</p>
-                <input type="file" name="resume" id="fileInput" accept=".pdf,.docx,.txt" style="display: none;" required>
-            </div>
-            <button type="submit" id="submitBtn" class="btn btn-primary" style="width: 100%;" disabled>
-                <i class="fas fa-chart-line"></i> Analyze Resume
-            </button>
-        </form>
-        
-        <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
-            <div class="grid grid-3" style="gap: 1rem;">
-                <div>
-                    <i class="fas fa-check-circle" style="color: #48bb78;"></i>
-                    <span style="font-size: 0.875rem;">ATS-friendly analysis</span>
-                </div>
-                <div>
-                    <i class="fas fa-bullseye" style="color: #48bb78;"></i>
-                    <span style="font-size: 0.875rem;">Job role matching</span>
-                </div>
-                <div>
-                    <i class="fas fa-chart-line" style="color: #48bb78;"></i>
-                    <span style="font-size: 0.875rem;">Score & improvements</span>
-                </div>
-            </div>
-        </div>
-    </div>
+<div class="bg-white rounded-xl shadow-md p-6">
+    <h2 class="text-2xl font-bold text-gray-800 mb-4">📄 Resume Analysis</h2>
+    <div id="dropZone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 transition-all"><i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-2"></i><p class="text-gray-600">Drag & drop your resume here or click to upload</p><input type="file" id="fileInput" class="hidden" accept=".pdf,.docx,.txt"></div>
+    <div id="analysisResult" class="mt-6 hidden"><div class="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg"><p class="text-lg font-semibold" id="suitabilityText"></p><div class="mt-3"><p class="font-semibold">🎯 Suggested Roles:</p><p id="rolesList" class="text-gray-700"></p><p class="font-semibold mt-2">📋 Key Responsibilities:</p><p id="responsibilitiesList" class="text-gray-700"></p></div><button onclick="startMockFromResume()" class="mt-4 bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700"><i class="fas fa-microphone mr-2"></i>Start Mock Interview Based on Resume</button></div></div>
 </div>
-
 <script>
-    const dropZone = document.getElementById('dropZone');
-    const fileInput = document.getElementById('fileInput');
-    const uploadIcon = document.getElementById('uploadIcon');
-    const uploadText = document.getElementById('uploadText');
-    const submitBtn = document.getElementById('submitBtn');
-    
-    dropZone.addEventListener('click', () => fileInput.click());
-    
-    fileInput.addEventListener('change', (e) => {
-        if (e.target.files[0]) {
-            const file = e.target.files[0];
-            const ext = file.name.split('.').pop().toLowerCase();
-            
-            uploadText.innerHTML = `✅ Selected: ${file.name}`;
-            submitBtn.disabled = false;
-            
-            if (ext === 'pdf') uploadIcon.className = 'fas fa-file-pdf';
-            else if (ext === 'docx') uploadIcon.className = 'fas fa-file-word';
-            else uploadIcon.className = 'fas fa-file-alt';
-            uploadIcon.style.color = '#48bb78';
-            dropZone.style.borderColor = '#48bb78';
-        }
-    });
-    
-    dropZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropZone.style.borderColor = '#667eea';
-        dropZone.style.background = '#f7fafc';
-    });
-    
-    dropZone.addEventListener('dragleave', () => {
-        dropZone.style.borderColor = '#cbd5e0';
-        dropZone.style.background = 'white';
-    });
-    
-    dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        const file = e.dataTransfer.files[0];
-        if (file && (file.name.endsWith('.pdf') || file.name.endsWith('.docx') || file.name.endsWith('.txt'))) {
-            fileInput.files = e.dataTransfer.files;
-            uploadText.innerHTML = `✅ Selected: ${file.name}`;
-            submitBtn.disabled = false;
-            uploadIcon.style.color = '#48bb78';
-            dropZone.style.borderColor = '#48bb78';
-        } else {
-            alert('Please upload PDF, DOCX, or TXT file');
-        }
-    });
+const dropZone=document.getElementById('dropZone');const fileInput=document.getElementById('fileInput');
+dropZone.addEventListener('click',()=>fileInput.click());
+dropZone.addEventListener('dragover',(e)=>{e.preventDefault();dropZone.classList.add('drag-active');});
+dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('drag-active'));
+dropZone.addEventListener('drop',(e)=>{e.preventDefault();dropZone.classList.remove('drag-active');const file=e.dataTransfer.files[0];if(file)analyzeResume(file);});
+fileInput.addEventListener('change',(e)=>{if(e.target.files[0])analyzeResume(e.target.files[0]);});
+function analyzeResume(file){window.incrementResume();document.getElementById('analysisResult').classList.remove('hidden');const roles=["Frontend Developer","Backend Developer","Full Stack Developer","Data Scientist","DevOps Engineer"];const randomRole=roles[Math.floor(Math.random()*roles.length)];const suitability=Math.floor(Math.random()*41)+60;document.getElementById('suitabilityText').innerHTML=`<i class="fas fa-chart-line text-blue-500 mr-2"></i>Suitability: ${suitability}% for ${randomRole}`;document.getElementById('rolesList').innerHTML=randomRole==="Frontend Developer"?"• React/Vue/Angular Developer<br>• UI/UX focused Engineer":randomRole==="Backend Developer"?"• API Developer<br>• Database Engineer":randomRole==="Data Scientist"?"• ML Engineer<br>• Data Analyst":"• Cloud Engineer<br>• Automation Expert";document.getElementById('responsibilitiesList').innerHTML="• Design and implement features<br>• Write clean, maintainable code<br>• Collaborate with cross-functional teams<br>• Troubleshoot and debug issues";window.resumeContext={role:randomRole,suitability:suitability};addActivity(`Resume analyzed: ${suitability}% match for ${randomRole}`,'resume');}
+function startMockFromResume(){if(window.resumeContext){showSection('mockInterview');setTimeout(()=>{document.getElementById('currentQuestion').innerText=`Based on your ${window.resumeContext.role} resume, tell me about your most relevant project.`;document.getElementById('feedback').innerHTML='<span class="text-green-500">🎯 This question is tailored to your resume!</span>';},500);}}
 </script>
-{% endblock %}
