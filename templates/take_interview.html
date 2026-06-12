@@ -53,4 +53,21 @@ document.getElementById('answerForm').addEventListener('submit', async (e) => {
         feedbackDiv.innerHTML = `
             <div style="background: ${bgColor}; color: white; padding: 1rem; border-radius: 12px;">
                 <i class="fas fa-chart-line"></i> <strong>Score: ${data.score}%</strong>
-                <p style="margin-top:
+                <p style="margin-top: 0.5rem;">${data.feedback}</p>
+            </div>
+        `;
+        
+        document.querySelector('textarea').value = '';
+        document.querySelector('input[name="question"]').value = data.next;
+        document.querySelector('h3 + p').textContent = data.next;
+        document.querySelector('span:last-child').innerHTML = `<i class="fas fa-question-circle"></i> Question ${data.num} of ${data.total}`;
+        
+        setTimeout(() => {
+            feedbackDiv.innerHTML = '';
+        }, 3000);
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Answer';
+    }
+});
+</script>
+{% endblock %}
