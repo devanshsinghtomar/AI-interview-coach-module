@@ -1,73 +1,243 @@
 {% extends "base.html" %}
+{% block title %}Interview in Progress — AI Interview Coach{% endblock %}
+{% block page_title %}Interview in Progress{% endblock %}
+{% block page_breadcrumb %}{{ role }} — Question {{ num }} of {{ total }}{% endblock %}
 
-{% block title %}Interview Session - AI Interview Coach{% endblock %}
+{% block extra_css %}
+<style>
+    .interview-wrap { max-width: 800px; margin: 0 auto; }
+
+    .progress-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .progress-info { flex: 1; }
+    .progress-text { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+
+    .timer-display {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.1rem; font-weight: 700;
+        padding: 0.45rem 1rem; border-radius: 10px;
+        background: var(--navy-800); border: 1px solid var(--border);
+        color: var(--amber-400); white-space: nowrap;
+    }
+    .timer-display.warning { color: var(--rose-400); border-color: var(--rose-400); animation: pulse-border 1s infinite; }
+    @keyframes pulse-border { 0%,100%{border-color:var(--rose-400);} 50%{border-color:rgba(251,113,133,0.3);} }
+
+    .role-badge { display: flex; align-items: center; gap: 0.5rem; padding: 0.45rem 1rem; border-radius: 10px; background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.2); font-size: 0.8rem; font-weight: 700; color: var(--cyan-400); }
+
+    .question-card {
+        background: linear-gradient(135deg, rgba(34,211,238,0.06), rgba(139,92,246,0.04));
+        border: 1px solid rgba(34,211,238,0.2); border-radius: 20px;
+        padding: 2rem; margin-bottom: 1.25rem;
+    }
+    .q-num { font-size: 0.72rem; font-weight: 700; color: var(--cyan-400); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 0.85rem; display: flex; align-items: center; gap: 0.5rem; }
+    .q-text { font-size: 1.15rem; font-weight: 600; color: var(--text-primary); line-height: 1.65; }
+
+    .tts-row { display: flex; gap: 0.6rem; align-items: center; margin-top: 1rem; flex-wrap: wrap; }
+    .tts-play-btn {
+        display: flex; align-items: center; gap: 0.5rem;
+        padding: 0.45rem 1rem; border-radius: 8px;
+        background: var(--navy-700); border: 1px solid var(--border);
+        color: var(--text-secondary); cursor: pointer; font-size: 0.78rem;
+        font-family: inherit; font-weight: 600; transition: all 0.2s;
+    }
+    .tts-play-btn:hover { color: var(--cyan-400); border-color: var(--cyan-500); background: rgba(34,211,238,0.06); }
+
+    .hint-box {
+        display: none; background: rgba(251,191,36,0.07);
+        border: 1px solid rgba(251,191,36,0.2); border-radius: 12px;
+        padding: 1rem 1.25rem; margin-bottom: 1.25rem;
+        font-size: 0.83rem; color: var(--amber-400); line-height: 1.6;
+    }
+    .hint-box.show { display: block; }
+
+    .answer-section { margin-bottom: 1.25rem; }
+    .answer-label { font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); letter-spacing: 0.04em; margin-bottom: 0.6rem; display: block; }
+    textarea#answerText {
+        width: 100%; min-height: 150px; resize: vertical;
+        background: var(--navy-800); border: 1px solid var(--border);
+        border-radius: 14px; padding: 1rem 1.1rem;
+        color: var(--text-primary); font-size: 0.9rem;
+        font-family: inherit; transition: all 0.2s; line-height: 1.6;
+    }
+    textarea#answerText:focus { outline: none; border-color: var(--cyan-500); box-shadow: 0 0 0 3px rgba(6,182,212,0.08); }
+    textarea#answerText.recording { border-color: var(--rose-400); }
+
+    .controls-row { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+    .mic-btn {
+        display: flex; align-items: center; gap: 0.6rem;
+        padding: 0.6rem 1.1rem; border-radius: 10px;
+        background: var(--navy-700); border: 1px solid var(--border);
+        color: var(--text-secondary); cursor: pointer; font-size: 0.82rem;
+        font-family: inherit; font-weight: 600; transition: all 0.2s;
+    }
+    .mic-btn:hover { background: var(--navy-600); color: var(--text-primary); }
+    .mic-btn.active { background: rgba(251,113,133,0.12); border-color: var(--rose-400); color: var(--rose-400); }
+
+    .rec-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--rose-400); animation: blink 1s infinite; }
+    @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.2;} }
+
+    .char-count { font-size: 0.72rem; color: var(--text-muted); margin-left: auto; }
+</style>
+{% endblock %}
 
 {% block content %}
-<div style="max-width: 800px; margin: 0 auto;">
-    <div class="card" style="padding: 2rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-            <span style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 0.5rem 1rem; border-radius: 25px;">
-                <i class="fas fa-briefcase"></i> {{ role }}
-            </span>
-            <span style="color: #718096;">
-                <i class="fas fa-question-circle"></i> Question {{ num }} of {{ total }}
-            </span>
-        </div>
-        
-        <div style="background: #f7fafc; padding: 1.5rem; border-radius: 20px; margin-bottom: 1.5rem;">
-            <h3><i class="fas fa-question"></i> Question:</h3>
-            <p style="font-size: 1.1rem; line-height: 1.6; margin-top: 0.5rem;">{{ question }}</p>
-        </div>
-        
-        <form id="answerForm">
-            <div class="form-group">
-                <label class="form-label"><i class="fas fa-edit"></i> Your Answer:</label>
-                <textarea name="answer" rows="8" required placeholder="Type your detailed answer here... Be specific and provide examples!" style="width: 100%; padding: 1rem; border: 2px solid #e2e8f0; border-radius: 12px; font-family: inherit;"></textarea>
+<div class="interview-wrap">
+    <div class="progress-header">
+        <div class="role-badge"><i class="fas fa-briefcase"></i> {{ role }}</div>
+        <div class="progress-info">
+            <div class="progress-text">
+                <span>Question {{ num }} of {{ total }}</span>
+                <span>{{ ((num / total) * 100)|round|int }}% complete</span>
             </div>
-            <input type="hidden" name="question" value="{{ question }}">
-            <button type="submit" class="btn btn-primary" style="width: 100%;">
-                <i class="fas fa-paper-plane"></i> Submit Answer
-            </button>
-        </form>
-        
-        <div id="feedbackDiv" style="margin-top: 1.5rem;"></div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width:{{ ((num / total) * 100)|round|int }}%;"></div>
+            </div>
+        </div>
+        <div class="timer-display" id="timerDisplay" style="display:{{ 'flex' if timer_enabled else 'none' }}">
+            <i class="fas fa-clock" style="font-size:0.9rem;"></i>
+            <span id="timerVal">02:00</span>
+        </div>
     </div>
+
+    <!-- Question -->
+    <div class="question-card">
+        <div class="q-num"><i class="fas fa-circle-question"></i> Question {{ num }}</div>
+        <div class="q-text" id="questionText">{{ question.question }}</div>
+        <div class="tts-row">
+            <button type="button" class="tts-play-btn" onclick="speakQ()">
+                <i class="fas fa-volume-high"></i> Read aloud
+            </button>
+            {% if hints_enabled and question.keywords %}
+            <button type="button" class="tts-play-btn" onclick="toggleHint()">
+                <i class="fas fa-lightbulb"></i> Show hint
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if hints_enabled and question.keywords %}
+    <div class="hint-box" id="hintBox">
+        <strong><i class="fas fa-lightbulb" style="margin-right:0.4rem;"></i>Key points to cover:</strong>
+        {{ question.keywords|join(', ') }}
+    </div>
+    {% endif %}
+
+    <!-- Answer -->
+    <form method="POST" action="/submit-answer" id="answerForm">
+        <input type="hidden" name="question_index" value="{{ question_index }}">
+
+        <div class="answer-section">
+            <label class="answer-label">YOUR ANSWER</label>
+            <textarea name="answer" id="answerText" placeholder="Type your answer here, or use the microphone button to speak…" required></textarea>
+            <div class="controls-row" style="margin-top:0.6rem;">
+                <button type="button" class="mic-btn" id="micBtn" onclick="toggleSTT()">
+                    <i class="fas fa-microphone"></i> Speak Answer
+                </button>
+                <button type="button" class="tts-play-btn" onclick="clearAnswer()">
+                    <i class="fas fa-rotate"></i> Clear
+                </button>
+                <span class="char-count" id="charCount">0 characters</span>
+            </div>
+        </div>
+
+        <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+            <button type="submit" class="btn btn-primary btn-lg" style="flex:1; max-width:300px;">
+                <i class="fas fa-arrow-right"></i>
+                {{ 'Submit & Finish' if num == total else 'Submit & Next Question' }}
+            </button>
+            {% if num < total %}
+            <a href="/skip-question" class="btn btn-ghost">Skip <i class="fas fa-forward"></i></a>
+            {% endif %}
+            <a href="/end-interview" class="btn btn-danger btn-sm" style="margin-left:auto;" onclick="return confirm('End interview early?')">
+                <i class="fas fa-stop"></i> End Early
+            </a>
+        </div>
+    </form>
 </div>
 
 <script>
-document.getElementById('answerForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    const submitBtn = e.target.querySelector('button');
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
-    
-    const response = await fetch('/submit-answer', { method: 'POST', body: formData });
-    const data = await response.json();
-    
-    if (data.completed) {
-        window.location.href = '/interview-complete';
-    } else {
-        const feedbackDiv = document.getElementById('feedbackDiv');
-        const bgColor = data.score >= 70 ? '#48bb78' : (data.score >= 50 ? '#ed8936' : '#ef4444');
-        feedbackDiv.innerHTML = `
-            <div style="background: ${bgColor}; color: white; padding: 1rem; border-radius: 12px;">
-                <i class="fas fa-chart-line"></i> <strong>Score: ${data.score}%</strong>
-                <p style="margin-top: 0.5rem;">${data.feedback}</p>
-            </div>
-        `;
-        
-        document.querySelector('textarea').value = '';
-        document.querySelector('input[name="question"]').value = data.next;
-        document.querySelector('h3 + p').textContent = data.next;
-        document.querySelector('span:last-child').innerHTML = `<i class="fas fa-question-circle"></i> Question ${data.num} of ${data.total}`;
-        
-        setTimeout(() => {
-            feedbackDiv.innerHTML = '';
-        }, 3000);
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Answer';
+    // Character counter
+    const ta = document.getElementById('answerText');
+    const cc = document.getElementById('charCount');
+    ta.addEventListener('input', () => cc.textContent = ta.value.length + ' characters');
+
+    // TTS for question
+    function speakQ() {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(document.getElementById('questionText').textContent);
+        u.rate = 0.92; u.pitch = 1;
+        window.speechSynthesis.speak(u);
     }
-});
+
+    function toggleHint() {
+        const h = document.getElementById('hintBox');
+        if (h) h.classList.toggle('show');
+    }
+
+    function clearAnswer() { ta.value = ''; cc.textContent = '0 characters'; }
+
+    // Speech-to-text
+    let recognition = null;
+    let isRecording = false;
+    let finalTranscript = '';
+
+    function toggleSTT() {
+        if (isRecording) { stopSTT(); return; }
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+            alert('Speech recognition requires Chrome or Edge.'); return;
+        }
+        const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new Rec();
+        recognition.lang = 'en-US'; recognition.continuous = true; recognition.interimResults = true;
+        finalTranscript = ta.value;
+        isRecording = true;
+        const btn = document.getElementById('micBtn');
+        btn.classList.add('active');
+        btn.innerHTML = '<span class="rec-dot"></span> Recording… (click to stop)';
+        ta.classList.add('recording');
+
+        recognition.onresult = (e) => {
+            let interim = '';
+            for (let i = e.resultIndex; i < e.results.length; i++) {
+                if (e.results[i].isFinal) finalTranscript += e.results[i][0].transcript + ' ';
+                else interim += e.results[i][0].transcript;
+            }
+            ta.value = finalTranscript + interim;
+            cc.textContent = ta.value.length + ' characters';
+        };
+        recognition.onerror = stopSTT;
+        recognition.start();
+    }
+
+    function stopSTT() {
+        if (recognition) recognition.stop();
+        isRecording = false;
+        ta.value = finalTranscript.trim();
+        cc.textContent = ta.value.length + ' characters';
+        ta.classList.remove('recording');
+        const btn = document.getElementById('micBtn');
+        btn.classList.remove('active');
+        btn.innerHTML = '<i class="fas fa-microphone"></i> Speak Answer';
+    }
+
+    // Timer
+    {% if timer_enabled %}
+    let secs = 120;
+    const timerEl = document.getElementById('timerVal');
+    const timerWrap = document.getElementById('timerDisplay');
+    const countdown = setInterval(() => {
+        secs--;
+        const m = String(Math.floor(secs/60)).padStart(2,'0');
+        const s = String(secs%60).padStart(2,'0');
+        timerEl.textContent = m + ':' + s;
+        if (secs <= 30) timerWrap.classList.add('warning');
+        if (secs <= 0) { clearInterval(countdown); document.getElementById('answerForm').submit(); }
+    }, 1000);
+    {% endif %}
+
+    // Auto-read question on load if TTS enabled
+    {% if tts_enabled %}
+    window.addEventListener('load', () => setTimeout(speakQ, 600));
+    {% endif %}
 </script>
 {% endblock %}
