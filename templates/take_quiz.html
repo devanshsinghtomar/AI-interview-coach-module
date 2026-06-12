@@ -1,57 +1,83 @@
 {% extends "base.html" %}
 
+{% block title %}Quiz - AI Interview Coach{% endblock %}
+
 {% block content %}
-<div style="max-width: 700px; margin: 0 auto;">
+<div style="max-width: 800px; margin: 0 auto;">
     <div class="card" style="padding: 2rem;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
-            <span style="background: #667eea; color: white; padding: 0.25rem 0.75rem; border-radius: 20px;">{{ category }}</span>
-            <span>Question {{ num }} of {{ total }}</span>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <span style="background: #667eea; color: white; padding: 0.5rem 1rem; border-radius: 25px;">
+                <i class="fas fa-brain"></i> {{ category }}
+            </span>
+            <span style="color: #718096;">
+                <i class="fas fa-question-circle"></i> Question {{ num }} of {{ total }}
+            </span>
         </div>
         
-        <h3 style="margin-bottom: 1rem;">{{ question.question }}</h3>
+        <div style="margin-bottom: 2rem;">
+            <h3>{{ question.question }}</h3>
+        </div>
         
         <div id="options">
             {% for option in question.options %}
-            <div class="option" data-value="{{ option }}" style="padding: 1rem; margin-bottom: 0.75rem; border: 2px solid #e2e8f0; border-radius: 10px; cursor: pointer;">
-                {{ option }}
+            <div class="quiz-option" data-value="{{ option }}" style="padding: 1rem; margin-bottom: 0.75rem; border: 2px solid #e2e8f0; border-radius: 12px; cursor: pointer; transition: all 0.3s;">
+                <i class="far fa-circle"></i> {{ option }}
             </div>
             {% endfor %}
         </div>
         
-        <button id="submitBtn" class="btn btn-primary" style="width: 100%; margin-top: 1rem;" disabled>Submit</button>
+        <button id="submitBtn" class="btn btn-primary" style="width: 100%; margin-top: 1rem;" disabled>
+            <i class="fas fa-check"></i> Submit Answer
+        </button>
+        
         <div id="feedbackDiv" style="margin-top: 1rem;"></div>
     </div>
 </div>
 
 <script>
-let selected = null;
-document.querySelectorAll('.option').forEach(opt => {
-    opt.onclick = () => {
-        document.querySelectorAll('.option').forEach(o => o.style.background = 'white');
+let selectedAnswer = null;
+let selectedElement = null;
+
+document.querySelectorAll('.quiz-option').forEach(opt => {
+    opt.addEventListener('click', () => {
+        document.querySelectorAll('.quiz-option').forEach(o => {
+            o.style.background = 'white';
+            o.style.borderColor = '#e2e8f0';
+            o.querySelector('i').className = 'far fa-circle';
+        });
         opt.style.background = '#667eea20';
-        selected = opt.dataset.value;
+        opt.style.borderColor = '#667eea';
+        opt.querySelector('i').className = 'fas fa-dot-circle';
+        selectedAnswer = opt.dataset.value;
+        selectedElement = opt;
         document.getElementById('submitBtn').disabled = false;
-    };
+    });
 });
 
-document.getElementById('submitBtn').onclick = async () => {
-    if (!selected) return;
+document.getElementById('submitBtn').addEventListener('click', async () => {
+    if (!selectedAnswer) return;
+    
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
+    
     const response = await fetch('/submit-quiz', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            answer: selected,
+            answer: selectedAnswer,
             correct: '{{ question.correct }}',
             question: '{{ question.question }}',
             explanation: '{{ question.explanation }}'
         })
     });
     const data = await response.json();
+    
     if (data.completed) {
         window.location.href = '/quiz-complete';
     } else {
         window.location.reload();
     }
-};
+});
 </script>
 {% endblock %}
