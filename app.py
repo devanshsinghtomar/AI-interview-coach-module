@@ -394,12 +394,17 @@ def dashboard():
     avg_quiz = sum(q.score for q in quizzes) / total_quizzes if total_quizzes > 0 else 0
     latest_resume = resumes[-1].score if resumes else 0
     
+    recent_interviews = interviews[-5:] if interviews else []
+    recent_quizzes = quizzes[-5:] if quizzes else []
+    
     return render_template('dashboard.html',
                          total_interviews=total_interviews,
                          avg_score=round(avg_score, 1),
                          total_quizzes=total_quizzes,
                          avg_quiz=round(avg_quiz, 1),
-                         resume_score=latest_resume)
+                         resume_score=latest_resume,
+                         recent_interviews=recent_interviews,
+                         recent_quizzes=recent_quizzes)
 
 @app.route('/mock-interview')
 @login_required
@@ -547,6 +552,38 @@ def resume_analysis():
             return redirect(url_for('resume_analysis'))
     
     return render_template('resume_analysis.html')
+
+@app.route('/start-from-resume', methods=['POST'])
+@login_required
+def start_from_resume():
+    role = request.form.get('role')
+    action = request.form.get('action')
+    
+    if action == 'interview':
+        questions = [q['question'] for q in INTERVIEW_QUESTIONS.get(role, [])]
+        random.shuffle(questions)
+        session['interview_role'] = role
+        session['interview_questions'] = questions[:4]
+        session['interview_answers'] = []
+        session['interview_scores'] = []
+        session['interview_current'] = 0
+        return redirect(url_for('take_interview'))
+    
+    elif action == 'quiz':
+        quiz_cat = 'Python'
+        for cat in QUIZ_QUESTIONS:
+            if cat.lower() in role.lower():
+                quiz_cat = cat
+                break
+        questions = QUIZ_QUESTIONS[quiz_cat][:8]
+        random.shuffle(questions)
+        session['quiz_category'] = f"{role} Quiz"
+        session['quiz_questions'] = questions
+        session['quiz_answers'] = []
+        session['quiz_current'] = 0
+        return redirect(url_for('take_quiz'))
+    
+    return redirect(url_for('resume_analysis'))
 
 @app.route('/skill-quiz')
 @login_required
