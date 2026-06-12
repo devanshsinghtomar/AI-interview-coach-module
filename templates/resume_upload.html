@@ -1,265 +1,262 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Resume | AI Interview Coach</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
-        }
+{% extends "base.html" %}
+{% block title %}Resume Analysis — AI Interview Coach{% endblock %}
+{% block page_title %}Resume Analysis{% endblock %}
+{% block page_breadcrumb %}Upload your resume for AI-powered role matching{% endblock %}
 
-        body {
-            background: linear-gradient(135deg, #0f172a 0%, #1a1f3a 50%, #0f172a 100%);
-            color: white;
-            min-height: 100vh;
-            padding: 20px;
-        }
+{% block extra_css %}
+<style>
+    .upload-zone {
+        border: 2px dashed var(--border);
+        border-radius: 20px;
+        padding: 3.5rem 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.25s;
+        background: var(--card-bg);
+        position: relative;
+    }
+    .upload-zone:hover, .upload-zone.drag-over {
+        border-color: var(--cyan-500);
+        background: rgba(34,211,238,0.04);
+    }
+    .upload-zone.file-selected {
+        border-color: var(--emerald-400);
+        background: rgba(52,211,153,0.04);
+    }
+    .upload-icon-wrap {
+        width: 72px; height: 72px; border-radius: 20px;
+        background: rgba(34,211,238,0.1);
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 1.25rem;
+        font-size: 1.75rem; color: var(--cyan-400);
+        transition: all 0.25s;
+    }
+    .upload-zone:hover .upload-icon-wrap,
+    .upload-zone.drag-over .upload-icon-wrap {
+        background: rgba(34,211,238,0.2);
+        transform: scale(1.05);
+    }
+    .upload-zone.file-selected .upload-icon-wrap {
+        background: rgba(52,211,153,0.15); color: var(--emerald-400);
+    }
+    .upload-title { font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.4rem; }
+    .upload-sub   { font-size: 0.83rem; color: var(--text-muted); margin-bottom: 1.25rem; }
+    .upload-zone input[type="file"] { display: none; }
+    .file-info {
+        display: none;
+        background: var(--navy-800); border: 1px solid var(--border);
+        border-radius: 10px; padding: 0.85rem 1.25rem;
+        margin-top: 1rem;
+        align-items: center; gap: 1rem;
+    }
+    .file-info.show { display: flex; }
+    .file-info-icon { font-size: 1.5rem; color: var(--emerald-400); }
+    .file-name { font-size: 0.875rem; font-weight: 600; color: var(--text-primary); }
+    .file-size { font-size: 0.75rem; color: var(--text-muted); }
+    .file-remove { margin-left: auto; color: var(--rose-400); cursor: pointer; font-size: 0.85rem; background: none; border: none; }
 
-        .submit-btn{
-    margin-top:20px;
-    background:linear-gradient(135deg,#8b5cf6,#6366f1);
-    color:white;
-    border:none;
-    padding:15px 35px;
-    border-radius:12px;
-    font-weight:600;
-    cursor:pointer;
-    transition:.3s;
-    display:inline-block;
-}
+    .format-chips { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin-top: 1.25rem; }
+    .format-chip {
+        display: flex; align-items: center; gap: 0.4rem;
+        padding: 0.3rem 0.75rem; border-radius: 20px;
+        font-size: 0.75rem; font-weight: 600;
+        background: var(--navy-800); border: 1px solid var(--border); color: var(--text-muted);
+    }
 
-.submit-btn:hover{
-    transform:translateY(-3px);
-}
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 1rem; margin-top: 1.5rem; }
+    .feature-item {
+        background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px;
+        padding: 1.25rem; text-align: center;
+    }
+    .feature-item-icon { font-size: 1.5rem; margin-bottom: 0.6rem; }
+    .feature-item-title { font-size: 0.85rem; font-weight: 700; color: var(--text-primary); }
+    .feature-item-desc  { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; line-height: 1.4; }
 
-.submit-btn.active{
-    background:linear-gradient(135deg,#10b981,#059669);
-}
+    /* Analysis steps */
+    .analysis-steps { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1.5rem; }
+    .step-item { display: flex; align-items: center; gap: 1rem; padding: 0.75rem 1rem; background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; }
+    .step-num { width: 28px; height: 28px; border-radius: 8px; background: rgba(34,211,238,0.1); color: var(--cyan-400); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
+    .step-text { font-size: 0.82rem; color: var(--text-secondary); }
 
-        
-     
-        @media(max-width: 768px) {
-            .hamburger {
-                display: block;
-            }
+    .loading-overlay {
+        display: none; position: fixed; inset: 0;
+        background: rgba(5,13,26,0.85); backdrop-filter: blur(6px);
+        z-index: 999; align-items: center; justify-content: center; flex-direction: column; gap: 1.5rem;
+    }
+    .loading-overlay.show { display: flex; }
+    .loader-ring {
+        width: 64px; height: 64px;
+        border: 4px solid rgba(34,211,238,0.15);
+        border-top-color: var(--cyan-400);
+        border-radius: 50%;
+        animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { font-size: 1rem; font-weight: 600; color: var(--text-primary); }
+    .loading-sub  { font-size: 0.82rem; color: var(--text-muted); }
+</style>
+{% endblock %}
 
-            .sidebar {
-                transform: translateX(-100%);
-                z-index: 999;
-            }
+{% block content %}
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loader-ring"></div>
+    <div style="text-align:center;">
+        <div class="loading-text">Analysing your resume…</div>
+        <div class="loading-sub">Extracting skills, matching roles, preparing feedback</div>
+    </div>
+</div>
 
-            .sidebar.active {
-                transform: translateX(0);
-            }
-
-            .sidebar-close {
-                display: block;
-            }
-
-            .main {
-                margin-left: 0;
-                padding: 20px;
-                padding-top: 80px;
-            }
-
-            .header {
-                padding: 30px;
-            }
-
-            .header h1 {
-                font-size: 28px;
-            }
-
-            .upload-section {
-                padding: 25px;
-            }
-
-            .upload-icon {
-                font-size: 45px;
-            }
-
-            .features {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
-</head>
-<body>
-    <button class="hamburger" onclick="toggleSidebar()">
-        <i class="fas fa-bars"></i>
-    </button>
-
-    <div class="sidebar">
-        <button class="sidebar-close" onclick="toggleSidebar()">
-            <i class="fas fa-times"></i>
-        </button>
-        <div class="logo">
-            <i class="fas fa-robot"></i>
-            AI Coach
+<div style="max-width: 900px; margin: 0 auto;">
+    <div style="text-align:center; margin-bottom:2rem;">
+        <div style="display:inline-flex; align-items:center; gap:0.75rem; background:rgba(34,211,238,0.08); border:1px solid rgba(34,211,238,0.2); border-radius:12px; padding:0.5rem 1.25rem; font-size:0.8rem; font-weight:600; color:var(--cyan-400); margin-bottom:1.25rem;">
+            <i class="fas fa-sparkles"></i> AI-Powered Analysis
         </div>
-        <div class="menu">
-            <a href="/dashboard">
-                <i class="fas fa-home"></i>
-                Dashboard
-            </a>
-            <a href="/interview">
-                <i class="fas fa-microphone"></i>
-                Mock Interview
-            </a>
-            <a href="/resume" class="active">
-                <i class="fas fa-file-alt"></i>
-                Resume Analysis
-            </a>
-            <a href="/performance">
-                <i class="fas fa-chart-line"></i>
-                Performance
-            </a>
-            <a href="/skill-assessment">
-                <i class="fas fa-brain"></i>
-                Skill Test
-            </a>
-            <a href="/logout">
-                <i class="fas fa-sign-out-alt"></i>
-                Logout
-            </a>
-        </div>
+        <h1 style="font-size:1.75rem; font-weight:800; color:var(--text-primary); margin-bottom:0.5rem;">Analyse Your Resume</h1>
+        <p style="color:var(--text-muted); font-size:0.875rem; max-width:500px; margin:0 auto;">Get instant role-suitability scores, gap analysis, and a tailored mock interview based on your actual experience.</p>
     </div>
 
-    <div class="main">
-        <div class="container">
-            <div class="header">
-                <i class="fas fa-cloud-upload-alt header-icon"></i>
-                <h1>Upload Your Resume</h1>
-                <p>Let AI analyze your resume and recommend suitable job roles</p>
+    <form action="/upload_resume" method="POST" enctype="multipart/form-data" onsubmit="return handleSubmit(event)" id="resumeForm">
+        <!-- Drop Zone -->
+        <div class="upload-zone" id="dropZone"
+             onclick="document.getElementById('resumeFile').click()"
+             ondragover="handleDragOver(event)"
+             ondragleave="handleDragLeave(event)"
+             ondrop="handleDrop(event)">
+            <div class="upload-icon-wrap" id="uploadIconWrap">
+                <i class="fas fa-cloud-arrow-up" id="uploadIcon"></i>
             </div>
+            <div class="upload-title" id="uploadTitle">Drop your resume here</div>
+            <div class="upload-sub">or click to browse your files</div>
+            <input type="file" name="resume" id="resumeFile" accept=".pdf,.doc,.docx,.txt" onchange="handleFile(this)">
+            <div class="format-chips">
+                <div class="format-chip"><i class="fas fa-file-pdf" style="color:#ef4444;"></i> PDF</div>
+                <div class="format-chip"><i class="fas fa-file-word" style="color:#2563eb;"></i> DOC/DOCX</div>
+                <div class="format-chip"><i class="fas fa-file-lines" style="color:var(--text-muted);"></i> TXT</div>
+                <div class="format-chip"><i class="fas fa-weight-scale" style="color:var(--amber-400);"></i> Max 10 MB</div>
+            </div>
+        </div>
 
-            <form action="/upload_resume" method="POST" enctype="multipart/form-data" onsubmit="return validateForm()">
-                <div class="upload-section">
-                    <i class="fas fa-file-pdf upload-icon"></i>
-                    <div class="upload-title">Drop your resume here or click to browse</div>
-                    <div class="upload-description">Supported formats: PDF, DOC, DOCX, TXT</div>
+        <!-- File Info -->
+        <div class="file-info" id="fileInfo">
+            <i class="fas fa-file-circle-check file-info-icon"></i>
+            <div>
+                <div class="file-name" id="fileName">—</div>
+                <div class="file-size" id="fileSize">—</div>
+            </div>
+            <button type="button" class="file-remove" onclick="removeFile()"><i class="fas fa-times"></i> Remove</button>
+        </div>
 
-                    <div class="file-input-wrapper">
-                        <input type="file" name="resume" id="resumeFile" accept=".pdf,.doc,.docx,.txt" required onchange="updateFileName()">
-                        <label for="resumeFile" class="file-input-label">
-                            <i class="fas fa-plus"></i>
-                            Choose File
-                        </label>
-                    </div>
+        <!-- Submit -->
+        <div style="margin-top:1.5rem; text-align:center;">
+            <button type="submit" class="btn btn-primary btn-lg" id="analyseBtn" disabled style="min-width:220px;">
+                <i class="fas fa-magnifying-glass-chart"></i> Analyse Resume
+            </button>
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.75rem;">
+                Your file is processed securely and never shared
+            </div>
+        </div>
+    </form>
 
-                    <div class="file-name" id="fileName"></div>
-                    <button type="submit" class="submit-btn" id="submitBtn">
-                        <i class="fas fa-arrow-right"></i>
-                        Analyze Resume
-                    </button>
-                </div>
-
-                <div class="supported-formats">
-                    <h4><i class="fas fa-info-circle"></i> Supported Formats</h4>
-                    <ul class="format-list">
-                        <li><i class="fas fa-file-pdf"></i> PDF</li>
-                        <li><i class="fas fa-file-word"></i> DOC/DOCX</li>
-                        <li><i class="fas fa-file-alt"></i> TXT</li>
-                    </ul>
-                </div>
-            </form>
-
-            <div class="features">
-                <div class="feature-card">
-                    <i class="fas fa-brain"></i>
-                    <h3>AI Analysis</h3>
-                    <p>Advanced AI algorithms analyze your resume comprehensively</p>
-                </div>
-                <div class="feature-card">
-                    <i class="fas fa-target"></i>
-                    <h3>Job Matching</h3>
-                    <p>Discover suitable career opportunities based on your profile</p>
-                </div>
-                <div class="feature-card">
-                    <i class="fas fa-chart-line"></i>
-                    <h3>Improvement Tips</h3>
-                    <p>Get actionable recommendations to enhance your resume</p>
-                </div>
+    <!-- What you'll get -->
+    <div class="card" style="margin-top:2rem;">
+        <div class="card-header">
+            <div class="card-title"><i class="fas fa-list-check" style="color:var(--emerald-400);"></i> What you'll get</div>
+        </div>
+        <div class="analysis-steps">
+            <div class="step-item">
+                <div class="step-num">1</div>
+                <div class="step-text"><strong style="color:var(--text-primary);">Role Suitability Score</strong> — percentage match for multiple job roles based on your skills and experience</div>
+            </div>
+            <div class="step-item">
+                <div class="step-num">2</div>
+                <div class="step-text"><strong style="color:var(--text-primary);">Skills Gap Analysis</strong> — what you have vs. what top roles in your field require</div>
+            </div>
+            <div class="step-item">
+                <div class="step-num">3</div>
+                <div class="step-text"><strong style="color:var(--text-primary);">Tailored Mock Interview</strong> — launch an interview built around your own resume content</div>
+            </div>
+            <div class="step-item">
+                <div class="step-num">4</div>
+                <div class="step-text"><strong style="color:var(--text-primary);">Improvement Suggestions</strong> — specific, actionable ways to strengthen your resume</div>
             </div>
         </div>
     </div>
 
-    <script>
-        function toggleSidebar() {
-            const sidebar = document.querySelector('.sidebar');
-            sidebar.classList.toggle('active');
+    <!-- Feature grid -->
+    <div class="features-grid">
+        <div class="feature-item">
+            <div class="feature-item-icon">🧠</div>
+            <div class="feature-item-title">AI Extraction</div>
+            <div class="feature-item-desc">Skills, tools, and keywords pulled from your resume automatically</div>
+        </div>
+        <div class="feature-item">
+            <div class="feature-item-icon">🎯</div>
+            <div class="feature-item-title">Role Matching</div>
+            <div class="feature-item-desc">Suitability % across 15+ tech and business roles</div>
+        </div>
+        <div class="feature-item">
+            <div class="feature-item-icon">🎤</div>
+            <div class="feature-item-title">Resume Interview</div>
+            <div class="feature-item-desc">Mock interview questions generated from your own experience</div>
+        </div>
+        <div class="feature-item">
+            <div class="feature-item-icon">📊</div>
+            <div class="feature-item-title">Detailed Report</div>
+            <div class="feature-item-desc">Downloadable PDF summary of your analysis</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function handleDragOver(e) {
+        e.preventDefault();
+        document.getElementById('dropZone').classList.add('drag-over');
+    }
+    function handleDragLeave(e) {
+        document.getElementById('dropZone').classList.remove('drag-over');
+    }
+    function handleDrop(e) {
+        e.preventDefault();
+        document.getElementById('dropZone').classList.remove('drag-over');
+        const files = e.dataTransfer.files;
+        if (files.length) {
+            document.getElementById('resumeFile').files = files;
+            applyFile(files[0]);
         }
+    }
+    function handleFile(input) {
+        if (input.files.length) applyFile(input.files[0]);
+    }
+    function applyFile(file) {
+        const validExts = ['.pdf','.doc','.docx','.txt'];
+        const ext = '.' + file.name.split('.').pop().toLowerCase();
+        if (!validExts.includes(ext)) { alert('Please upload a PDF, DOC, DOCX, or TXT file.'); return; }
+        if (file.size > 10 * 1024 * 1024) { alert('File must be under 10 MB.'); return; }
 
-        function updateFileName() {
-            const fileInput = document.getElementById('resumeFile');
-            const fileName = document.getElementById('fileName');
-            const submitBtn = document.getElementById('submitBtn');
-
-            if (fileInput.files.length > 0) {
-                fileName.textContent = '📄 ' + fileInput.files[0].name + ' (' + formatFileSize(fileInput.files[0].size) + ')';
-                fileName.classList.add('active');
-                submitBtn.classList.add('active');
-            } else {
-                fileName.classList.remove('active');
-                submitBtn.classList.remove('active');
-            }
-        }
-
-        function formatFileSize(bytes) {
-            if (bytes === 0) return '0 Bytes';
-            const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-        }
-
-        function validateForm() {
-            const fileInput = document.getElementById('resumeFile');
-            const file = fileInput.files[0];
-
-            if (!file) {
-                alert('Please select a resume file');
-                return false;
-            }
-
-            const validExtensions = ['.pdf', '.doc', '.docx', '.txt'];
-            const fileName = file.name.toLowerCase();
-            const isValidExtension = validExtensions.some(ext => fileName.endsWith(ext));
-
-            if (!isValidExtension) {
-                alert('Please upload a PDF, DOC, DOCX, or TXT file');
-                return false;
-            }
-
-            const maxSize = 10 * 1024 * 1024; // 10MB
-            if (file.size > maxSize) {
-                alert('File size should not exceed 10MB');
-                return false;
-            }
-
-            return true;
-        }
-
-        document.querySelectorAll('.menu a').forEach(link => {
-            link.addEventListener('click', () => {
-                const sidebar = document.querySelector('.sidebar');
-                sidebar.classList.remove('active');
-            });
-        });
-
-        document.addEventListener('click', (e) => {
-            const sidebar = document.querySelector('.sidebar');
-            const hamburger = document.querySelector('.hamburger');
-            if (!sidebar.contains(e.target) && !hamburger.contains(e.target)) {
-                sidebar.classList.remove('active');
-            }
-        });
-    </script>
-</body>
-</html>
+        document.getElementById('dropZone').classList.add('file-selected');
+        document.getElementById('uploadIcon').className = 'fas fa-circle-check';
+        document.getElementById('uploadTitle').textContent = 'File ready';
+        document.getElementById('fileName').textContent = file.name;
+        document.getElementById('fileSize').textContent = formatSize(file.size);
+        document.getElementById('fileInfo').classList.add('show');
+        document.getElementById('analyseBtn').disabled = false;
+    }
+    function removeFile() {
+        document.getElementById('resumeFile').value = '';
+        document.getElementById('dropZone').classList.remove('file-selected');
+        document.getElementById('uploadIcon').className = 'fas fa-cloud-arrow-up';
+        document.getElementById('uploadTitle').textContent = 'Drop your resume here';
+        document.getElementById('fileInfo').classList.remove('show');
+        document.getElementById('analyseBtn').disabled = true;
+    }
+    function formatSize(b) {
+        if (b < 1024) return b + ' B';
+        if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
+        return (b/1048576).toFixed(1) + ' MB';
+    }
+    function handleSubmit(e) {
+        document.getElementById('loadingOverlay').classList.add('show');
+        return true;
+    }
+</script>
+{% endblock %}
