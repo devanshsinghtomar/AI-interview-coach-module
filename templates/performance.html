@@ -1,9 +1,163 @@
-<div class="bg-white rounded-xl shadow-md p-6">
-    <h2 class="text-2xl font-bold text-gray-800 mb-4">📊 Performance Analytics</h2>
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><div><canvas id="progressChart"></canvas></div><div><canvas id="pieChart"></canvas></div></div>
+{% extends "base.html" %}
+
+{% block title %}Performance - AI Interview Coach{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <h1>📊 Performance Analytics</h1>
+    <p style="color: var(--gray-600); margin-bottom: 2rem;">Track your progress and identify areas for improvement</p>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">🎤</div>
+            <div class="stat-value">{{ interviews|length }}</div>
+            <div class="stat-label">Total Interviews</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🧠</div>
+            <div class="stat-value">{{ quizzes|length }}</div>
+            <div class="stat-label">Total Quizzes</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📄</div>
+            <div class="stat-value">{{ resumes|length }}</div>
+            <div class="stat-label">Resumes Analyzed</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🏆</div>
+            <div class="stat-value">
+                {% set total_scores = [] %}
+                {% for i in interviews %}{% set _ = total_scores.append(i.score) %}{% endfor %}
+                {% for q in quizzes %}{% set _ = total_scores.append(q.score) %}{% endfor %}
+                {{ (total_scores|sum / total_scores|length)|round|int if total_scores|length > 0 else 0 }}%
+            </div>
+            <div class="stat-label">Overall Avg Score</div>
+        </div>
+    </div>
+
+    <!-- Interview History -->
+    {% if interviews %}
+    <div class="card" style="margin-bottom: 1.5rem;">
+        <div class="card-header">
+            <h3 style="margin: 0;">🎤 Interview History</h3>
+        </div>
+        <div class="card-body">
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--gray-200);">
+                            <th style="padding: 0.75rem; text-align: left;">Date</th>
+                            <th style="padding: 0.75rem; text-align: left;">Role</th>
+                            <th style="padding: 0.75rem; text-align: left;">Question</th>
+                            <th style="padding: 0.75rem; text-align: center;">Score</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for interview in interviews[-10:]|reverse %}
+                        <tr style="border-bottom: 1px solid var(--gray-200);">
+                            <td style="padding: 0.75rem;">{{ interview.date.strftime('%Y-%m-%d') }}</td>
+                            <td style="padding: 0.75rem;">{{ interview.job_role }}</td>
+                            <td style="padding: 0.75rem;">{{ interview.question[:80] }}...</td>
+                            <td style="padding: 0.75rem; text-align: center;">
+                                <span class="score-badge {% if interview.score >= 70 %}score-high{% elif interview.score >= 50 %}score-medium{% else %}score-low{% endif %}">
+                                    {{ interview.score }}%
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Quiz History -->
+    {% if quizzes %}
+    <div class="card" style="margin-bottom: 1.5rem;">
+        <div class="card-header">
+            <h3 style="margin: 0;">🧠 Quiz History</h3>
+        </div>
+        <div class="card-body">
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--gray-200);">
+                            <th style="padding: 0.75rem; text-align: left;">Date</th>
+                            <th style="padding: 0.75rem; text-align: left;">Category</th>
+                            <th style="padding: 0.75rem; text-align: center;">Score</th>
+                            <th style="padding: 0.75rem; text-align: center;">Correct/Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for quiz in quizzes[-10:]|reverse %}
+                        <tr style="border-bottom: 1px solid var(--gray-200);">
+                            <td style="padding: 0.75rem;">{{ quiz.date.strftime('%Y-%m-%d') }}</td>
+                            <td style="padding: 0.75rem;">{{ quiz.category }}</td>
+                            <td style="padding: 0.75rem; text-align: center;">
+                                <span class="score-badge {% if quiz.score >= 70 %}score-high{% elif quiz.score >= 50 %}score-medium{% else %}score-low{% endif %}">
+                                    {{ quiz.score }}%
+                                </span>
+                            </td>
+                            <td style="padding: 0.75rem; text-align: center;">{{ quiz.correct_answers }}/{{ quiz.total_questions }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Resume History -->
+    {% if resumes %}
+    <div class="card">
+        <div class="card-header">
+            <h3 style="margin: 0;">📄 Resume Analysis History</h3>
+        </div>
+        <div class="card-body">
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--gray-200);">
+                            <th style="padding: 0.75rem; text-align: left;">Date</th>
+                            <th style="padding: 0.75rem; text-align: left;">Filename</th>
+                            <th style="padding: 0.75rem; text-align: left;">Suggested Role</th>
+                            <th style="padding: 0.75rem; text-align: center;">Score</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for resume in resumes[-10:]|reverse %}
+                        <tr style="border-bottom: 1px solid var(--gray-200);">
+                            <td style="padding: 0.75rem;">{{ resume.date.strftime('%Y-%m-%d') }}</td>
+                            <td style="padding: 0.75rem;">{{ resume.filename }}</td>
+                            <td style="padding: 0.75rem;">{{ resume.suggested_role }}</td>
+                            <td style="padding: 0.75rem; text-align: center;">
+                                <span class="score-badge {% if resume.score >= 70 %}score-high{% elif resume.score >= 50 %}score-medium{% else %}score-low{% endif %}">
+                                    {{ resume.score }}%
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- No Data Message -->
+    {% if not interviews and not quizzes and not resumes %}
+    <div class="card" style="text-align: center; padding: 3rem;">
+        <div style="font-size: 3rem;">📊</div>
+        <h3>No Data Yet</h3>
+        <p style="color: var(--gray-600);">Start practicing to see your performance metrics!</p>
+        <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1rem;">
+            <a href="{{ url_for('mock_interview') }}" class="btn btn-primary">Start Interview</a>
+            <a href="{{ url_for('skill_quiz') }}" class="btn btn-secondary">Take a Quiz</a>
+            <a href="{{ url_for('resume_analysis') }}" class="btn btn-outline">Analyze Resume</a>
+        </div>
+    </div>
+    {% endif %}
 </div>
-<script>
-let progressChart,pieChart;
-function updateAllCharts(){if(window.progressChart&&window.pieChart){window.progressChart.update();window.pieChart.update();}}
-document.addEventListener('DOMContentLoaded',function(){const ctx1=document.getElementById('progressChart').getContext('2d');const ctx2=document.getElementById('pieChart').getContext('2d');const data=localStorage.getItem('dashboardData');let mock=0,resume=0,quiz=0;if(data){const d=JSON.parse(data);mock=d.mockCount||0;resume=d.resumeCount||0;quiz=d.quizCount||0;}window.progressChart=new Chart(ctx1,{type:'line',data:{labels:['Week 1','Week 2','Week 3','Week 4'],datasets:[{label:'Mock Interviews',data:[mock*0.2,mock*0.4,mock*0.7,mock],borderColor:'#3b82f6'},{label:'Resume Analysis',data:[resume*0.2,resume*0.4,resume*0.7,resume],borderColor:'#8b5cf6'},{label:'Quizzes',data:[quiz*0.2,quiz*0.4,quiz*0.7,quiz],borderColor:'#f97316'}]}});window.pieChart=new Chart(ctx2,{type:'pie',data:{labels:['Mock Interviews','Resume Analysis','Quizzes'],datasets:[{data:[mock,resume,quiz],backgroundColor:['#3b82f6','#8b5cf6','#f97316']}]}});});
-</script>
+{% endblock %}
