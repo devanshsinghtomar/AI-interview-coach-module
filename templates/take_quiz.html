@@ -1,181 +1,166 @@
 {% extends "base.html" %}
-{% block title %}Quiz in Progress — AI Interview Coach{% endblock %}
-{% block page_title %}Skill Quiz{% endblock %}
-{% block page_breadcrumb %}{{ category }} — Question {{ num }} of {{ total }}{% endblock %}
 
-{% block extra_css %}
-<style>
-    .quiz-wrap { max-width: 760px; margin: 0 auto; }
-
-    .quiz-progress-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-    .category-badge { display: flex; align-items: center; gap: 0.5rem; padding: 0.45rem 1rem; border-radius: 10px; background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.2); font-size: 0.8rem; font-weight: 700; color: var(--emerald-400); }
-    .diff-badge { padding: 0.3rem 0.75rem; border-radius: 8px; font-size: 0.72rem; font-weight: 700; }
-    .diff-easy   { background: rgba(52,211,153,0.12); color: var(--emerald-400); }
-    .diff-medium { background: rgba(251,191,36,0.12);  color: var(--amber-400); }
-    .diff-hard   { background: rgba(251,113,133,0.12); color: var(--rose-400); }
-
-    .progress-info { flex: 1; min-width: 180px; }
-    .progress-text { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.4rem; }
-
-    .score-tracker {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 1rem; font-weight: 700;
-        padding: 0.4rem 0.9rem; border-radius: 9px;
-        background: var(--navy-800); border: 1px solid var(--border);
-        color: var(--text-primary); white-space: nowrap;
-    }
-
-    .question-card {
-        background: linear-gradient(135deg, rgba(52,211,153,0.05), rgba(34,211,238,0.03));
-        border: 1px solid rgba(52,211,153,0.18); border-radius: 20px;
-        padding: 2rem; margin-bottom: 1.25rem;
-    }
-    .q-num { font-size: 0.72rem; font-weight: 700; color: var(--emerald-400); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 0.85rem; }
-    .q-text { font-size: 1.1rem; font-weight: 600; color: var(--text-primary); line-height: 1.65; }
-
-    .options-grid { display: flex; flex-direction: column; gap: 0.7rem; margin-bottom: 1.25rem; }
-    .opt {
-        display: flex; align-items: flex-start; gap: 1rem;
-        padding: 0.95rem 1.1rem; border-radius: 12px;
-        border: 2px solid var(--border); background: var(--card-bg);
-        cursor: pointer; transition: all 0.2s;
-        font-size: 0.875rem; font-weight: 500; color: var(--text-secondary);
-        user-select: none;
-    }
-    .opt:hover:not(.locked) { border-color: var(--emerald-400); background: rgba(52,211,153,0.05); color: var(--text-primary); }
-    .opt.selected { border-color: var(--cyan-500); background: rgba(34,211,238,0.07); color: var(--text-primary); }
-    .opt.correct  { border-color: var(--emerald-400); background: rgba(52,211,153,0.12); color: var(--emerald-400); }
-    .opt.wrong    { border-color: var(--rose-400); background: rgba(251,113,133,0.07); color: var(--rose-400); }
-    .opt.locked   { cursor: default; }
-
-    .opt-letter {
-        width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
-        background: var(--navy-700); display: flex; align-items: center; justify-content: center;
-        font-size: 0.72rem; font-weight: 800; color: var(--text-muted); transition: all 0.2s;
-    }
-    .opt.selected .opt-letter { background: var(--cyan-500); color: white; }
-    .opt.correct  .opt-letter { background: var(--emerald-500); color: white; }
-    .opt.wrong    .opt-letter { background: var(--rose-500); color: white; }
-
-    .feedback-panel {
-        display: none; border-radius: 14px; padding: 1.1rem 1.25rem;
-        margin-bottom: 1.25rem; font-size: 0.85rem; line-height: 1.65;
-    }
-    .feedback-panel.show { display: block; }
-    .feedback-panel.fb-correct { background: rgba(52,211,153,0.09); border: 1px solid rgba(52,211,153,0.25); color: var(--emerald-400); }
-    .feedback-panel.fb-wrong   { background: rgba(251,113,133,0.09); border: 1px solid rgba(251,113,133,0.25); color: var(--rose-400); }
-    .fb-heading { font-weight: 700; margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.5rem; }
-
-    .submit-row { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
-</style>
-{% endblock %}
+{% block title %}Quiz - AI Interview Coach{% endblock %}
 
 {% block content %}
-<div class="quiz-wrap">
-    <!-- Progress header -->
-    <div class="quiz-progress-header">
-        <div class="category-badge"><i class="fas fa-brain"></i> {{ category }}</div>
-        <span class="diff-badge diff-{{ difficulty|default('easy') }}">{{ difficulty|default('Easy')|capitalize }}</span>
-        <div class="progress-info">
-            <div class="progress-text">
-                <span>Q{{ num }} of {{ total }}</span>
-                <span>{{ ((num / total) * 100)|round|int }}%</span>
-            </div>
-            <div class="progress-bar">
-                <div class="progress-fill" style="width:{{ ((num / total) * 100)|round|int }}%;"></div>
-            </div>
+<div class="interview-container fade-in">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <div>
+            <h2 style="margin: 0;">🧠 {{ category }} Quiz</h2>
         </div>
-        <div class="score-tracker">
-            ✓ <span id="correctCount">{{ correct_so_far|default(0) }}</span> / {{ num - 1 }}
+        <div class="score-badge score-high" style="font-size: 1rem;">
+            Question {{ num }} of {{ total }}
         </div>
     </div>
 
-    <!-- Question -->
     <div class="question-card">
-        <div class="q-num"><i class="fas fa-circle-question"></i> Question {{ num }} of {{ total }}</div>
-        <div class="q-text">{{ question.question }}</div>
-    </div>
-
-    <!-- Options -->
-    <div class="options-grid" id="optionsGrid">
-        {% set letters = ['A','B','C','D'] %}
-        {% for option in question.options %}
-        <div class="opt" data-value="{{ option }}" onclick="selectOpt(this)">
-            <div class="opt-letter">{{ letters[loop.index0] }}</div>
-            <div>{{ option }}</div>
+        <div class="question-text">
+            {{ question.question }}
         </div>
-        {% endfor %}
+        
+        <div id="optionsContainer">
+            {% for option in question.options %}
+                <button class="option-btn" onclick="selectOption('{{ option }}')">
+                    {{ option }}
+                </button>
+            {% endfor %}
+        </div>
+
+        <div id="feedbackSection" style="margin-top: 1.5rem; display: none;">
+            <div id="feedbackMessage" class="feedback-card"></div>
+            <div id="nextSection" style="margin-top: 1rem; text-align: right;">
+                <button id="nextBtn" class="btn btn-primary">Next Question →</button>
+            </div>
+        </div>
     </div>
 
-    <!-- Feedback -->
-    <div class="feedback-panel" id="feedbackPanel">
-        <div class="fb-heading" id="fbHeading"></div>
-        <div id="fbBody"></div>
-    </div>
-
-    <!-- Controls -->
-    <div class="submit-row">
-        <button type="button" class="btn btn-emerald btn-lg" id="submitBtn" disabled onclick="submitAnswer()">
-            <i class="fas fa-check"></i> Submit Answer
-        </button>
-        <button type="button" class="btn btn-primary" id="nextBtn" style="display:none;" onclick="nextQuestion()">
-            {{ 'View Results' if num == total else 'Next Question' }} <i class="fas fa-arrow-right"></i>
-        </button>
-        <a href="/end-quiz" class="btn btn-ghost btn-sm" style="margin-left:auto;" onclick="return confirm('End quiz early?')">
-            <i class="fas fa-stop"></i> End Quiz
-        </a>
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" style="display: none; text-align: center; padding: 2rem;">
+        <div class="spinner" style="margin: 0 auto;"></div>
     </div>
 </div>
 
+<style>
+    .option-btn {
+        width: 100%;
+        text-align: left;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        border: 2px solid var(--gray-200);
+        border-radius: var(--radius);
+        background: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 1rem;
+    }
+    .option-btn:hover {
+        border-color: var(--primary-color);
+        background: var(--gray-50);
+        transform: translateX(4px);
+    }
+    .option-btn.correct {
+        background: #d1fae5;
+        border-color: var(--secondary-color);
+    }
+    .option-btn.incorrect {
+        background: #fee2e2;
+        border-color: var(--danger-color);
+    }
+    .option-btn.disabled {
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+</style>
+
 <script>
-    let selectedAnswer = null;
-    const correct = {{ question.correct|tojson }};
-    const explanation = {{ question.explanation|tojson }};
+    const questionData = {{ question | tojson }};
+    const category = '{{ category }}';
+    let currentNum = {{ num }};
+    let total = {{ total }};
+    let answered = false;
 
-    function selectOpt(el) {
-        if (el.classList.contains('locked')) return;
-        document.querySelectorAll('.opt').forEach(o => o.classList.remove('selected'));
-        el.classList.add('selected');
-        selectedAnswer = el.dataset.value;
-        document.getElementById('submitBtn').disabled = false;
-    }
-
-    async function submitAnswer() {
-        if (!selectedAnswer) return;
-        const btn = document.getElementById('submitBtn');
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking…';
-
-        // Lock all options
-        document.querySelectorAll('.opt').forEach(o => o.classList.add('locked'));
-
-        const isCorrect = selectedAnswer === correct;
-        document.querySelectorAll('.opt').forEach(o => {
-            if (o.dataset.value === correct) o.classList.add('correct');
-            else if (o.dataset.value === selectedAnswer && !isCorrect) o.classList.add('wrong');
+    function selectOption(selected) {
+        if (answered) return;
+        answered = true;
+        
+        const isCorrect = (selected === questionData.correct);
+        
+        // Highlight all options
+        document.querySelectorAll('.option-btn').forEach(btn => {
+            btn.classList.add('disabled');
+            if (btn.textContent === questionData.correct) {
+                btn.classList.add('correct');
+            }
+            if (btn.textContent === selected && !isCorrect) {
+                btn.classList.add('incorrect');
+            }
         });
-
+        
         // Show feedback
-        const fp = document.getElementById('feedbackPanel');
-        fp.className = 'feedback-panel show ' + (isCorrect ? 'fb-correct' : 'fb-wrong');
-        document.getElementById('fbHeading').innerHTML = isCorrect
-            ? '<i class="fas fa-circle-check"></i> Correct!'
-            : '<i class="fas fa-circle-xmark"></i> Incorrect — the right answer is: ' + correct;
-        document.getElementById('fbBody').textContent = explanation || '';
-
-        // Submit to server
-        await fetch('/submit-quiz', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ answer: selectedAnswer, correct: correct, question: {{ question.question|tojson }}, explanation: explanation })
-        });
-
-        btn.style.display = 'none';
-        document.getElementById('nextBtn').style.display = 'inline-flex';
+        const feedbackDiv = document.getElementById('feedbackSection');
+        const feedbackMessage = document.getElementById('feedbackMessage');
+        
+        if (isCorrect) {
+            feedbackMessage.innerHTML = `
+                <strong>✅ Correct!</strong><br>
+                ${questionData.explanation}
+            `;
+            feedbackMessage.classList.add('feedback-positive');
+        } else {
+            feedbackMessage.innerHTML = `
+                <strong>❌ Incorrect</strong><br>
+                Correct answer: ${questionData.correct}<br>
+                ${questionData.explanation}
+            `;
+            feedbackMessage.classList.add('feedback-negative');
+        }
+        
+        feedbackDiv.style.display = 'block';
+        
+        // Submit answer to server
+        submitAnswer(selected, isCorrect);
     }
-
-    async function nextQuestion() {
-        window.location.href = '/next-quiz-question';
+    
+    async function submitAnswer(answer, isCorrect) {
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        loadingSpinner.style.display = 'block';
+        
+        try {
+            const response = await fetch('{{ url_for("submit_quiz") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    answer: answer,
+                    correct: questionData.correct,
+                    question: questionData.question,
+                    explanation: questionData.explanation
+                })
+            });
+            
+            const data = await response.json();
+            loadingSpinner.style.display = 'none';
+            
+            if (data.completed) {
+                // Quiz completed - show results
+                const nextBtn = document.getElementById('nextBtn');
+                nextBtn.textContent = 'View Results →';
+                nextBtn.onclick = () => {
+                    window.location.href = '{{ url_for("quiz_complete") }}';
+                };
+            } else {
+                // Setup next question
+                const nextBtn = document.getElementById('nextBtn');
+                nextBtn.onclick = () => {
+                    window.location.reload();
+                };
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            loadingSpinner.style.display = 'none';
+            alert('An error occurred. Please try again.');
+        }
     }
 </script>
 {% endblock %}
